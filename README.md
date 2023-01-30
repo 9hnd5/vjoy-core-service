@@ -58,16 +58,37 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Support
+## Response Format (Google JSON guide)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```
+Success response return data:
+{
+  "data": {
+    "id": 1001,
+    "name": "Wing"
+  }
+}
 
-## Stay in touch
+OR 
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+{
+  "data": [
+    {
+      "id": 1001,
+      "name": "Wing"
+    },
+    {
+      "id": 1002,
+      "name": "Zing"
+    }
+  ]
+}
 
-## License
-
-Nest is [MIT licensed](LICENSE).
+Error response return error:
+{
+  "error": {
+    "code": 404,
+    "message": "ID not found"
+  }
+}
+```
