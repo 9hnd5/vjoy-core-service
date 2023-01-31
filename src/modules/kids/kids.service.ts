@@ -3,13 +3,13 @@ import { CreateKidDto } from './dto/create-kid.dto';
 import { UpdateKidDto } from './dto/update-kid.dto';
 
 @Injectable()
-export class KidService {
+export class KidsService {
   create(createKidDto: CreateKidDto) {
     return 'This action adds a new kid';
   }
 
   findAll() {
-    return `This action returns all kid`;
+    return `This action returns all kids`;
   }
 
   findOne(id: number) {
