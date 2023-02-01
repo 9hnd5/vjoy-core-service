@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { CreateKidDto } from './dto/create-kid.dto';
-import { UpdateKidDto } from './dto/update-kid.dto';
+import { Injectable } from "@nestjs/common";
+import { CreateKidDto } from "./dto/create-kid.dto";
+import { UpdateKidDto } from "./dto/update-kid.dto";
 
 @Injectable()
 export class KidsService {
   create(createKidDto: CreateKidDto) {
-    return 'This action adds a new kid';
+    return "This action adds a new kid";
   }
 
   findAll() {
