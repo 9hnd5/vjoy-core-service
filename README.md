@@ -1,11 +1,12 @@
 ## Description
+
 vjoy-core-service is a microservice, apart of vjoy backend service. This service takes the responsibility of:
+
 - Authentication & Authorization.
 - Users management.
 - Kids management.
 - Roles management.
-......
-
+  ......
 
 ## Installation
 
@@ -50,7 +51,7 @@ Success response return data:
   }
 }
 
-OR 
+OR
 
 {
   "data": [
