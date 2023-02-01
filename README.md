@@ -41,12 +41,15 @@ $ npm run test:cov
 
 ## Response Format (Google JSON guide)
 
-```
+### *camelCase* data field.
+
 Success response return data:
+```
 {
   "data": {
     "id": 1001,
-    "name": "Wing"
+    "name": "Wing",
+    "phoneNumber": "+849093748392"
   }
 }
 
@@ -64,8 +67,11 @@ OR
     }
   ]
 }
+```
+
 
 Error response return error:
+```
 {
   "error": {
     "code": 404,
