@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { Authorize } from "src/modules/auth/decorators/authorize.decorator";
+import { SameUser } from "src/modules/auth/decorators/same-user.decorator";
 import { LoginDTO } from "src/modules/auth/dto/login.dto";
 import { AuthService } from "./auth.service";
 
@@ -12,9 +13,15 @@ export class AuthController {
     return this.authService.login(data);
   }
   @Authorize({ action: "read", resource: "live_sessions" })
-  @Get()
-  get() {
-    return "Ok";
+  @Get("check-authorize")
+  checkAuthorize() {
+    return "Authorized";
+  }
+
+  @Get("check-same-user/:userId")
+  @SameUser()
+  checkSameUser(@Param("userId") userId: unknown) {
+    return "User is the same";
   }
 
   @Post("/otp")
