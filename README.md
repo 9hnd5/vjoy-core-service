@@ -75,8 +75,24 @@ Error response return error:
 ```
 {
   "error": {
-    "code": 404,
+    "code": "InvalidFormat",
     "message": "ID not found"
   }
 }
+
+OR
+
+{
+  "error": [{
+    "code": "InvalidFormat",
+    "message": "ID not found"
+  },
+  {
+    "code": "InvalidField",
+    "message": "Name not found"
+  }
+  ]
+}
+
+
 ```
