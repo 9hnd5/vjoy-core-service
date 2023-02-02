@@ -1,11 +1,11 @@
 import { Optional } from "sequelize";
 import { Column, DataType, Model, Table } from "sequelize-typescript";
 
-type Action = "*" | "read" | "write" | "delete";
+export type ActionAttributes = "*" | "read" | "write" | "delete";
 
 export type PermissionAttributes = {
   resource: string;
-  action: Action;
+  action: ActionAttributes | ActionAttributes[];
 };
 
 export type RoleAttributes = {
