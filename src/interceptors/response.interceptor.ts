@@ -7,7 +7,7 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class AppInterceptor<T> implements NestInterceptor<T, Response<T>> {
+export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
   intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
     return next.handle().pipe(
       map((data) => ({ data })),
