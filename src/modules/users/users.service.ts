@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
@@ -22,6 +22,13 @@ export class UsersService {
 
   findOne(id: number) {
     return `This action returns a #${id} user`;
+
+    // throw new NotFoundException("not find user with id #${id}");
+    
+    // const errors:any[] = [];
+    // errors.push({ 'firstname': 'already exist' });
+    // errors.push({ 'email': 'wrong format' });
+    // throw errors;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
