@@ -1,12 +1,18 @@
+import { UnprocessableEntityException, ValidationError, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ResponseInterceptor } from "./interceptors/response.interceptor";
-import { ValidationPipe } from "./pipes/validation.pipe";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalInterceptors(new ResponseInterceptor());
-  app.useGlobalPipes(new ValidationPipe());
-  await app.listen(3000);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      exceptionFactory(errors: ValidationError[]) {
+        return new UnprocessableEntityException(errors);
+      },
+    })
+  );
+  await app.listen(3001);
 }
 bootstrap();

@@ -1,4 +1,3 @@
-import { TinyIntegerDataType } from "sequelize";
 import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt, AutoIncrement, PrimaryKey } from "sequelize-typescript";
 
 @Table({ modelName: "users" })

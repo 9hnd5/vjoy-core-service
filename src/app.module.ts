@@ -4,7 +4,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { UsersModule } from "./modules/users/users.module";
 import { Role } from "src/modules/auth/entities/role.entity";
-import { User } from "./modules/users/entities/user.entity";
+import { User } from "src/modules/users/entities/user.entity";
 
 const models = [Role, User];
 
