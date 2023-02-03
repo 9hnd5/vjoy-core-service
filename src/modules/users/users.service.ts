@@ -10,29 +10,27 @@ export class UsersService {
     private usersRepository: typeof User
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return "This action adds a new user";
+  async create(createUserDto: CreateUserDto) {
+    let rs = await this.usersRepository.create({ ...createUserDto });
+    return rs;
   }
 
   async findAll() {
     let rs = await this.usersRepository.findAll<User>();
-    console.log(rs);
     return rs;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-
-    // throw new NotFoundException("not find user with id #${id}");
-    
-    // const errors:any[] = [];
-    // errors.push({ 'firstname': 'already exist' });
-    // errors.push({ 'email': 'wrong format' });
-    // throw errors;
+  async findOne(id: number) {
+    let rs = await this.usersRepository.findByPk(id);
+    if (rs === null) throw new NotFoundException(`Not found user with id #${id}`);
+    return rs;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    await this.usersRepository.update({ ...updateUserDto }, { where: { id: id } })
+    let rs = await this.usersRepository.findByPk(id);
+    if (rs === null) throw new NotFoundException(`Not found user with id #${id}`);
+    return rs;
   }
 
   remove(id: number) {
