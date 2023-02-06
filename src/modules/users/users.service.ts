@@ -4,6 +4,7 @@ import { AuthService } from "src/modules/auth/auth.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
+import { USER_STATUS } from "./users.constants";
 
 @Injectable()
 export class UsersService {
@@ -23,6 +24,7 @@ export class UsersService {
       password: pass,
       phone: createUserDto.phone,
       roleId: createUserDto.roleId,
+      status: USER_STATUS.ACTIVATED,
       provider: createUserDto.provider,
       socialId: createUserDto.socialId
     });
@@ -30,8 +32,8 @@ export class UsersService {
   }
 
   async findAll(includeDeleted = false) {
-    const rs = await this.userModel.findAll<User>({ paranoid: !includeDeleted });
-    return rs;
+    const rs = await this.userModel.findAndCountAll<User>({ paranoid: !includeDeleted });
+    return { data: rs.rows, total: rs.count };
   }
 
   async findOne(id: number, includeDeleted = false) {
