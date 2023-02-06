@@ -8,7 +8,7 @@ export type UserAttributes = {
   email: string;
   password: string;
   phone?: string;
-  role: number;
+  roleId: number;
   provider?: string;
   socialId?: string;
 };
@@ -39,7 +39,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   status: number;
 
   @Column(DataType.TINYINT)
-  role: number;
+  roleId: number;
 
   @Column(DataType.STRING(255))
   provider: string;

@@ -22,7 +22,7 @@ export class UsersService {
       email: createUserDto.email,
       password: pass,
       phone: createUserDto.phone,
-      role: createUserDto.role,
+      roleId: createUserDto.roleId,
       provider: createUserDto.provider,
       socialId: createUserDto.socialId
     });
