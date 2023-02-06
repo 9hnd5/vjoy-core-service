@@ -1,4 +1,6 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/sequelize";
+import { AuthService } from "src/modules/auth/auth.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
@@ -6,36 +8,46 @@ import { User } from "./entities/user.entity";
 @Injectable()
 export class UsersService {
   constructor(
-    @Inject("USERS_REPOSITORY")
-    private usersRepository: typeof User
+    @InjectModel(User)
+    private userModel: typeof User,
+
+    private readonly authService: AuthService
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return "This action adds a new user";
-  }
-
-  async findAll() {
-    let rs = await this.usersRepository.findAll<User>();
-    console.log(rs);
+  async create(createUserDto: CreateUserDto) {
+    const pass = await this.authService.createPassword('123456');
+    let rs = await this.userModel.create({ 
+      firstname: createUserDto.firstname,
+      lastname: createUserDto.lastname,
+      email: createUserDto.email,
+      password: pass,
+      phone: createUserDto.phone,
+      role: createUserDto.role,
+      provider: createUserDto.provider,
+      socialId: createUserDto.socialId
+    });
     return rs;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-
-    // throw new NotFoundException("not find user with id #${id}");
-    
-    // const errors:any[] = [];
-    // errors.push({ 'firstname': 'already exist' });
-    // errors.push({ 'email': 'wrong format' });
-    // throw errors;
+  async findAll(includeDeleted: boolean = false) {
+    let rs = await this.userModel.findAll<User>({ paranoid: !includeDeleted });
+    return rs;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findOne(id: number, includeDeleted: boolean = false) {
+    let rs = await this.userModel.findByPk(id, { paranoid: !includeDeleted });
+    return rs;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    await this.userModel.update({ ...updateUserDto }, { where: { id: id } })
+    let rs = await this.userModel.findByPk(id);
+    return rs;
+  }
+
+  async remove(id: number) {
+    await this.userModel.destroy({ where: { id: id } })
+      .catch(() => { return false })
+    return true;
   }
 }
