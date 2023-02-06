@@ -16,7 +16,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const pass = await this.authService.createPassword('123456');
-    let rs = await this.userModel.create({ 
+    const rs = await this.userModel.create({ 
       firstname: createUserDto.firstname,
       lastname: createUserDto.lastname,
       email: createUserDto.email,
@@ -29,19 +29,19 @@ export class UsersService {
     return rs;
   }
 
-  async findAll(includeDeleted: boolean = false) {
-    let rs = await this.userModel.findAll<User>({ paranoid: !includeDeleted });
+  async findAll(includeDeleted = false) {
+    const rs = await this.userModel.findAll<User>({ paranoid: !includeDeleted });
     return rs;
   }
 
-  async findOne(id: number, includeDeleted: boolean = false) {
-    let rs = await this.userModel.findByPk(id, { paranoid: !includeDeleted });
+  async findOne(id: number, includeDeleted = false) {
+    const rs = await this.userModel.findByPk(id, { paranoid: !includeDeleted });
     return rs;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     await this.userModel.update({ ...updateUserDto }, { where: { id: id } })
-    let rs = await this.userModel.findByPk(id);
+    const rs = await this.userModel.findByPk(id);
     return rs;
   }
 

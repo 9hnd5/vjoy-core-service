@@ -1,5 +1,5 @@
 import { Optional } from "sequelize";
-import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt, AutoIncrement, PrimaryKey } from "sequelize-typescript";
+import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt } from "sequelize-typescript";
 
 export type UserAttributes = {
   id: number;
