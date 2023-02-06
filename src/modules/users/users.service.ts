@@ -29,13 +29,13 @@ export class UsersService {
     return rs;
   }
 
-  async findAll(notIncludeDeleted: boolean = true) {
-    let rs = await this.userModel.findAll<User>({ paranoid: notIncludeDeleted });
+  async findAll(includeDeleted: boolean = false) {
+    let rs = await this.userModel.findAll<User>({ paranoid: !includeDeleted });
     return rs;
   }
 
-  async findOne(id: number, notIncludeDeleted: boolean = true) {
-    let rs = await this.userModel.findByPk(id, { paranoid: notIncludeDeleted });
+  async findOne(id: number, includeDeleted: boolean = false) {
+    let rs = await this.userModel.findByPk(id, { paranoid: !includeDeleted });
     return rs;
   }
 

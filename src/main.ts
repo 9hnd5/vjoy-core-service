@@ -1,4 +1,4 @@
-import { UnprocessableEntityException, ValidationError, ValidationPipe } from "@nestjs/common";
+import { UnprocessableEntityException, ValidationError, ValidationPipe, HttpStatus } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ResponseInterceptor } from "./interceptors/response.interceptor";
@@ -8,8 +8,10 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
-      errorHttpStatusCode: 422,
-      whitelist: false,
+      whitelist: true,
+      exceptionFactory(errors: ValidationError[]) {
+        return new UnprocessableEntityException(errors);
+      },
     })
   );
   await app.listen(3000);
