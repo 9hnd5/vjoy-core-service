@@ -15,14 +15,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         let error: any;
         if (err instanceof Error || err instanceof TypeError) error = ({ code: err?.name || 'InternalServerException', message: err?.message || 'Something went wrong'});
         if (err instanceof UnprocessableEntityException) {
-          let errRes: any = err.getResponse();
-          // console.log(errRes);
+          const errRes: any = err.getResponse();
           error = errRes.message.map(e => {
             const constraint: any = e.constraints;
             return ({ code: e.property, message: Object.values(constraint)[0] })
           })
         }
-        // console.log(err);
         
         return new HttpException(
           {

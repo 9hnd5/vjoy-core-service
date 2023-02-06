@@ -1,5 +1,5 @@
 import { Optional } from "sequelize";
-import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt, AutoIncrement, PrimaryKey } from "sequelize-typescript";
+import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt } from "sequelize-typescript";
 
 export type UserAttributes = {
   id: number;
@@ -8,7 +8,7 @@ export type UserAttributes = {
   email: string;
   password: string;
   phone?: string;
-  role: number;
+  roleId: number;
   provider?: string;
   socialId?: string;
 };
@@ -39,7 +39,7 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   status: number;
 
   @Column(DataType.TINYINT)
-  role: number;
+  roleId: number;
 
   @Column(DataType.STRING(255))
   provider: string;
