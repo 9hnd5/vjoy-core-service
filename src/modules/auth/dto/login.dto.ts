@@ -1,6 +1,26 @@
+import { Exclude, Expose } from "class-transformer";
+import { IsEmail, IsNotEmpty, IsString, ValidateIf } from "class-validator";
+
+@Exclude()
 export class LoginDTO {
+  @Expose()
+  @IsNotEmpty()
   type: "email" | "phone";
-  phone?: string;
-  email?: string;
-  password?: string;
+
+  @Expose()
+  @ValidateIf((o) => o.type === "phone")
+  @IsNotEmpty()
+  @IsString()
+  phone: string;
+
+  @Expose()
+  @ValidateIf((o) => o.type === "email")
+  @IsEmail()
+  email: string;
+
+  @Expose()
+  @ValidateIf((o) => o.type === "email")
+  @IsNotEmpty()
+  @IsString()
+  password: string;
 }

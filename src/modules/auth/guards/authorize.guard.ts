@@ -40,10 +40,10 @@ export class AuthorizeGuard implements CanActivate {
     if (!role) return false;
     if (role.code === "admin") return true;
 
-    const hasResource = role.permissions.some((p) => p.resource === "*" || p.resource === permission.resource);
+    const hasResource = role.permissions?.some((p) => p.resource === "*" || p.resource === permission.resource);
     if (!hasResource) return false;
 
-    const hasAction = role.permissions.some((p) => {
+    const hasAction = role.permissions?.some((p) => {
       if (p.action === "*") return true;
       if (typeof p.action === "string") return p.action === permission.action;
       return p.action.some((a) => a === permission.action);

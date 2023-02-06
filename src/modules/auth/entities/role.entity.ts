@@ -1,5 +1,6 @@
 import { Optional } from "sequelize";
-import { Column, DataType, Model, Table } from "sequelize-typescript";
+import { Column, DataType, HasMany, Model, Table } from "sequelize-typescript";
+import { User } from "src/modules/users/entities/user.entity";
 
 export type ActionAttributes = "*" | "read" | "write" | "delete";
 
@@ -12,8 +13,8 @@ export type RoleAttributes = {
   id: number;
   name: string;
   code: string;
-  description: string;
-  permissions: PermissionAttributes[];
+  description?: string;
+  permissions?: PermissionAttributes[];
 };
 
 type RoleCreationAttributes = Optional<RoleAttributes, "id">;
@@ -28,8 +29,11 @@ export class Role extends Model<RoleAttributes, RoleCreationAttributes> {
   code: string;
 
   @Column(DataType.STRING(255))
-  description: string;
+  description?: string;
 
   @Column(DataType.JSON)
-  permissions: PermissionAttributes[];
+  permissions?: PermissionAttributes[];
+
+  @HasMany(() => User)
+  users: User[];
 }
