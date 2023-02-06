@@ -1,4 +1,4 @@
-import { UnprocessableEntityException, ValidationError, ValidationPipe, HttpStatus } from "@nestjs/common";
+import { UnprocessableEntityException, ValidationError, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ResponseInterceptor } from "./interceptors/response.interceptor";
@@ -14,6 +14,6 @@ async function bootstrap() {
       },
     })
   );
-  await app.listen(3000);
+  await app.listen(3001);
 }
 bootstrap();
