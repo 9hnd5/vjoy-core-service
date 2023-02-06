@@ -1,14 +1,16 @@
 import { Optional } from "sequelize";
 import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt } from "sequelize-typescript";
+import { USER_STATUS } from "../users.constants";
 
 export type UserAttributes = {
   id: number;
-  firstname: string;
-  lastname: string;
-  email: string;
-  password: string;
+  firstname?: string;
+  lastname?: string;
+  email?: string;
+  password?: string;
   phone?: string;
   roleId: number;
+  status: number;
   provider?: string;
   socialId?: string;
 };
@@ -20,32 +22,33 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   id: number;
 
   @Column(DataType.STRING(255))
-  firstname: string;
+  firstname?: string;
 
   @Column(DataType.STRING(255))
-  lastname: string;
+  lastname?: string;
 
   @Column(DataType.STRING(255))
-  email: string;
+  email?: string;
 
   @Column(DataType.STRING(255))
-  phone: string;
+  phone?: string;
 
   @Column(DataType.STRING(255))
-  password: string;
+  password?: string;
 
-  @Default(1)
+  @Default(USER_STATUS.NEW)
   @Column(DataType.TINYINT)
   status: number;
 
+  @Default(4)
   @Column(DataType.TINYINT)
   roleId: number;
 
   @Column(DataType.STRING(255))
-  provider: string;
+  provider?: string;
 
   @Column(DataType.STRING(255))
-  socialId: string;
+  socialId?: string;
 
   @CreatedAt
   @Column
