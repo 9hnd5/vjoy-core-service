@@ -11,13 +11,18 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
   intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
     return next.handle().pipe(
       map((data) => ({ data })),
-      catchError((err) => throwError(() => {
+      catchError((err) => throwError(() => {        
         let error: any;
         if (err instanceof Error || err instanceof TypeError) error = ({ code: err?.name || 'InternalServerException', message: err?.message || 'Something went wrong'});
         if (err instanceof UnprocessableEntityException) {
           let errRes: any = err.getResponse();
-          error = errRes.message.map(e => ({ code: e.property, message: e.constraints.isNotEmpty || e.constraints.isEmail }))
+          // console.log(errRes);
+          error = errRes.message.map(e => {
+            const constraint: any = e.constraints;
+            return ({ code: e.property, message: Object.values(constraint)[0] })
+          })
         }
+        // console.log(err);
         
         return new HttpException(
           {

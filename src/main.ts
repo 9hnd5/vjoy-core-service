@@ -8,11 +8,10 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
-      exceptionFactory(errors: ValidationError[]) {
-        return new UnprocessableEntityException(errors);
-      },
+      errorHttpStatusCode: 422,
+      whitelist: false,
     })
   );
-  await app.listen(3001);
+  await app.listen(3000);
 }
 bootstrap();

@@ -1,10 +1,22 @@
+import { Optional } from "sequelize";
 import { Table, Column, Model, DataType, Default, CreatedAt, UpdatedAt, AutoIncrement, PrimaryKey } from "sequelize-typescript";
 
-@Table({ modelName: "users" })
-export class User extends Model {
-  @AutoIncrement
-  @PrimaryKey
-  @Column
+export type UserAttributes = {
+  id: number;
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+  phone?: string;
+  role: number;
+  provider?: string;
+  socialId?: string;
+};
+
+type UserCreationAttributes = Optional<UserAttributes, "id">;
+
+@Table({ modelName: "users", paranoid: true })
+export class User extends Model<UserAttributes, UserCreationAttributes> {
   id: number;
 
   @Column(DataType.STRING(255))
