@@ -8,9 +8,10 @@ import { AuthenticateGuard } from "src/modules/auth/guards/authenticate.guard";
 import { AuthorizeGuard } from "src/modules/auth/guards/authorize.guard";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { User } from "../users/entities/user.entity";
 
 @Module({
-  imports: [JwtModule.register({}), SequelizeModule.forFeature([Role])],
+  imports: [JwtModule.register({}), SequelizeModule.forFeature([Role, User])],
   controllers: [AuthController],
   providers: [
     AuthService,
@@ -24,6 +25,6 @@ import { AuthService } from "./auth.service";
       useClass: AuthorizeGuard,
     },
   ],
-  exports: [AuthService]
+  exports: [AuthService],
 })
 export class AuthModule {}
