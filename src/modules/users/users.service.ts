@@ -1,16 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { AuthService } from "modules/auth/auth.service";
+import { Role } from "modules/auth/entities/role.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
-import { USER_STATUS } from "./users.constants";
+import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User)
-    private userModel: typeof User,
+    @InjectModel(User) private userModel: typeof User,
 
     private readonly authService: AuthService
   ) {}
@@ -18,26 +18,20 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     const pass = await this.authService.createPassword('123456');
     const rs = await this.userModel.create({ 
-      firstname: createUserDto.firstname,
-      lastname: createUserDto.lastname,
-      email: createUserDto.email,
+      ...createUserDto,
       password: pass,
-      phone: createUserDto.phone,
-      roleId: createUserDto.roleId,
-      status: USER_STATUS.ACTIVATED,
-      provider: createUserDto.provider,
-      socialId: createUserDto.socialId
+      status: USER_STATUS.ACTIVATED
     });
     return rs;
   }
 
-  async findAll(includeDeleted = false) {
-    const rs = await this.userModel.findAndCountAll<User>({ paranoid: !includeDeleted });
-    return { data: rs.rows, total: rs.count };
+  async findAll(query?, includeDeleted = false) {
+    const rs = await this.userModel.findAndCountAll<User>({ attributes: {exclude: EXCLUDE_FIELDS}, include: Role, paranoid: !includeDeleted });
+    return rs;
   }
 
   async findOne(id: number, includeDeleted = false) {
-    const rs = await this.userModel.findByPk(id, { paranoid: !includeDeleted });
+    const rs = await this.userModel.findByPk(id, { attributes: {exclude: EXCLUDE_FIELDS}, paranoid: !includeDeleted });
     return rs;
   }
 
