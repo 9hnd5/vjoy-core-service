@@ -1,10 +1,10 @@
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { InjectModel } from "@nestjs/sequelize";
-import { AUTHORIZE_KEY, Permission } from "src/modules/auth/decorators/authorize.decorator";
-import { ADMIN_OR_SAME_USER_KEY } from "src/modules/auth/decorators/admin-or-same-user.decorator";
-import { Role } from "src/modules/auth/entities/role.entity";
 import { ROLE_CODE } from "../auth.constants";
+import { ADMIN_OR_SAME_USER_KEY } from "../decorators/admin-or-same-user.decorator";
+import { AUTHORIZE_KEY, Permission } from "../decorators/authorize.decorator";
+import { Role } from "../entities/role.entity";
 
 @Injectable()
 export class AuthorizeGuard implements CanActivate {

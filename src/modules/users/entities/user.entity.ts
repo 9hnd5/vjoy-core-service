@@ -12,7 +12,7 @@ import {
   BelongsTo,
   DeletedAt,
 } from "sequelize-typescript";
-import { Role } from "src/modules/auth/entities/role.entity";
+import { Role } from "modules/auth/entities/role.entity";
 
 export type UserAttributes = {
   id: number;

@@ -2,13 +2,13 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { JWTAuthStrategy } from "src/modules/auth/strategies/jwt-auth.strategy";
-import { Role } from "src/modules/auth/entities/role.entity";
-import { AuthenticateGuard } from "src/modules/auth/guards/authenticate.guard";
-import { AuthorizeGuard } from "src/modules/auth/guards/authorize.guard";
+import { User } from "../users/entities/user.entity";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { User } from "../users/entities/user.entity";
+import { Role } from "./entities/role.entity";
+import { AuthenticateGuard } from "./guards/authenticate.guard";
+import { AuthorizeGuard } from "./guards/authorize.guard";
+import { JWTAuthStrategy } from "./strategies/jwt-auth.strategy";
 
 @Module({
   imports: [JwtModule.register({}), SequelizeModule.forFeature([Role, User])],

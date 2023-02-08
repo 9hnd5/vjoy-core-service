@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { Authorize } from "src/modules/auth/decorators/authorize.decorator";
-import { AdminOrSameUser } from "src/modules/auth/decorators/admin-or-same-user.decorator";
-import { LoginDTO } from "src/modules/auth/dto/login.dto";
-import { VerifyOTP } from "src/modules/auth/dto/verify-otp.dto";
 import { AuthService } from "./auth.service";
+import { AdminOrSameUser } from "./decorators/admin-or-same-user.decorator";
+import { Authorize } from "./decorators/authorize.decorator";
+import { LoginDTO } from "./dto/login.dto";
+import { VerifyOTP } from "./dto/verify-otp.dto";
 
 @Controller("auth")
 export class AuthController {
