@@ -2,19 +2,20 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { InjectModel } from "@nestjs/sequelize";
 import { AUTHORIZE_KEY, Permission } from "src/modules/auth/decorators/authorize.decorator";
-import { SAME_USER_KEY } from "src/modules/auth/decorators/same-user.decorator";
+import { ADMIN_OR_SAME_USER_KEY } from "src/modules/auth/decorators/admin-or-same-user.decorator";
 import { Role } from "src/modules/auth/entities/role.entity";
+import { ROLE_CODE } from "../auth.constants";
 
 @Injectable()
 export class AuthorizeGuard implements CanActivate {
   constructor(private reflector: Reflector, @InjectModel(Role) private roleModel: typeof Role) {}
   async canActivate(context: ExecutionContext) {
-    const sameUser = this.reflector.getAllAndOverride(SAME_USER_KEY, [
+    const adminOrSameUser = this.reflector.getAllAndOverride(ADMIN_OR_SAME_USER_KEY, [
       context.getHandler(),
       context.getClass(),
     ]) satisfies string | undefined;
 
-    if (sameUser) return this.isSameUser(context, sameUser);
+    if (adminOrSameUser) return this.isAdminOrSameUser(context, adminOrSameUser);
 
     const permission = this.reflector.getAllAndOverride(AUTHORIZE_KEY, [
       context.getHandler(),
@@ -25,10 +26,13 @@ export class AuthorizeGuard implements CanActivate {
     return this.isHasPermission(context, permission);
   }
 
-  private isSameUser(context: ExecutionContext, sameUser: string) {
+  private async isAdminOrSameUser(context: ExecutionContext, adminOrSameUser: string) {
     const request = context.switchToHttp().getRequest();
+    const roleCodeInToken = request.user.roleCode;
+    if (roleCodeInToken === ROLE_CODE.ADMIN) return true;
+
     const userIdInToken = request.user.userId;
-    const userIdInParams = request.params[sameUser];
+    const userIdInParams = request.params[adminOrSameUser];
     if (userIdInToken != userIdInParams) return false;
     return true;
   }
@@ -38,7 +42,7 @@ export class AuthorizeGuard implements CanActivate {
     const user = request.user;
     const role = await this.roleModel.findOne({ where: { id: user.roleId } });
     if (!role) return false;
-    if (role.code === "admin") return true;
+    if (role.code === ROLE_CODE.ADMIN) return true;
 
     const hasResource = role.permissions?.some((p) => p.resource === "*" || p.resource === permission.resource);
     if (!hasResource) return false;

@@ -2,7 +2,7 @@ import { Optional } from "sequelize";
 import { Column, DataType, HasMany, Model, Table } from "sequelize-typescript";
 import { User } from "src/modules/users/entities/user.entity";
 
-export type ActionAttributes = "*" | "read" | "write" | "delete";
+export type ActionAttributes = "*" | "read" | "write" | "delete" | "list";
 
 export type PermissionAttributes = {
   resource: string;

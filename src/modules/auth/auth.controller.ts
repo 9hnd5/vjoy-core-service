@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { Authorize } from "src/modules/auth/decorators/authorize.decorator";
-import { SameUser } from "src/modules/auth/decorators/same-user.decorator";
+import { AdminOrSameUser } from "src/modules/auth/decorators/admin-or-same-user.decorator";
 import { LoginDTO } from "src/modules/auth/dto/login.dto";
 import { VerifyOTP } from "src/modules/auth/dto/verify-otp.dto";
 import { AuthService } from "./auth.service";
@@ -20,7 +20,7 @@ export class AuthController {
   }
 
   @Get("check-same-user/:userId")
-  @SameUser()
+  @AdminOrSameUser()
   checkSameUser(@Param("userId") userId: unknown) {
     return "User is the same";
   }

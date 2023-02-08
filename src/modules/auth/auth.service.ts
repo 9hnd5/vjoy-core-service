@@ -56,9 +56,9 @@ export class AuthService {
       lastname,
       email,
       roleId,
-      role: { permissions },
+      role: { permissions, code: roleCode },
     } = user;
-    const payload = { userId: id, roleId: roleId };
+    const payload = { userId: id, roleId, roleCode };
     const accessToken = await this.jwtService.signAsync(payload, { secret: this.secret, expiresIn: this.expiresIn });
     return { id, firstname, lastname, email, roleId, permissions, accessToken };
   };
@@ -82,7 +82,7 @@ export class AuthService {
 
   private async loginByPhone(userPhone: string) {
     let payload = {};
-    
+
     const existUser = await this.userModel.findOne({ where: { phone: userPhone }, paranoid: false });
     if (existUser) {
       if (existUser.deletedAt) throw new UnauthorizedException(AUTH_ERROR_MESSAGE.USER_DELETED);
