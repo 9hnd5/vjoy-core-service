@@ -28,9 +28,8 @@ export class AuthorizeGuard implements CanActivate {
 
   private async isAdminOrSameUser(context: ExecutionContext, adminOrSameUser: string) {
     const request = context.switchToHttp().getRequest();
-    const roleIdInToken = request.user.roleId;
-    const role = await this.roleModel.findOne({ where: { id: roleIdInToken } });
-    if (role?.code === ROLE_CODE.ADMIN) return true;
+    const roleCodeInToken = request.user.roleCode;
+    if (roleCodeInToken === ROLE_CODE.ADMIN) return true;
 
     const userIdInToken = request.user.userId;
     const userIdInParams = request.params[adminOrSameUser];
