@@ -2,33 +2,46 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/commo
 import { KidsService } from "./kids.service";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
+import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
+import { Authorize } from "modules/auth/decorators/authorize.decorator";
 
-@Controller("kids")
+@Controller("users")
 export class KidsController {
   constructor(private readonly kidsService: KidsService) {}
 
-  @Post()
-  create(@Body() createKidDto: CreateKidDto) {
+  @AdminOrSameUser()
+  @Post(":userId/kids")
+  createKid(@Body() createKidDto: CreateKidDto) {
     return this.kidsService.create(createKidDto);
   }
 
-  @Get()
-  findAll() {
+  @Authorize({ action: "list", resource: "kids" })
+  @Get("kids")
+  findAllKids() {
     return this.kidsService.findAll();
   }
 
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.kidsService.findOne(+id);
+  @AdminOrSameUser()
+  @Get(":userId/kids")
+  findAllKidsByUser(@Param("userId") userId: number) {
+    return this.kidsService.findAll(userId);
   }
 
-  @Patch(":id")
-  update(@Param("id") id: string, @Body() updateKidDto: UpdateKidDto) {
-    return this.kidsService.update(+id, updateKidDto);
+  @AdminOrSameUser()
+  @Get(":userId/kids/:kidId")
+  findOneKid(@Param("userId") userId: number, @Param("kidId") kidId: number) {
+    return this.kidsService.findOne(userId, kidId);
   }
 
-  @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.kidsService.remove(+id);
+  @AdminOrSameUser()
+  @Patch(":userId/kids/:kidId")
+  updateKid(@Param("userId") userId: number, @Param("kidId") kidId: number, @Body() updateKidDto: UpdateKidDto) {
+    return this.kidsService.update(userId, kidId, updateKidDto);
+  }
+
+  @Authorize({ action: "delete", resource: "kids" })
+  @Delete(":userId/kids/:kidId")
+  removeKid(@Param("kidId") id: number) {
+    return this.kidsService.remove(id);
   }
 }

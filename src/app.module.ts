@@ -1,12 +1,14 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { AuthModule } from "./modules/auth/auth.module";
 import { SequelizeModule } from "@nestjs/sequelize";
+import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
+import { Kid } from "modules/kids/entities/kid.entity";
+import { KidsModule } from "modules/kids/kids.module";
 
-const models = [Role, User];
+const models = [Kid, Role, User];
 
 @Module({
   imports: [
@@ -21,6 +23,7 @@ const models = [Role, User];
       models: [...models],
     }),
     AuthModule,
+    KidsModule,
     UsersModule,
   ],
   controllers: [],
