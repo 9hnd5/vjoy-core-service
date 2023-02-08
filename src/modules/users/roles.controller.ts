@@ -6,7 +6,7 @@ import { RolesService } from "./roles.service";
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
-  @Authorize({ action: "read", resource: "roles" })
+  @Authorize({ action: "list", resource: "roles" })
   @Get()
   findAll() {
     return this.rolesService.findAll();
@@ -14,7 +14,7 @@ export class RolesController {
 
   @Authorize({ action: "read", resource: "roles" })
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.rolesService.findOne(+id);
+  findOne(@Param("id") id: number) {
+    return this.rolesService.findOne(id);
   }
 }
