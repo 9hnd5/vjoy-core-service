@@ -3,3 +3,5 @@ export const USER_STATUS = {
   ACTIVATED: 1,
   DEACTIVED: 2,
 };
+
+export const EXCLUDE_FIELDS = ['password']
