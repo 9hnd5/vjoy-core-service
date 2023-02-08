@@ -2,10 +2,10 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
-import { AUTH_ERROR_MESSAGE, OTP_TOKEN_EXPIRES, ROLE_CODE } from "src/modules/auth/auth.constants";
-import { LoginDTO } from "src/modules/auth/dto/login.dto";
 import { User } from "../users/entities/user.entity";
 import { USER_STATUS } from "../users/users.constants";
+import { AUTH_ERROR_MESSAGE, OTP_TOKEN_EXPIRES, ROLE_CODE } from "./auth.constants";
+import { LoginDTO } from "./dto/login.dto";
 import { Role } from "./entities/role.entity";
 
 @Injectable()
