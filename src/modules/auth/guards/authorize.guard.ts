@@ -15,7 +15,7 @@ export class AuthorizeGuard implements CanActivate {
       context.getClass(),
     ]) satisfies string | undefined;
 
-    if (adminOrSameUser) return this.isSameUser(context, adminOrSameUser);
+    if (adminOrSameUser) return this.isAdminOrSameUser(context, adminOrSameUser);
 
     const permission = this.reflector.getAllAndOverride(AUTHORIZE_KEY, [
       context.getHandler(),
@@ -26,7 +26,7 @@ export class AuthorizeGuard implements CanActivate {
     return this.isHasPermission(context, permission);
   }
 
-  private async isSameUser(context: ExecutionContext, adminOrSameUser: string) {
+  private async isAdminOrSameUser(context: ExecutionContext, adminOrSameUser: string) {
     const request = context.switchToHttp().getRequest();
     const roleIdInToken = request.user.roleId;
     const role = await this.roleModel.findOne({ where: { id: roleIdInToken } });
