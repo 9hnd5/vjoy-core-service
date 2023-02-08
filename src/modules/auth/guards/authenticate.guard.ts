@@ -2,7 +2,7 @@ import { ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
 import { AUTHORIZE_KEY, Permission } from "src/modules/auth/decorators/authorize.decorator";
-import { SAME_USER_KEY } from "src/modules/auth/decorators/same-user.decorator";
+import { ADMIN_OR_SAME_USER_KEY } from "src/modules/auth/decorators/admin-or-same-user.decorator";
 
 @Injectable()
 export class AuthenticateGuard extends AuthGuard("jwt") {
@@ -14,11 +14,11 @@ export class AuthenticateGuard extends AuthGuard("jwt") {
       context.getHandler(),
       context.getClass(),
     ]) satisfies Permission | undefined;
-    const sameUser = this.reflector.getAllAndOverride(SAME_USER_KEY, [
+    const adminOrSameUser = this.reflector.getAllAndOverride(ADMIN_OR_SAME_USER_KEY, [
       context.getHandler(),
       context.getClass(),
     ]) satisfies string | undefined;
-    if (!permission && !sameUser) return true;
+    if (!permission && !adminOrSameUser) return true;
 
     return super.canActivate(context);
   }
