@@ -3,9 +3,9 @@ import { ConfigModule } from "@nestjs/config";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
+import { Kid } from "entities/kid.entity";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
-import { Kid } from "modules/kids/entities/kid.entity";
 import { KidsModule } from "modules/kids/kids.module";
 
 const models = [Kid, Role, User];

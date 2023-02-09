@@ -3,13 +3,11 @@ import { InjectModel } from "@nestjs/sequelize";
 import { Role } from "entities/role.entity";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
-import { Kid } from "./entities/kid.entity";
+import { Kid } from "entities/kid.entity";
 
 @Injectable()
 export class KidsService {
-  constructor(
-    @InjectModel(Kid) private kidModel: typeof Kid,
-  ) {}
+  constructor(@InjectModel(Kid) private kidModel: typeof Kid) {}
 
   async create(createKidDto: CreateKidDto) {
     const rs = await this.kidModel.create({ ...createKidDto });
@@ -17,7 +15,11 @@ export class KidsService {
   }
 
   async findAll(userId?: number, query?, includeDeleted = false) {
-    const rs = await this.kidModel.findAndCountAll<Kid>({ where: userId ? { parentId: userId } : {}, include: Role, paranoid: !includeDeleted });
+    const rs = await this.kidModel.findAndCountAll<Kid>({
+      where: userId ? { parentId: userId } : {},
+      include: Role,
+      paranoid: !includeDeleted,
+    });
     return rs;
   }
 
@@ -27,14 +29,15 @@ export class KidsService {
   }
 
   async update(userId: number, kidId: number, updateUserDto: UpdateKidDto) {
-    await this.kidModel.update({ ...updateUserDto }, { where: { id: kidId, parentId: userId } })
+    await this.kidModel.update({ ...updateUserDto }, { where: { id: kidId, parentId: userId } });
     const rs = await this.kidModel.findByPk(kidId);
     return rs;
   }
 
   async remove(kidId: number) {
-    await this.kidModel.destroy({ where: { id: kidId } })
-      .catch(() => { return false })
+    await this.kidModel.destroy({ where: { id: kidId } }).catch(() => {
+      return false;
+    });
     return true;
   }
 }

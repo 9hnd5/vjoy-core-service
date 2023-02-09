@@ -1,5 +1,5 @@
 
-import { IsDateString, IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 
 class LearningGoalDTO {
@@ -19,7 +19,7 @@ export class CreateKidDto {
   @IsNotEmpty()
   lastname: string;
 
-  @IsDateString()
+  @Matches(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/g, { message: "dob must be a valid YYYY-MM-DD date string"})
   dob: string;
 
   @Matches(/^[FM]$/g, { message: "gender must be M or F" })
