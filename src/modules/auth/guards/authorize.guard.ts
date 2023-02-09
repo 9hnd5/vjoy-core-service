@@ -4,7 +4,7 @@ import { InjectModel } from "@nestjs/sequelize";
 import { ROLE_CODE } from "../auth.constants";
 import { ADMIN_OR_SAME_USER_KEY } from "../decorators/admin-or-same-user.decorator";
 import { AUTHORIZE_KEY, Permission } from "../decorators/authorize.decorator";
-import { Role } from "../entities/role.entity";
+import { Role } from "entities/role.entity";
 
 @Injectable()
 export class AuthorizeGuard implements CanActivate {

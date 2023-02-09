@@ -1,5 +1,5 @@
 import { SetMetadata } from "@nestjs/common";
-import { ActionAttributes, PermissionAttributes } from "../entities/role.entity";
+import { ActionAttributes, PermissionAttributes } from "entities/role.entity";
 
 export const AUTHORIZE_KEY = "AUTHORIZE_KEY";
 export type Permission = Omit<PermissionAttributes, "action"> & {
