@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { AuthModule } from "modules/auth/auth.module";
-import { Role } from "modules/auth/entities/role.entity";
+import { Role } from "entities/role.entity";
+import { User } from "entities/user.entity";
 import { RolesController } from "./roles.controller";
 import { RolesService } from "./roles.service";
-import { User } from "./entities/user.entity";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
 

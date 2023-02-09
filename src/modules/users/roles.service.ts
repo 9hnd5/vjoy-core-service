@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Role } from "modules/auth/entities/role.entity";
+import { Role } from "entities/role.entity";
 
 @Injectable()
 export class RolesService {
   constructor(
     @InjectModel(Role)
-    private roleModel: typeof Role,
+    private roleModel: typeof Role
   ) {}
 
   async findAll() {

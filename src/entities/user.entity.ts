@@ -1,5 +1,4 @@
 import { Optional } from "sequelize";
-import { USER_STATUS } from "../users.constants";
 import {
   Table,
   Column,
@@ -12,7 +11,8 @@ import {
   BelongsTo,
   DeletedAt,
 } from "sequelize-typescript";
-import { Role } from "modules/auth/entities/role.entity";
+import { Role } from "entities/role.entity";
+import { USER_STATUS } from "modules/users/users.constants";
 
 export type UserAttributes = {
   id: number;
