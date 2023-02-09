@@ -33,7 +33,7 @@ export class AuthService {
 
   verifyOTP = async (otpToken: string, otpCode: string) => {
     try {
-      const verifyResult = await this.jwtService.verifyAsync(otpToken, { secret: process.env.JWT_SECRET + otpCode });
+      const verifyResult = await this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.userId },
         attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
@@ -75,7 +75,7 @@ export class AuthService {
     if (!existUser) throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
 
     const isPasswordMatch = existUser.password && (await this.comparePassword(userPassword, existUser.password));
-    if (!isPasswordMatch) return new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
+    if (!isPasswordMatch) throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
 
     return this.generateUserToken(existUser);
   }
