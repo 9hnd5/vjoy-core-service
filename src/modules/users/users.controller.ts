@@ -21,21 +21,21 @@ export class UsersController {
     return this.usersService.findAll(query);
   }
 
-  @AdminOrSameUser("id")
-  @Get(":id")
-  findOne(@Param("id") id: number) {
-    return this.usersService.findOne(id);
+  @AdminOrSameUser()
+  @Get(":userId")
+  findOne(@Param("userId") userId: number) {
+    return this.usersService.findOne(userId);
   }
 
-  @AdminOrSameUser("id")
-  @Patch(":id")
-  update(@Param("id") id: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @AdminOrSameUser()
+  @Patch(":userId")
+  update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(userId, updateUserDto);
   }
 
   @Authorize({ action: "delete", resource: "users" })
-  @Delete(":id")
-  remove(@Param("id") id: number) {
-    return this.usersService.remove(id);
+  @Delete(":userId")
+  remove(@Param("userId") userId: number) {
+    return this.usersService.remove(userId);
   }
 }
