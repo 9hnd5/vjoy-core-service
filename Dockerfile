@@ -16,5 +16,7 @@ COPY . .
 # Creates a "dist" folder with the production build
 RUN npm run build
 
+EXPOSE 8080
+
 # Run the web service on container startup.
 CMD [ "npm", "run", "start:dev" ]
