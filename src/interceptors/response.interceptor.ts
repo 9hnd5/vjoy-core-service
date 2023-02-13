@@ -16,9 +16,13 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         if (err instanceof Error || err instanceof TypeError) error = ({ code: err?.name || 'InternalServerException', message: err?.message || 'Something went wrong'});
         if (err instanceof UnprocessableEntityException) {
           const errRes: any = err.getResponse();
-          error = errRes.message.map(e => {
-            const constraint: any = e.constraints;
-            return ({ code: e.property, message: Object.values(constraint)[0] })
+          const errArr = this.flattenChildren(errRes.message);
+          error = [];
+          errArr.forEach(e => {
+            if(e.constraints !== undefined) {
+              const constraints: any = e.constraints;
+              error.push({ code: e.property, message: Object.values(constraints)[0] })
+            }
           })
         }
         
@@ -30,5 +34,12 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         )}
       ))
     );
+  }
+
+  private flattenChildren(arr: any): any {
+    return arr.flatMap(({ children, ...o }: { children: any; o: any }) => [
+      o,
+      ...this.flattenChildren(children),
+    ])
   }
 }
