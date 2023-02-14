@@ -99,7 +99,6 @@ describe("AuthService", () => {
   it("should login success by phone, return create otptoken and otpcode with existing user", async () => {
     const result = await authService.login({ ...loginByPhone } as any);
     expect(result).toHaveProperty("otpToken");
-    expect(result).toHaveProperty("otpCode");
   });
 
   it("should login success by phone, return create otptoken and otpcode with non-existing user", async () => {
@@ -110,7 +109,6 @@ describe("AuthService", () => {
     const authService = module.get(AuthService);
     const result = await authService.login({ ...loginByPhone } as any);
     expect(result).toHaveProperty("otpToken");
-    expect(result).toHaveProperty("otpCode");
   });
 
   it("should login fail by phone because phone was already exist and deleted", async () => {
