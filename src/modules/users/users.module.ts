@@ -7,9 +7,11 @@ import { RolesController } from "./roles.controller";
 import { RolesService } from "./roles.service";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
+import { JwtModule } from "@nestjs/jwt";
+import { SMSModule } from "modules/sms/sms.module";
 
 @Module({
-  imports: [AuthModule, SequelizeModule.forFeature([Role, User])],
+  imports: [AuthModule, JwtModule.register({}), SMSModule, SequelizeModule.forFeature([Role, User])],
   controllers: [RolesController, UsersController],
   providers: [RolesService, UsersService],
 })
