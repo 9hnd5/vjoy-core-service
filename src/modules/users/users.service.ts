@@ -1,5 +1,4 @@
-import { Injectable, NotAcceptableException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { AuthService } from "modules/auth/auth.service";
 import { Role } from "entities/role.entity";
@@ -9,22 +8,19 @@ import { User } from "entities/user.entity";
 import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
 import { Op } from "sequelize";
 import { generateNumber } from "utils/helpers";
-import { OTP_TOKEN_EXPIRES } from "utils/constants";
 import { SMSService } from "modules/sms/sms.service";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common/exceptions";
+import { AUTH_ERROR_MESSAGE } from "modules/auth/auth.constants";
 
 @Injectable()
 export class UsersService {
-  private secret: string;
 
   constructor(
     @InjectModel(User) private userModel: typeof User,
 
     private readonly authService: AuthService,
-    private jwtService: JwtService,
     private smsService: SMSService,
-  ) {
-    this.secret = process.env.JWT_SECRET || "";
-  }
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const pass = await this.authService.createPassword(`${generateNumber(6)}`);
@@ -70,12 +66,18 @@ export class UsersService {
           ]
         }, 
         paranoid: false });
-      if (existUser) return errorCode;
+      if (existUser) { 
+        switch (errorCode) {
+          case -1: throw new BadRequestException("Email already exists");
+          case -2: throw new BadRequestException("Phone already exists");
+          case -3: throw new BadRequestException("Email or Phone already exists");
+        }
+      }
 
       otpCode = this.authService.generateOTPCode();
     }
     
-    await this.userModel.update({ ...othersdata }, { where: { id: id } });
+    await this.userModel.update(othersdata, { where: { id: id } });
     const rs = await this.userModel.findByPk(id, { attributes: { exclude: EXCLUDE_FIELDS } });
     if (otpCode !== undefined) {
       if (rs?.phone) this.smsService.send(rs.phone, `Ma OTP cua quy khach la ${otpCode}`);
@@ -92,7 +94,7 @@ export class UsersService {
       const rs = await this.userModel.update({ email: verifyResult.email, phone: verifyResult.phone }, { where: { id: verifyResult.userId }, returning: true });
       return rs[1][0].get();
     } catch {
-      throw new NotAcceptableException("Invalid credendial");
+      throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
     }
   }
 

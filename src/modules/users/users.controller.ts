@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, BadRequestException } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from "@nestjs/common";
 import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
 import { UsersService } from "./users.service";
@@ -30,12 +30,8 @@ export class UsersController {
 
   @AdminOrSameUser()
   @Patch(":userId")
-  async update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
-    const rs = await this.usersService.update(userId, updateUserDto);
-    if (rs === -1) throw new BadRequestException("Email already exists");
-    if (rs === -2) throw new BadRequestException("Phone already exists");
-    if (rs === -3) throw new BadRequestException("Email or Phone already exists");
-    return rs;
+  update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(userId, updateUserDto);
   }
 
   @Authorize({ action: "delete", resource: "users" })
