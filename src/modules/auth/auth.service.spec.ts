@@ -1,8 +1,11 @@
-import { JwtService } from "@nestjs/jwt";
+import { ConfigService } from "@nestjs/config";
+import { JwtModule, JwtService } from "@nestjs/jwt";
 import { getModelToken } from "@nestjs/sequelize";
 import { Test, TestingModuleBuilder } from "@nestjs/testing";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
+import { SMSModule } from "modules/sms/sms.module";
+import { SMSService } from "modules/sms/sms.service";
 import { USER_STATUS } from "modules/users/users.constants";
 import { AUTH_ERROR_MESSAGE } from "./auth.constants";
 import { AuthService } from "./auth.service";
@@ -10,6 +13,7 @@ import { AuthService } from "./auth.service";
 describe("AuthService", () => {
   let authService: AuthService;
   let jwtService: JwtService;
+  let smsService: SMSService;
   let moduleBuilder: TestingModuleBuilder;
   const loginByEmail = {
     type: "email",
@@ -18,7 +22,7 @@ describe("AuthService", () => {
   };
   const loginByPhone = {
     type: "phone",
-    phone: "0931337283",
+    phone: "0931335283",
   };
   const mockRole = {
     id: 1,
@@ -27,7 +31,7 @@ describe("AuthService", () => {
     id: 1,
     firstname: "Nguyen",
     lastname: "Huy",
-    phone: "0931337283",
+    phone: "0931335283",
     email: "huy.nguyendinh@vus-etsc.edu.vn",
     roleId: 1,
     role: {
@@ -47,9 +51,15 @@ describe("AuthService", () => {
 
   beforeEach(async () => {
     moduleBuilder = Test.createTestingModule({
+      imports: [SMSModule, JwtModule],
       providers: [
         AuthService,
-        JwtService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (param: string) => param,
+          },
+        },
         {
           provide: getModelToken(User),
           useValue: {
@@ -69,8 +79,9 @@ describe("AuthService", () => {
     });
 
     const module = await moduleBuilder.compile();
-    authService = module.get<AuthService>(AuthService);
-    jwtService = module.get<JwtService>(JwtService);
+    authService = module.get(AuthService);
+    smsService = module.get(SMSService);
+    jwtService = module.get(JwtService);
   });
 
   it("should login success by email", async () => {
@@ -96,19 +107,22 @@ describe("AuthService", () => {
     await expect(login).rejects.toThrow(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
   });
 
-  it("should login success by phone, return create otptoken and otpcode with existing user", async () => {
+  it("should login success by phone, return create otptoken with existing user", async () => {
+    jest.spyOn(smsService, "send").mockResolvedValue(true);
     const result = await authService.login({ ...loginByPhone } as any);
-    expect(result).toHaveProperty("otpToken");
+    expect(result).not.toBeNull();
   });
 
-  it("should login success by phone, return create otptoken and otpcode with non-existing user", async () => {
+  it("should login success by phone, return create otptoken with non-existing user", async () => {
     const module = await moduleBuilder
       .overrideProvider(getModelToken(User))
       .useValue({ findOne: () => null, create: () => ({ phone: loginByPhone.phone }) })
       .compile();
     const authService = module.get(AuthService);
+    const smsService = module.get(SMSService);
+    jest.spyOn(smsService, "send").mockResolvedValue(true);
     const result = await authService.login({ ...loginByPhone } as any);
-    expect(result).toHaveProperty("otpToken");
+    expect(result).not.toBeNull();
   });
 
   it("should login fail by phone because phone was already exist and deleted", async () => {
@@ -138,21 +152,23 @@ describe("AuthService", () => {
   });
 
   it("should verify otp success", async () => {
-    const loginResult = (await authService.login({ ...loginByPhone } as any)) as any;
+    jest.spyOn(smsService, "send").mockResolvedValue(true);
+    const otpToken = (await authService.login({ ...loginByPhone } as any)) as any;
+    jest.spyOn(authService, "verifyOTPToken").mockResolvedValue("");
     jest.spyOn(jwtService, "signAsync").mockResolvedValue("accessToken");
-    const result = await authService.verifyOTP(loginResult.otpToken, loginResult.otpCode);
+    const result = await authService.verifyOTP(otpToken, "1234");
     expect(result).toEqual(mockUserToken);
   });
 
   it("should verify otp fail wrong otpCode", async () => {
-    const loginResult = (await authService.login({ ...loginByPhone } as any)) as any;
-    const login = () => authService.verifyOTP(loginResult.otpToken, "wrong otpCode");
+    jest.spyOn(smsService, "send").mockResolvedValue(true);
+    const otpToken = (await authService.login({ ...loginByPhone } as any)) as any;
+    const login = () => authService.verifyOTP(otpToken, "wrong otpCode");
     await expect(login).rejects.toThrow(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
   });
 
   it("should verify otp fail wrong otpToken", async () => {
-    const loginResult = (await authService.login({ ...loginByPhone } as any)) as any;
-    const login = () => authService.verifyOTP("wrong otpToken", loginResult.otpCode);
+    const login = () => authService.verifyOTP("wrong otpToken", "1234");
     await expect(login).rejects.toThrow(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
   });
 });
