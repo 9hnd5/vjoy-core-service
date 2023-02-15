@@ -1,9 +1,11 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
+import { SMSService } from "modules/sms/sms.service";
 import { USER_STATUS } from "../users/users.constants";
 import { AUTH_ERROR_MESSAGE, OTP_TOKEN_EXPIRES, ROLE_CODE } from "./auth.constants";
 import { LoginDTO } from "./dto/login.dto";
@@ -13,12 +15,14 @@ export class AuthService {
   private expiresIn: string;
   private secret: string;
   constructor(
+    configService: ConfigService,
     private jwtService: JwtService,
+    private smsService: SMSService,
     @InjectModel(User) private userModel: typeof User,
     @InjectModel(Role) private roleModel: typeof Role
   ) {
-    this.expiresIn = process.env.JWT_EXPIRES || "";
-    this.secret = process.env.JWT_SECRET || "";
+    this.expiresIn = configService.get("JWT_EXPIRES") || "";
+    this.secret = configService.get("JWT_SECRET") || "";
   }
 
   login(data: LoginDTO) {
@@ -33,7 +37,7 @@ export class AuthService {
 
   verifyOTP = async (otpToken: string, otpCode: string) => {
     try {
-      const verifyResult = await this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
+      const verifyResult = await this.verifyOTPToken(otpCode, otpToken);
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.userId },
         attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
@@ -47,7 +51,17 @@ export class AuthService {
     }
   };
 
-  private generateOTP = () => `${Math.floor(Math.random() * 9000) + 1000}`; // 4 digits;
+  generateOTPToken = (otpCode: string, payload: Record<string, any>) => {
+    return this.jwtService.signAsync(payload, {
+      secret: this.secret + otpCode,
+      expiresIn: OTP_TOKEN_EXPIRES,
+    });
+  };
+
+  verifyOTPToken = (otpCode: string, otpToken: string) =>
+    this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
+
+  generateOTPCode = () => `${Math.floor(Math.random() * 9000) + 1000}`; // 4 digits;
 
   private generateUserToken = async (user: User) => {
     const {
@@ -95,11 +109,8 @@ export class AuthService {
       payload = { userId: newUser.id, roleId: newUser.roleId };
     }
 
-    const otpCode = this.generateOTP();
-    const otpToken = await this.jwtService.signAsync(payload, {
-      secret: this.secret + otpCode,
-      expiresIn: OTP_TOKEN_EXPIRES,
-    });
-    return { otpToken, otpCode };
+    const otpCode = this.generateOTPCode();
+    this.smsService.send(userPhone, otpCode);
+    return this.generateOTPToken(otpCode, payload);
   }
 }
