@@ -8,6 +8,7 @@ import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
 import { KidsModule } from "modules/kids/kids.module";
 import { SequelizeOptions } from "utils/sequelize-options";
+import { SMSModule } from "modules/sms/sms.module";
 
 const models = [Kid, Role, User];
 
@@ -19,6 +20,7 @@ const models = [Kid, Role, User];
     AuthModule,
     KidsModule,
     UsersModule,
+    SMSModule
   ],
   controllers: [],
   providers: [],
