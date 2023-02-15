@@ -1,67 +1,49 @@
-import { Test, TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import {
   INestApplication,
-  HttpStatus,
-  ValidationError,
-  ValidationPipe,
-  UnprocessableEntityException,
+  HttpStatus
 } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { SequelizeModule } from "@nestjs/sequelize";
 import * as request from "supertest";
-import { AuthModule } from "./auth.module";
-import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
-import { SequelizeOptions } from "utils/sequelize-options";
-import { ResponseInterceptor } from "interceptors/response.interceptor";
-import { Sequelize } from "sequelize";
+import { AppModule } from "app.module";
+import { Op } from "sequelize";
 
-const models = [Role, User];
-
-describe("AuthService (e2e)", () => {
+jest.setTimeout(10000);
+describe("Auth (e2e)", () => {
   let app: INestApplication;
-  let testModule: TestingModule;
-  let sequelize;
+  let userModel: typeof User;
   let verifySuccess;
   const user = {
-    email: "test@gmail.com", 
+    firstname: "test",
+    lastname: "nguyen van",
+    email: "test@vus-etsc.edu.vn", 
     password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK", 
     phone: "0366033333",
-    roleId: 4,
+    roleId: 1,
     status: 1
   };
 
   beforeAll(async () => {
-    testModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ envFilePath: `./env/.dev.env` }),
-        SequelizeModule.forFeature(models),
-        SequelizeModule.forRoot(SequelizeOptions()),
-        AuthModule,
-      ]
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule]
     }).compile();
 
-    app = testModule.createNestApplication();
-    app.useGlobalInterceptors(new ResponseInterceptor());
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        exceptionFactory(errors: ValidationError[]) {
-          return new UnprocessableEntityException(errors);
-        },
-      })
-    );
+    app = moduleRef.createNestApplication();
     await app.init();
 
-    sequelize = new Sequelize(SequelizeOptions());
-    await sequelize.query(`INSERT users (email, password, phone, roleId, status) VALUES('${user.email}', '${user.password}', '${user.phone}', ${user.roleId}, ${user.status})`);
+    userModel = moduleRef.get("UserRepository");
+    await userModel.create(user);
   });
 
   afterAll(async () => {
-    await sequelize.query(`DELETE FROM users WHERE email='${user.email}' or phone='123456789'`)
+    await userModel.destroy({
+      where: {
+        [Op.or]: [{ email: "test@vus-etsc.edu.vn" }, { phone: '123456789' }],
+      },
+      force: true,
+    });
 
     await app.close();
-    await testModule.close();
   });
 
   it("/auth/login (POST by email)", () => {
