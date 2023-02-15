@@ -1,18 +1,18 @@
-import { Optional } from "sequelize";
-import {
-  Table,
-  Column,
-  Model,
-  DataType,
-  Default,
-  CreatedAt,
-  UpdatedAt,
-  ForeignKey,
-  BelongsTo,
-  DeletedAt,
-} from "sequelize-typescript";
 import { Role } from "entities/role.entity";
 import { USER_STATUS } from "modules/users/users.constants";
+import { Optional } from "sequelize";
+import {
+  BelongsTo,
+  Column,
+  CreatedAt,
+  DataType,
+  Default,
+  DeletedAt,
+  ForeignKey,
+  Model,
+  Table,
+  UpdatedAt,
+} from "sequelize-typescript";
 
 export type UserAttributes = {
   id: number;
@@ -42,21 +42,21 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   @Column(DataType.STRING(255))
   lastname?: string;
 
-  @Column(DataType.STRING(255))
+  @Column({ type: DataType.STRING(255), unique: true })
   email?: string;
 
-  @Column(DataType.STRING(255))
+  @Column({ type: DataType.STRING(255), unique: true })
   phone?: string;
 
   @Column(DataType.STRING(255))
   password?: string;
 
   @Default(USER_STATUS.NEW)
-  @Column(DataType.TINYINT)
+  @Column({ type: DataType.INTEGER, allowNull: false })
   status: number;
 
   @ForeignKey(() => Role)
-  @Column(DataType.TINYINT)
+  @Column({ type: DataType.INTEGER, allowNull: false })
   roleId: number;
 
   @BelongsTo(() => Role)
@@ -69,14 +69,11 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   socialId?: string;
 
   @CreatedAt
-  @Column
   createdAt: Date;
 
   @UpdatedAt
-  @Column
   updatedAt: Date;
 
   @DeletedAt
-  @Column
-  deletedAt: Date;
+  deletedAt?: Date;
 }

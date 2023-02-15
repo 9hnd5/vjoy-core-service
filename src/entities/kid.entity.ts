@@ -1,17 +1,17 @@
-import { Optional } from "sequelize";
-import {
-  Table,
-  Column,
-  Model,
-  DataType,
-  CreatedAt,
-  UpdatedAt,
-  ForeignKey,
-  BelongsTo,
-  DeletedAt,
-} from "sequelize-typescript";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
+import { Optional } from "sequelize";
+import {
+  BelongsTo,
+  Column,
+  CreatedAt,
+  DataType,
+  DeletedAt,
+  ForeignKey,
+  Model,
+  Table,
+  UpdatedAt,
+} from "sequelize-typescript";
 
 export type LearningGoalAttributes = {
   d?: number;
@@ -42,24 +42,24 @@ type KidCreationAttributes = Optional<KidAttributes, "id" | "createdAt" | "updat
 export class Kid extends Model<KidAttributes, KidCreationAttributes> {
   id: number;
 
-  @Column(DataType.STRING(255))
+  @Column({ type: DataType.STRING(255), allowNull: false })
   firstname: string;
 
-  @Column(DataType.STRING(255))
+  @Column({ type: DataType.STRING(255), allowNull: false })
   lastname: string;
 
-  @Column(DataType.STRING(255))
+  @Column({ type: DataType.STRING(255), allowNull: false })
   dob: string;
 
-  @Column(DataType.STRING(1))
+  @Column({ type: DataType.STRING(1), allowNull: false })
   gender: string;
 
   @ForeignKey(() => User)
-  @Column(DataType.BIGINT)
+  @Column({ allowNull: false })
   parentId: number;
 
   @ForeignKey(() => Role)
-  @Column(DataType.TINYINT)
+  @Column({ type: DataType.INTEGER, allowNull: false })
   roleId: number;
 
   @BelongsTo(() => Role)
@@ -76,19 +76,16 @@ export class Kid extends Model<KidAttributes, KidCreationAttributes> {
 
   @Column(DataType.STRING(255))
   buddyName?: string;
-  
-  @Column(DataType.JSON)
+
+  @Column(DataType.JSONB)
   learningGoal?: LearningGoalAttributes;
-  
+
   @CreatedAt
-  @Column
   createdAt: Date;
 
   @UpdatedAt
-  @Column
   updatedAt: Date;
 
   @DeletedAt
-  @Column
-  deletedAt: Date;
+  deletedAt?: Date;
 }
