@@ -7,20 +7,32 @@ import * as request from "supertest";
 import { User } from "entities/user.entity";
 import { AppModule } from "app.module";
 import { Op } from "sequelize";
+import { USER_STATUS } from "modules/users/users.constants";
 
-jest.setTimeout(10000);
 describe("Auth (e2e)", () => {
   let app: INestApplication;
   let userModel: typeof User;
   let verifySuccess;
   const user = {
-    firstname: "test",
-    lastname: "nguyen van",
-    email: "test@vus-etsc.edu.vn", 
+    email: "api-test@vus-etsc.edu.vn", 
     password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK", 
     phone: "0366033333",
     roleId: 1,
-    status: 1
+    status: USER_STATUS.ACTIVATED
+  };
+
+  const userDeactived = {
+    email: "api-test-deactived@vus-etsc.edu.vn", 
+    phone: "0366033334",
+    roleId: 1,
+    status: USER_STATUS.DEACTIVED
+  };
+
+  const userDeleted = {
+    email: "api-test-deleted@vus-etsc.edu.vn", 
+    phone: "0366033335",
+    roleId: 1,
+    status: USER_STATUS.ACTIVATED
   };
 
   beforeAll(async () => {
@@ -32,13 +44,14 @@ describe("Auth (e2e)", () => {
     await app.init();
 
     userModel = moduleRef.get("UserRepository");
-    await userModel.create(user);
+    await userModel.bulkCreate([user, userDeactived, userDeleted]);
+    await userModel.destroy({ where: { email: "api-test-deleted@vus-etsc.edu.vn" } });
   });
 
   afterAll(async () => {
     await userModel.destroy({
       where: {
-        [Op.or]: [{ email: "test@vus-etsc.edu.vn" }, { phone: '123456789' }],
+        [Op.or]: [{ email: { [Op.like]: "api-test%@vus-etsc.edu.vn" } }, { phone: '123456789' }],
       },
       force: true,
     });
@@ -68,7 +81,7 @@ describe("Auth (e2e)", () => {
   it("should not login by email if user not exist", () => {
     const loginDTO = {
       type: "email",
-      email: "a@mail.com",
+      email: "a@vus-etsc.edu.vn",
       password: "123456",
     };
 
@@ -140,7 +153,7 @@ describe("Auth (e2e)", () => {
   it("should not login by phone if user deleted", () => {
     const loginDTO = {
       type: "phone",
-      phone: "0388849503",
+      phone: "0366033335",
     };
 
     return request(app.getHttpServer())
@@ -157,7 +170,7 @@ describe("Auth (e2e)", () => {
   it("should not login by phone if user deactived", () => {
     const loginDTO = {
       type: "phone",
-      phone: "0388849504",
+      phone: "0366033334",
     };
 
     return request(app.getHttpServer())
