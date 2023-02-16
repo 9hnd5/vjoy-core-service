@@ -5,10 +5,10 @@ import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
-import { SMSService } from "modules/sms/sms.service";
+import { SmsService } from "modules/sms/sms.service";
 import { USER_STATUS } from "../users/users.constants";
 import { AUTH_ERROR_MESSAGE, OTP_TOKEN_EXPIRES, ROLE_CODE } from "./auth.constants";
-import { LoginDTO } from "./dto/login.dto";
+import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
 export class AuthService {
@@ -17,7 +17,7 @@ export class AuthService {
   constructor(
     configService: ConfigService,
     private jwtService: JwtService,
-    private smsService: SMSService,
+    private smsService: SmsService,
     @InjectModel(User) private userModel: typeof User,
     @InjectModel(Role) private roleModel: typeof Role
   ) {
@@ -25,7 +25,7 @@ export class AuthService {
     this.secret = configService.get("JWT_SECRET") || "";
   }
 
-  login(data: LoginDTO) {
+  login(data: LoginDto) {
     const { type, email, password, phone } = data;
     if (type === "email") return this.loginByEmail(email, password);
     return this.loginByPhone(phone);

@@ -3,7 +3,7 @@ import { HttpException, Injectable } from "@nestjs/common";
 import { catchError, firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class SMSService {
+export class SmsService {
   constructor(
     private readonly httpService: HttpService
   ) {}
