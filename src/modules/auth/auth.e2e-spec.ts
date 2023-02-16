@@ -1,67 +1,62 @@
-import { Test, TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
 import {
   INestApplication,
-  HttpStatus,
-  ValidationError,
-  ValidationPipe,
-  UnprocessableEntityException,
+  HttpStatus
 } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { SequelizeModule } from "@nestjs/sequelize";
 import * as request from "supertest";
-import { AuthModule } from "./auth.module";
-import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
-import { SequelizeOptions } from "utils/sequelize-options";
-import { ResponseInterceptor } from "interceptors/response.interceptor";
-import { Sequelize } from "sequelize";
+import { AppModule } from "app.module";
+import { Op } from "sequelize";
+import { USER_STATUS } from "modules/users/users.constants";
 
-const models = [Role, User];
-
-describe("AuthService (e2e)", () => {
+describe("Auth (e2e)", () => {
   let app: INestApplication;
-  let testModule: TestingModule;
-  let sequelize;
+  let userModel: typeof User;
   let verifySuccess;
   const user = {
-    email: "test@gmail.com", 
+    email: "api-test@vus-etsc.edu.vn", 
     password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK", 
     phone: "0366033333",
-    roleId: 4,
-    status: 1
+    roleId: 1,
+    status: USER_STATUS.ACTIVATED
+  };
+
+  const userDeactived = {
+    email: "api-test-deactived@vus-etsc.edu.vn", 
+    phone: "0366033334",
+    roleId: 1,
+    status: USER_STATUS.DEACTIVED
+  };
+
+  const userDeleted = {
+    email: "api-test-deleted@vus-etsc.edu.vn", 
+    phone: "0366033335",
+    roleId: 1,
+    status: USER_STATUS.ACTIVATED
   };
 
   beforeAll(async () => {
-    testModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ envFilePath: `./env/.dev.env` }),
-        SequelizeModule.forFeature(models),
-        SequelizeModule.forRoot(SequelizeOptions()),
-        AuthModule,
-      ]
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule]
     }).compile();
 
-    app = testModule.createNestApplication();
-    app.useGlobalInterceptors(new ResponseInterceptor());
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        exceptionFactory(errors: ValidationError[]) {
-          return new UnprocessableEntityException(errors);
-        },
-      })
-    );
+    app = moduleRef.createNestApplication();
     await app.init();
 
-    sequelize = new Sequelize(SequelizeOptions());
-    await sequelize.query(`INSERT users (email, password, phone, roleId, status) VALUES('${user.email}', '${user.password}', '${user.phone}', ${user.roleId}, ${user.status})`);
+    userModel = moduleRef.get("UserRepository");
+    await userModel.bulkCreate([user, userDeactived, userDeleted]);
+    await userModel.destroy({ where: { email: "api-test-deleted@vus-etsc.edu.vn" } });
   });
 
   afterAll(async () => {
-    await sequelize.query(`DELETE FROM users WHERE email='${user.email}' or phone='123456789'`)
+    await userModel.destroy({
+      where: {
+        [Op.or]: [{ email: { [Op.like]: "api-test%@vus-etsc.edu.vn" } }, { phone: '123456789' }],
+      },
+      force: true,
+    });
 
     await app.close();
-    await testModule.close();
   });
 
   it("/auth/login (POST by email)", () => {
@@ -86,7 +81,7 @@ describe("AuthService (e2e)", () => {
   it("should not login by email if user not exist", () => {
     const loginDTO = {
       type: "email",
-      email: "a@mail.com",
+      email: "a@vus-etsc.edu.vn",
       password: "123456",
     };
 
@@ -158,7 +153,7 @@ describe("AuthService (e2e)", () => {
   it("should not login by phone if user deleted", () => {
     const loginDTO = {
       type: "phone",
-      phone: "0388849503",
+      phone: "0366033335",
     };
 
     return request(app.getHttpServer())
@@ -175,7 +170,7 @@ describe("AuthService (e2e)", () => {
   it("should not login by phone if user deactived", () => {
     const loginDTO = {
       type: "phone",
-      phone: "0388849504",
+      phone: "0366033334",
     };
 
     return request(app.getHttpServer())
