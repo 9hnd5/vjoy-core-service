@@ -27,9 +27,8 @@ export class UsersService {
   }
 
   async findAll(query?, includeDeleted = false) {
-    const obj: any = transformQueries(query, ['firstname', 'lastname', 'email', 'phone', 'provider']);
+    const obj: any = transformQueries(query);
     const rs = await this.userModel.findAndCountAll<User>({
-      where: obj.filters,
       ...obj.pagination,
       order: obj.sort,
       attributes: { exclude: EXCLUDE_FIELDS },
