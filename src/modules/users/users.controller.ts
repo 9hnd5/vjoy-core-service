@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from "@nestjs/common";
+import { Get, Post, Body, Patch, Param, Delete, Query } from "@nestjs/common";
 import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { Controller } from "decorators/controller.decorator";
 
 @Controller("users")
 export class UsersController {
@@ -17,7 +18,7 @@ export class UsersController {
 
   @Authorize({ action: "list", resource: "users" })
   @Get()
-  findAll(@Query() query) {    
+  findAll(@Query() query) {
     return this.usersService.findAll(query);
   }
 

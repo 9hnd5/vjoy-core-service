@@ -1,13 +1,12 @@
-
-import { IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
+import { IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
 
 class LearningGoalDto {
   @IsNumber()
   @IsOptional()
   d?: number;
 
-  @IsNumber({}, {each: true}) 
+  @IsNumber({}, { each: true })
   @IsOptional()
   w?: number[];
 }
@@ -19,10 +18,12 @@ export class CreateKidDto {
   @IsNotEmpty()
   lastname: string;
 
-  @Matches(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/g, { message: "dob must be a valid YYYY-MM-DD date string"})
+  @Matches(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/, {
+    message: "dob must be a valid YYYY-MM-DD date string",
+  })
   dob: string;
 
-  @Matches(/^[FM]$/g, { message: "gender must be M or F" })
+  @Matches(/^[FM]$/, { message: "gender must be M or F" })
   gender: string;
 
   @IsNumber()
@@ -42,7 +43,7 @@ export class CreateKidDto {
 
   @IsOptional()
   buddyName?: string;
-  
+
   @IsOptional()
   @ValidateNested()
   @Type(() => LearningGoalDto)

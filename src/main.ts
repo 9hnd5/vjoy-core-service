@@ -5,6 +5,8 @@ import { AppModule } from "./app.module";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.enableVersioning();
+  app.setGlobalPrefix("api");
   const config = new DocumentBuilder()
     .setTitle("Vjoy-Core")
     .setDescription("The documentation vjoy-core")
