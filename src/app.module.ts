@@ -4,7 +4,7 @@ import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { ResponseInterceptor } from "interceptors/response.interceptor";
 import { KidsModule } from "modules/kids/kids.module";
-import { SMSModule } from "modules/sms/sms.module";
+import { SmsModule } from "modules/sms/sms.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -46,7 +46,7 @@ const validationProvider = {
     AuthModule,
     KidsModule,
     UsersModule,
-    SMSModule
+    SmsModule
   ],
   controllers: [],
   providers: [responseProvider, validationProvider],

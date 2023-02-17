@@ -2,7 +2,7 @@
 import { IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 
-class LearningGoalDTO {
+class LearningGoalDto {
   @IsNumber()
   @IsOptional()
   d?: number;
@@ -45,6 +45,6 @@ export class CreateKidDto {
   
   @IsOptional()
   @ValidateNested()
-  @Type(() => LearningGoalDTO)
-  learningGoal?: LearningGoalDTO;
+  @Type(() => LearningGoalDto)
+  learningGoal?: LearningGoalDto;
 }

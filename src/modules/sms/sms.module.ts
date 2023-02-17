@@ -1,10 +1,10 @@
 import { HttpModule } from "@nestjs/axios";
 import { Module } from "@nestjs/common";
-import { SMSService } from "./sms.service";
+import { SmsService } from "./sms.service";
 
 @Module({
   imports: [HttpModule],
-  providers: [SMSService],
-  exports: [SMSService]
+  providers: [SmsService],
+  exports: [SmsService]
 })
-export class SMSModule {}
+export class SmsModule {}

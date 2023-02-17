@@ -2,15 +2,15 @@ import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { AdminOrSameUser } from "./decorators/admin-or-same-user.decorator";
 import { Authorize } from "./decorators/authorize.decorator";
-import { LoginDTO } from "./dto/login.dto";
-import { VerifyOTP } from "./dto/verify-otp.dto";
+import { LoginDto } from "./dto/login.dto";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("login")
-  login(@Body() data: LoginDTO) {
+  login(@Body() data: LoginDto) {
     return this.authService.login(data);
   }
   @Authorize({ action: "read", resource: "live_sessions" })
@@ -26,7 +26,7 @@ export class AuthController {
   }
 
   @Post("otp")
-  verifyOTP(@Body() data: VerifyOTP) {
+  verifyOTP(@Body() data: VerifyOtpDto) {
     return this.authService.verifyOTP(data.otpToken, data.otpCode);
   }
 }

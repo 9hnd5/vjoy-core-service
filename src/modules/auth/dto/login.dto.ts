@@ -2,7 +2,7 @@ import { Exclude, Expose } from "class-transformer";
 import { IsEmail, IsNotEmpty, IsString, ValidateIf } from "class-validator";
 
 @Exclude()
-export class LoginDTO {
+export class LoginDto {
   @Expose()
   @IsNotEmpty()
   type: "email" | "phone";
