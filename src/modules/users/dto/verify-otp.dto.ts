@@ -2,7 +2,7 @@ import { Exclude, Expose } from "class-transformer";
 import { IsNotEmpty, IsNumberString, IsString } from "class-validator";
 
 @Exclude()
-export class VerifyOTP {
+export class VerifyOtpDto {
   @Expose()
   @IsNumberString()
   otpCode: string;

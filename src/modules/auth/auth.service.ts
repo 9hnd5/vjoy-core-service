@@ -6,6 +6,7 @@ import * as bcrypt from "bcrypt";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
 import { SmsService } from "modules/sms/sms.service";
+import { SMS_TEMPLATE } from "utils/constants";
 import { USER_STATUS } from "../users/users.constants";
 import { AUTH_ERROR_MESSAGE, OTP_TOKEN_EXPIRES, ROLE_CODE } from "./auth.constants";
 import { LoginDto } from "./dto/login.dto";
@@ -110,7 +111,7 @@ export class AuthService {
     }
 
     const otpCode = this.generateOTPCode();
-    this.smsService.send(userPhone, otpCode);
+    this.smsService.send(userPhone, eval("`" + SMS_TEMPLATE.OTP + "`"));
     return this.generateOTPToken(otpCode, payload);
   }
 }

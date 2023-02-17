@@ -5,7 +5,7 @@ import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { Controller } from "decorators/controller.decorator";
-import { VerifyOTP } from "./dto/verify-otp.dto";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("users")
 export class UsersController {
@@ -31,10 +31,8 @@ export class UsersController {
 
   @AdminOrSameUser()
   @Patch(":userId")
-  async update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
-    const rs = await this.usersService.update(userId, updateUserDto);
-    if (rs === -1) throw new BadRequestException("Email or Phone already exists");
-    return rs;
+  update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(userId, updateUserDto);
   }
 
   @Authorize({ action: "delete", resource: "users" })
@@ -44,7 +42,7 @@ export class UsersController {
   }
 
   @Post("otp")
-  verifyOTP(@Body() data: VerifyOTP) {
-    return this.usersService.verifyOTP(data.otpCode, data.otpToken);
+  verifyOTP(@Body() data: VerifyOtpDto) {
+    return this.usersService.verifyOtp(data.otpCode, data.otpToken);
   }
 }
