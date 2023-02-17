@@ -12,7 +12,7 @@ const isNestControllerOption = (param: NestControllerOption | string | string[])
  * The default API version is 1. Use the version option to specify the new version
  */
 export function Controller(options?: ControllerOption) {
-  if (!options) return applyDecorators(NestController());
+  if (!options) return applyDecorators(NestController({ path: `${process.env.NODE_ENV}/core/`, version: "1" }));
 
   if (!isNestControllerOption(options)) {
     const mapPath =

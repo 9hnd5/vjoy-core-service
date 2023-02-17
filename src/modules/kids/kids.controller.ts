@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
+import { Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
 import { KidsService } from "./kids.service";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
 import { Authorize } from "modules/auth/decorators/authorize.decorator";
+import { Controller } from "decorators/controller.decorator";
 
 @Controller()
 export class KidsController {
