@@ -7,9 +7,10 @@ import { RolesController } from "./roles.controller";
 import { RolesService } from "./roles.service";
 import { UsersController } from "./users.controller";
 import { UsersService } from "./users.service";
+import { SmsModule } from "modules/sms/sms.module";
 
 @Module({
-  imports: [AuthModule, SequelizeModule.forFeature([Role, User])],
+  imports: [AuthModule, SmsModule, SequelizeModule.forFeature([Role, User])],
   controllers: [RolesController, UsersController],
   providers: [RolesService, UsersService],
 })

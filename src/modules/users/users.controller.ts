@@ -5,6 +5,7 @@ import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { Controller } from "decorators/controller.decorator";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("users")
 export class UsersController {
@@ -38,5 +39,10 @@ export class UsersController {
   @Delete(":userId")
   remove(@Param("userId") userId: number) {
     return this.usersService.remove(userId);
+  }
+
+  @Post("otp")
+  verifyOTP(@Body() data: VerifyOtpDto) {
+    return this.usersService.verifyOtp(data.otpCode, data.otpToken);
   }
 }
