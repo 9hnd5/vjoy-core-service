@@ -38,8 +38,8 @@ export class KidsService {
     return rs;
   }
 
-  async remove(kidId: number) {
-    await this.kidModel.destroy({ where: { id: kidId } }).catch(() => {
+  async remove(userId: number, kidId: number, hardDelete = false) {
+    await this.kidModel.destroy({ where: { id: kidId, parentId: userId }, force: hardDelete }).catch(() => {
       return false;
     });
     return true;

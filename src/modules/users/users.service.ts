@@ -105,8 +105,8 @@ export class UsersService {
     }
   }
 
-  async remove(id: number) {
-    await this.userModel.destroy({ where: { id: id } }).catch(() => {
+  async remove(id: number, hardDelete = false) {
+    await this.userModel.destroy({ where: { id: id }, force: hardDelete }).catch(() => {
       return false;
     });
     return true;
