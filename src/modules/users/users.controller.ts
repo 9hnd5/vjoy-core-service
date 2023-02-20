@@ -1,4 +1,4 @@
-import { Get, Post, Body, Patch, Param, Delete, Query } from "@nestjs/common";
+import { Get, Post, Body, Patch, Param, Delete, Query, Inject } from "@nestjs/common";
 import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
 import { UsersService } from "./users.service";
@@ -9,7 +9,7 @@ import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("users")
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, @Inject("REQUEST") private request: any) {}
 
   @Authorize({ action: "create", resource: "users" })
   @Post()
@@ -35,10 +35,12 @@ export class UsersController {
     return this.usersService.update(userId, updateUserDto);
   }
 
-  @Authorize({ action: "delete", resource: "users" })
+  @AdminOrSameUser()
   @Delete(":userId")
-  remove(@Param("userId") userId: number) {
-    return this.usersService.remove(userId);
+  remove(@Param("userId") userId: number, @Query("hardDelete") hardDelete: boolean) {
+    const role = this.request.user?.roleCode;
+    const isHardDelete = role === "admin" && hardDelete;
+    return this.usersService.remove(userId, isHardDelete);
   }
 
   @Post("otp")

@@ -1,4 +1,4 @@
-import { Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
+import { Get, Post, Body, Patch, Param, Delete, Query, Inject } from "@nestjs/common";
 import { KidsService } from "./kids.service";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
@@ -8,7 +8,7 @@ import { Controller } from "decorators/controller.decorator";
 
 @Controller()
 export class KidsController {
-  constructor(private readonly kidsService: KidsService) {}
+  constructor(private readonly kidsService: KidsService, @Inject("REQUEST") private request: any) {}
 
   @AdminOrSameUser()
   @Post("users/:userId/kids")
@@ -40,9 +40,11 @@ export class KidsController {
     return this.kidsService.update(userId, kidId, updateKidDto);
   }
 
-  @Authorize({ action: "delete", resource: "kids" })
-  @Delete("kids/:kidId")
-  removeKid(@Param("kidId") kidId: number) {
-    return this.kidsService.remove(kidId);
+  @AdminOrSameUser()
+  @Delete("users/:userId/kids/:kidId")
+  removeKid(@Param("userId") userId: number, @Param("kidId") kidId: number, @Query("hardDelete") hardDelete: boolean) {
+    const role = this.request.user?.roleCode;
+    const isHardDelete = role === "admin" && hardDelete;
+    return this.kidsService.remove(userId, kidId, isHardDelete);
   }
 }
