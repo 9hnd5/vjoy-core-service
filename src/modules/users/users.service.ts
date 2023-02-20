@@ -1,5 +1,4 @@
-import { Injectable, NotAcceptableException } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { Injectable, Inject } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { AuthService } from "modules/auth/auth.service";
 import { Role } from "entities/role.entity";
@@ -7,11 +6,12 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "entities/user.entity";
 import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
-import { transformQueries } from "utils/helpers";
 import { Op } from "sequelize";
-import { generateNumber } from "utils/helpers";
-import { OTP_TOKEN_EXPIRES } from "utils/constants";
-import { SMSService } from "modules/sms/sms.service";
+import { generateNumber, transformQueries } from "utils/helpers";
+import { SmsService } from "modules/sms/sms.service";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common/exceptions";
+import { AUTH_ERROR_MESSAGE } from "modules/auth/auth.constants";
+import { SMS_TEMPLATE } from "utils/constants";
 
 @Injectable()
 export class UsersService {
@@ -20,15 +20,13 @@ export class UsersService {
   constructor(
     @InjectModel(User) private userModel: typeof User,
 
+    @Inject("REQUEST") private request: any,
     private readonly authService: AuthService,
-    private jwtService: JwtService,
-    private smsService: SMSService,
-  ) {
-    this.secret = process.env.JWT_SECRET || "";
-  }
+    private smsService: SmsService
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const pass = await this.authService.createPassword(`${generateNumber(6)}`);
+    const pass = await this.authService.createPassword("123456");
     const rs = await this.userModel.create({
       ...createUserDto,
       password: pass,
@@ -58,45 +56,52 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const { email, phone, ...othersdata } = updateUserDto;
-    let otpToken: any = undefined;
-    let otpCode: any = undefined;
-    const or: any[] = [];
-    let errorCode = 0;
-    if (email !== undefined) { or.push({ email }); errorCode -= 1; }
-    if (phone !== undefined) { or.push({ phone }); errorCode -= 2; }
-    if (or.length > 0) {
-      const existUser = await this.userModel.findOne({ 
-        where: { 
-          [Op.and]: [
-            { [Op.not]: [{ id: [id] }] },
-            { [Op.or]: or }
-          ]
-        }, 
-        paranoid: false });
-      if (existUser) return errorCode;
+    try {
+      const role = this.request.user?.roleCode;
 
-      otpCode = this.authService.generateOTPCode();
-    }
-    
-    await this.userModel.update({ ...othersdata }, { where: { id: id } });
-    const rs = await this.userModel.findByPk(id, { attributes: { exclude: EXCLUDE_FIELDS } });
-    if (otpCode !== undefined) {
-      if (rs?.phone) this.smsService.send(rs.phone, `Ma OTP cua quy khach la ${otpCode}`);
-      const payload = { userId: rs?.id, email, phone };
-      otpToken = await this.authService.generateOTPToken(otpCode, payload);
-    }
+      if (role === "admin") {
+        const rs = await this.userModel.update(updateUserDto, { where: { id: id }, returning: true });
+        return rs[1][0].get();
+      }
 
-    return { ...rs?.dataValues, otpToken };
+      const { email, phone, ...others } = updateUserDto;
+      const rs = await this.userModel.update(others, { where: { id: id }, returning: true });
+      let otpToken;
+      const user = rs[1][0].get();
+      if (email) {
+        const existUser = await this.checkExistUser(user.id, { email });
+        if (existUser) throw new BadRequestException("Email already exists");
+
+        const otpCode = this.authService.generateOTPCode();
+        // send email
+        const payload = { userId: user.id, email };
+        otpToken = this.authService.generateOTPToken(otpCode, payload);
+      }
+      if (phone) {
+        const existUser = await this.checkExistUser(user.id, { phone });
+        if (existUser) throw new BadRequestException("Phone already exists");
+
+        const otpCode = this.authService.generateOTPCode();
+        if (user.phone) this.smsService.send(user.phone, eval("`" + SMS_TEMPLATE.OTP + "`"));
+        const payload = { userId: user.id, phone };
+        otpToken = this.authService.generateOTPToken(otpCode, payload);
+      }
+      return { ...user, otpToken };
+    } catch {
+      throw new BadRequestException("There was an error when updating");
+    }
   }
 
-  async verifyOTP(otpCode: string, otpToken: string) {
+  async verifyOtp(otpCode: string, otpToken: string) {
     try {
       const verifyResult = await this.authService.verifyOTPToken(otpCode, otpToken);
-      const rs = await this.userModel.update({ email: verifyResult.email, phone: verifyResult.phone }, { where: { id: verifyResult.userId }, returning: true });
+      const rs = await this.userModel.update(
+        { email: verifyResult.email, phone: verifyResult.phone },
+        { where: { id: verifyResult.userId }, returning: true }
+      );
       return rs[1][0].get();
     } catch {
-      throw new NotAcceptableException("Invalid credendial");
+      throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
     }
   }
 
@@ -105,5 +110,15 @@ export class UsersService {
       return false;
     });
     return true;
+  }
+
+  private async checkExistUser(id, condition) {
+    return await this.userModel.findOne({
+      where: {
+        [Op.not]: id,
+        ...condition,
+      },
+      paranoid: false,
+    });
   }
 }
