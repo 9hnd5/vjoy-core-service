@@ -18,14 +18,14 @@ export class KidsController {
 
   @Authorize({ action: "list", resource: "kids" })
   @Get("kids")
-  findAllKids() {
-    return this.kidsService.findAll();
+  findAllKids(@Query() query) {
+    return this.kidsService.findAll(undefined, query);
   }
 
   @AdminOrSameUser()
   @Get("users/:userId/kids")
-  findAllKidsByUser(@Param("userId") userId: number) {
-    return this.kidsService.findAll(userId);
+  findAllKidsByUser(@Param("userId") userId: number, @Query() query) {
+    return this.kidsService.findAll(userId, query);
   }
 
   @AdminOrSameUser()

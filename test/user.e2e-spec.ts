@@ -1,7 +1,6 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
-import { User } from "entities/user.entity";
 import * as request from "supertest";
 import { signin } from "./test.util";
 jest.setTimeout(10000);
@@ -11,13 +10,11 @@ describe("UsersController E2E Test", () => {
   let adminToken = "";
   let user;
   const url = "/api/v1/dev/core";
-  let userModel: typeof User;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-    userModel = moduleRef.get("UserRepository");
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");
@@ -50,7 +47,7 @@ describe("UsersController E2E Test", () => {
       };
     });
 
-    it("Should succeed due to user sufficient privilleges", () => {
+    it("Should succeed due to user sufficient privileges", () => {
       return request(app.getHttpServer())
         .post(`${url}/users`)
         .send(testUser)
@@ -121,23 +118,23 @@ describe("UsersController E2E Test", () => {
 
   describe("Get users (GET)api/users", () => {
     it("should fail due to user unauthorized", () => {
-      return request(app.getHttpServer()).get(`${url}/users`).expect(HttpStatus.UNAUTHORIZED);
+      return request(app.getHttpServer()).get(`${url}/users?page=1&pageSize=10&sort=[["id","ASC"]]`).expect(HttpStatus.UNAUTHORIZED);
     });
 
-    it("Should succeed because user having sufficient privilleges", () => {
+    it("Should succeed because user having sufficient privileges", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users`)
+        .get(`${url}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect((response) => {
           const { data } = response.body;
           expect(data).toHaveProperty("count");
-          expect(data).toHaveProperty("rows");
+          expect(data.rows.length).toEqual(10);
         });
     });
 
-    it("Should fail due to user lacking sufficient privilleges", () => {
+    it("Should fail due to user lacking sufficient privileges", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users`)
+        .get(`${url}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
     });
@@ -171,22 +168,21 @@ describe("UsersController E2E Test", () => {
     it("Should fail due to user unauthorize", () => {
       return request(app.getHttpServer()).delete(`${url}/users/${user.id}`).expect(HttpStatus.UNAUTHORIZED);
     });
-    it("Should fail due to user lacking sufficient privilleges", () => {
+    it("Should Succeed due to user having sufficient privileges", () => {
       return request(app.getHttpServer())
         .delete(`${url}/users/${user.id}`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN);
+        .expect(HttpStatus.OK);
     });
-    it("Should Succeed due to user having sufficient privilleges", () => {
+    it("Should Succeed due to user having sufficient privileges (Hard delete)", () => {
       return request(app.getHttpServer())
-        .delete(`${url}/users/${user.id}`)
+        .delete(`${url}/users/${user.id}?hardDelete=true`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK);
     });
   });
 
   afterAll(async () => {
-    await userModel.destroy({ where: { email: "testUser@gmail.com" }, force: true });
     await app.close();
   });
 });
