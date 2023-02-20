@@ -3,7 +3,8 @@ import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { User } from "entities/user.entity";
 import * as request from "supertest";
-
+import { signin } from "./test.util";
+jest.setTimeout(10000);
 describe("KidsController E2E Test", () => {
   let app: INestApplication;
   let userToken = "";
@@ -22,17 +23,9 @@ describe("KidsController E2E Test", () => {
     app.enableVersioning();
     app.setGlobalPrefix("api");
     await app.init();
-  });
 
-  it("Should signin successfully and return adminToken", () => {
-    return request(app.getHttpServer())
-      .post(`${url}/auth/login`)
-      .send({ type: "email", email: "admin@vus-etsc.edu.vn", password: "admin" })
-      .expect(HttpStatus.CREATED)
-      .expect((response) => {
-        const { data } = response.body;
-        adminToken = data.accessToken;
-      });
+    const { accessToken } = await signin();
+    adminToken = accessToken;
   });
 
   it("Create new parent (POST)api/users", () => {

@@ -112,6 +112,6 @@ export class AuthService {
 
     const otpCode = this.generateOTPCode();
     this.smsService.send(userPhone, eval("`" + SMS_TEMPLATE.OTP + "`"));
-    return this.generateOTPToken(otpCode, payload);
+    return { otpToken: await this.generateOTPToken(otpCode, payload) };
   }
 }
