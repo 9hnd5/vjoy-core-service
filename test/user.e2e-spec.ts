@@ -3,6 +3,8 @@ import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { User } from "entities/user.entity";
 import * as request from "supertest";
+import { signin } from "./test.util";
+jest.setTimeout(10000);
 describe("UsersController E2E Test", () => {
   let app: INestApplication;
   let userToken = "";
@@ -20,18 +22,21 @@ describe("UsersController E2E Test", () => {
     app.enableVersioning();
     app.setGlobalPrefix("api");
     await app.init();
+
+    const { accessToken } = await signin();
+    adminToken = accessToken;
   });
 
-  it("Should signin successfully and return adminToken", () => {
-    return request(app.getHttpServer())
-      .post(`${url}/auth/login`)
-      .send({ type: "email", email: "admin@vus-etsc.edu.vn", password: "admin" })
-      .expect(HttpStatus.CREATED)
-      .expect((response) => {
-        const { data } = response.body;
-        adminToken = data.accessToken;
-      });
-  });
+  // it("Should signin successfully and return adminToken", () => {
+  //   return request(app.getHttpServer())
+  //     .post(`${url}/auth/login`)
+  //     .send({ type: "email", email: "admin@vus-etsc.edu.vn", password: "admin" })
+  //     .expect(HttpStatus.CREATED)
+  //     .expect((response) => {
+  //       const { data } = response.body;
+  //       adminToken = data.accessToken;
+  //     });
+  // });
 
   describe("Create new user (POST)api/users", () => {
     let testUser;

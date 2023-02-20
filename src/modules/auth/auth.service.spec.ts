@@ -4,8 +4,8 @@ import { getModelToken } from "@nestjs/sequelize";
 import { Test, TestingModuleBuilder } from "@nestjs/testing";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
-import { SMSModule } from "modules/sms/sms.module";
-import { SMSService } from "modules/sms/sms.service";
+import { SmsModule } from "modules/sms/sms.module";
+import { SmsService } from "modules/sms/sms.service";
 import { USER_STATUS } from "modules/users/users.constants";
 import { AUTH_ERROR_MESSAGE } from "./auth.constants";
 import { AuthService } from "./auth.service";
@@ -13,7 +13,7 @@ import { AuthService } from "./auth.service";
 describe("AuthService", () => {
   let authService: AuthService;
   let jwtService: JwtService;
-  let smsService: SMSService;
+  let smsService: SmsService;
   let moduleBuilder: TestingModuleBuilder;
   const loginByEmail = {
     type: "email",
@@ -51,7 +51,7 @@ describe("AuthService", () => {
 
   beforeEach(async () => {
     moduleBuilder = Test.createTestingModule({
-      imports: [SMSModule, JwtModule],
+      imports: [SmsModule, JwtModule],
       providers: [
         AuthService,
         {
@@ -80,7 +80,7 @@ describe("AuthService", () => {
 
     const module = await moduleBuilder.compile();
     authService = module.get(AuthService);
-    smsService = module.get(SMSService);
+    smsService = module.get(SmsService);
     jwtService = module.get(JwtService);
   });
 
@@ -119,7 +119,7 @@ describe("AuthService", () => {
       .useValue({ findOne: () => null, create: () => ({ phone: loginByPhone.phone }) })
       .compile();
     const authService = module.get(AuthService);
-    const smsService = module.get(SMSService);
+    const smsService = module.get(SmsService);
     jest.spyOn(smsService, "send").mockResolvedValue(true);
     const result = await authService.login({ ...loginByPhone } as any);
     expect(result).not.toBeNull();
