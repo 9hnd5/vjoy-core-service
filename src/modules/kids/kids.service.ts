@@ -4,6 +4,7 @@ import { Role } from "entities/role.entity";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { Kid } from "entities/kid.entity";
+import { transformQueries } from "utils/helpers";
 
 @Injectable()
 export class KidsService {
@@ -15,8 +16,11 @@ export class KidsService {
   }
 
   async findAll(userId?: number, query?, includeDeleted = false) {
+    const obj: any = transformQueries(query);
     const rs = await this.kidModel.findAndCountAll<Kid>({
       where: userId ? { parentId: userId } : {},
+      ...obj.pagination,
+      order: obj.sort,
       include: Role,
       paranoid: !includeDeleted,
     });

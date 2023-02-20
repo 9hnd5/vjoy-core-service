@@ -6,6 +6,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "entities/user.entity";
 import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
+import { transformQueries } from "utils/helpers";
 
 @Injectable()
 export class UsersService {
@@ -26,7 +27,10 @@ export class UsersService {
   }
 
   async findAll(query?, includeDeleted = false) {
+    const obj: any = transformQueries(query);
     const rs = await this.userModel.findAndCountAll<User>({
+      ...obj.pagination,
+      order: obj.sort,
       attributes: { exclude: EXCLUDE_FIELDS },
       include: Role,
       paranoid: !includeDeleted,
