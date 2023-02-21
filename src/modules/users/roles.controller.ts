@@ -1,4 +1,5 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Get, Param } from "@nestjs/common";
+import { Controller } from "decorators/controller.decorator";
 import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { RolesService } from "./roles.service";
 
