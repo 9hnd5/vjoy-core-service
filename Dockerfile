@@ -22,4 +22,5 @@ ENV NODE_ENV production
 RUN npm run build
 
 # Run the web service on container startup.
+ENV env=${env}
 CMD npm run start:${env}
