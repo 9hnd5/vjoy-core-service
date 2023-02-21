@@ -16,8 +16,6 @@
    - 'gcr.io/$PROJECT_ID/vjoy-core-dev:$COMMIT_SHA'
    - '--region'
    - 'asia-east1'
-   - '--port'
-   - '8080'
 
  images:
  - 'gcr.io/$PROJECT_ID/vjoy-core-dev:$COMMIT_SHA'
