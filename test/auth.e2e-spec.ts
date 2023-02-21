@@ -8,10 +8,12 @@ import { User } from "entities/user.entity";
 import { AppModule } from "app.module";
 import { Op } from "sequelize";
 import { USER_STATUS } from "modules/users/users.constants";
+import { AuthService } from "modules/auth/auth.service";
 
 describe("Auth (e2e)", () => {
   let app: INestApplication;
   let userModel: typeof User;
+  const url = "/api/v1/dev/core";
   let verifySuccess;
   const user = {
     email: "api-test@vus-etsc.edu.vn", 
@@ -41,11 +43,18 @@ describe("Auth (e2e)", () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
+    app.enableVersioning();
+    app.setGlobalPrefix("api");
     await app.init();
 
     userModel = moduleRef.get("UserRepository");
     await userModel.bulkCreate([user, userDeactived, userDeleted]);
     await userModel.destroy({ where: { email: "api-test-deleted@vus-etsc.edu.vn" } });
+
+    const authService = moduleRef.get(AuthService);
+    const otpCode = authService.generateOTPCode();
+    const otpToken = await authService.generateOTPToken(otpCode, { userId: 1, roleId: 1 });
+    verifySuccess = { otpCode, otpToken }
   });
 
   afterAll(async () => {
@@ -67,7 +76,7 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { email, accessToken } = response.body.data;
@@ -86,7 +95,7 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -104,7 +113,7 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -121,13 +130,12 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
-        const { otpToken, otpCode } = response.body.data;
-        verifySuccess = { otpToken, otpCode };
-        expect(otpToken).not.toBeNull();
-        expect(otpCode).toBeNull();
+        const { data } = response.body;
+        expect(data).toHaveProperty("otpToken");
+        expect(data).not.toHaveProperty("otpCode");
       })
       .expect(HttpStatus.CREATED);
   });
@@ -139,13 +147,13 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
-        const { otpToken, otpCode } = response.body.data;
+        const { data } = response.body;
 
-        expect(otpToken).not.toBeNull();
-        expect(otpCode).toBeNull();
+        expect(data).toHaveProperty("otpToken");
+        expect(data).not.toHaveProperty("otpCode");
       })
       .expect(HttpStatus.CREATED);
   });
@@ -157,7 +165,7 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -174,7 +182,7 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/login")
+      .post(`${url}/auth/login`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -186,7 +194,7 @@ describe("Auth (e2e)", () => {
 
   it("/auth/otp", () => {
     return request(app.getHttpServer())
-      .post("/auth/otp")
+      .post(`${url}/auth/otp`)
       .send(verifySuccess)
       .expect((response: request.Response) => {
         const { accessToken } = response.body.data;
@@ -204,7 +212,7 @@ describe("Auth (e2e)", () => {
     };
 
     return request(app.getHttpServer())
-      .post("/auth/otp")
+      .post(`${url}/auth/otp`)
       .send(verifyDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;

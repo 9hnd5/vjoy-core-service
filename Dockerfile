@@ -17,6 +17,6 @@ COPY . .
 RUN npm run build
 
 # Run the web service on container startup.
-CMD [ "npm", "run", "start:$env" ]
+CMD [ "npm", "run", "start:dev" ]
 
 EXPOSE 8080/tcp

@@ -68,6 +68,6 @@ export const createUser = async (newUser: CreateUserRequest, accessToken: string
  * @returns {Promise<object>} - The data of the deleted user.
  */
 export const deleteUser = async (id: number, accessToken: string): Promise<object> => {
-  const { data } = await instance.delete(`core/users/${id}`, { headers: { Authorization: `Bearer ${accessToken}` } });
+  const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, { headers: { Authorization: `Bearer ${accessToken}` } });
   return data;
 };
