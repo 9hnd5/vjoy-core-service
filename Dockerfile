@@ -13,12 +13,13 @@ RUN npm i
 # Bundle app source
 COPY . .
 
-# Set NODE_ENV environment variable
-ENV NODE_ENV production
+# Run API Test
+RUN npm run test:e2e
 
+# Build production
 # Creates a "dist" folder with the production build
+ENV NODE_ENV production
 RUN npm run build
 
 # Run the web service on container startup.
-ENV env=${env}
 CMD npm run start:${env}

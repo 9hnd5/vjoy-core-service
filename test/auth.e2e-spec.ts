@@ -9,6 +9,7 @@ import { AppModule } from "app.module";
 import { Op } from "sequelize";
 import { USER_STATUS } from "modules/users/users.constants";
 import { AuthService } from "modules/auth/auth.service";
+jest.setTimeout(60000);
 
 describe("Auth (e2e)", () => {
   let app: INestApplication;
