@@ -1,51 +1,63 @@
+import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import {
-  INestApplication,
-  HttpStatus
-} from "@nestjs/common";
-import * as request from "supertest";
-import { User } from "entities/user.entity";
 import { AppModule } from "app.module";
-import { Op } from "sequelize";
-import { USER_STATUS } from "modules/users/users.constants";
+import { ApiKey } from "entities/api-key.entity";
+import { User } from "entities/user.entity";
 import { AuthService } from "modules/auth/auth.service";
-import { API_CORE_PREFIX } from "../test.util";
+import { USER_STATUS } from "modules/users/users.constants";
+import { Op } from "sequelize";
+import * as request from "supertest";
+import { API_CORE_PREFIX, createUser, deleteUser, signin } from "../test.util";
 
 describe("Auth (e2e)", () => {
   let app: INestApplication;
   let userModel: typeof User;
   let verifySuccess;
+  let adminToken: string;
+  let userToken: string;
+  let newUser: User["dataValues"];
+  let apiKey: ApiKey["dataValues"];
   const user = {
-    email: "api-test@vus-etsc.edu.vn", 
-    password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK", 
+    email: "api-test@vus-etsc.edu.vn",
+    password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK",
     phone: "0366033333",
     roleId: 1,
-    status: USER_STATUS.ACTIVATED
+    status: USER_STATUS.ACTIVATED,
   };
 
   const userDeactived = {
-    email: "api-test-deactived@vus-etsc.edu.vn", 
+    email: "api-test-deactived@vus-etsc.edu.vn",
     phone: "0366033334",
     roleId: 1,
-    status: USER_STATUS.DEACTIVED
+    status: USER_STATUS.DEACTIVED,
   };
 
   const userDeleted = {
-    email: "api-test-deleted@vus-etsc.edu.vn", 
+    email: "api-test-deleted@vus-etsc.edu.vn",
     phone: "0366033335",
     roleId: 1,
-    status: USER_STATUS.ACTIVATED
+    status: USER_STATUS.ACTIVATED,
   };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule]
+      imports: [AppModule],
     }).compile();
 
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");
     await app.init();
+
+    //signin as admin
+    const result1 = await signin();
+    adminToken = result1.accessToken;
+
+    //create new user
+    newUser = await createUser({ accessToken: adminToken });
+    //sigin with new user;
+    const result2 = await signin({ email: newUser.email!, password: "123456" });
+    userToken = result2.accessToken;
 
     userModel = moduleRef.get("UserRepository");
     await userModel.bulkCreate([user, userDeactived, userDeleted]);
@@ -54,18 +66,52 @@ describe("Auth (e2e)", () => {
     const authService = moduleRef.get(AuthService);
     const otpCode = authService.generateOTPCode();
     const otpToken = await authService.generateOTPToken(otpCode, { userId: 1, roleId: 1 });
-    verifySuccess = { otpCode, otpToken }
+    verifySuccess = { otpCode, otpToken };
   });
 
   afterAll(async () => {
     await userModel.destroy({
       where: {
-        [Op.or]: [{ email: { [Op.like]: "api-test%@vus-etsc.edu.vn" } }, { phone: '123456789' }],
+        [Op.or]: [{ email: { [Op.like]: "api-test%@vus-etsc.edu.vn" } }, { phone: "123456789" }],
       },
       force: true,
     });
 
+    //Delete new user was created before
+    await deleteUser({ id: newUser.id, accessToken: adminToken });
+
     await app.close();
+  });
+
+  it("should create api-key success due to user is admin", () => {
+    return request(app.getHttpServer())
+      .post(`${API_CORE_PREFIX}/auth/api-key`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-name-description" })
+      .expect((res) => (apiKey = res.body.data))
+      .expect(HttpStatus.CREATED);
+  });
+
+  it("should create api-key fail due to user is not admin", () => {
+    return request(app.getHttpServer())
+      .post(`${API_CORE_PREFIX}/auth/api-key`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-description" })
+      .expect(HttpStatus.FORBIDDEN);
+  });
+
+  it("should delete api-key success due to user is admin", () => {
+    return request(app.getHttpServer())
+      .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(HttpStatus.OK);
+  });
+
+  it("should delete api-key fail due to user is not admin", () => {
+    return request(app.getHttpServer())
+      .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
+      .set("Authorization", `Bearer ${userToken}`)
+      .expect(HttpStatus.FORBIDDEN);
   });
 
   it("/auth/login (POST by email)", () => {

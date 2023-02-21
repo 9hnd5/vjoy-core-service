@@ -2,6 +2,7 @@ import axios from "axios";
 import { AuthService } from "modules/auth/auth.service";
 import { CreateUserDto } from "modules/users/dto/create-user.dto";
 import { UsersService } from "modules/users/users.service";
+import * as crypto from "crypto";
 
 const baseUrl = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}`;
 export const API_CORE_PREFIX = `/api/v1/${process.env.ENV}/core`;
@@ -56,7 +57,16 @@ type CreateUserResponse = Awaited<ReturnType<typeof UsersService.prototype.creat
  * @param accessToken The access token to use.
  * @returns The created user.
  */
-export const createUser = async (newUser: CreateUserRequest, accessToken: string) => {
+export const createUser = async (param: { newUser?: CreateUserRequest; accessToken: string }) => {
+  const {
+    newUser = {
+      firstname: "APITEST-firstname",
+      lastname: "APITEST-lastname",
+      email: `APITEST-${crypto.randomUUID()}@gmail.com`,
+      roleId: 4,
+    },
+    accessToken,
+  } = param;
   const { data } = await instance.post("core/users", newUser, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -70,8 +80,11 @@ export const createUser = async (newUser: CreateUserRequest, accessToken: string
  * @param {string} accessToken - The access token of the user.
  * @returns {Promise<object>} - The data of the deleted user.
  */
-export const deleteUser = async (id: number, accessToken: string): Promise<object> => {
-  const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, { headers: { Authorization: `Bearer ${accessToken}` } });
+export const deleteUser = async (param: { id: number; accessToken: string }): Promise<object> => {
+  const { id, accessToken } = param;
+  const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
   return data;
 };
 
