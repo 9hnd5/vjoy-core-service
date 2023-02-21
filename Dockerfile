@@ -1,6 +1,6 @@
 # Base image
 FROM node:18
-
+ARG env
 # Create app directory
 WORKDIR /usr/src/app
 
