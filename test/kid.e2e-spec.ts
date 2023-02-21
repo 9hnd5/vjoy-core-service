@@ -4,6 +4,8 @@ import { AppModule } from "app.module";
 import { User } from "entities/user.entity";
 import * as request from "supertest";
 import { signin } from "./test.util";
+jest.setTimeout(60000);
+
 describe("KidsController E2E Test", () => {
   let app: INestApplication;
   let userToken = "";

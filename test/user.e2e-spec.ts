@@ -3,6 +3,8 @@ import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import * as request from "supertest";
 import { signin } from "./test.util";
+jest.setTimeout(60000);
+
 describe("UsersController E2E Test", () => {
   let app: INestApplication;
   let userToken = "";
