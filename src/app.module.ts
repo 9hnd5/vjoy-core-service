@@ -25,7 +25,7 @@ const validationProvider = {
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ envFilePath: `./env/.${process.env.NODE_ENV || "prod"}.env`, isGlobal: true }),
+    ConfigModule.forRoot({ envFilePath: `./env/.${process.env.ENV || "prod"}.env`, isGlobal: true }),
     SequelizeModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
         return {
