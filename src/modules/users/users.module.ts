@@ -13,5 +13,6 @@ import { SmsModule } from "modules/sms/sms.module";
   imports: [AuthModule, SmsModule, SequelizeModule.forFeature([Role, User])],
   controllers: [RolesController, UsersController],
   providers: [RolesService, UsersService],
+  exports: [RolesService]
 })
 export class UsersModule {}

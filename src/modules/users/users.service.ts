@@ -25,11 +25,12 @@ export class UsersService {
     private smsService: SmsService
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
-    const pass = await this.authService.createPassword("123456");
+  async createByAdmin(createUserDto: CreateUserDto) {
+    const pass = createUserDto.password??"123456";
+    const password = await this.authService.createPassword(pass);
     const rs = await this.userModel.create({
       ...createUserDto,
-      password: pass,
+      password,
       status: USER_STATUS.ACTIVATED,
     });
     return rs;

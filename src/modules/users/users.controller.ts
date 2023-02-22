@@ -14,7 +14,7 @@ export class UsersController {
   @Authorize({ action: "create", resource: "users" })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return this.usersService.createByAdmin(createUserDto);
   }
 
   @Authorize({ action: "list", resource: "users" })

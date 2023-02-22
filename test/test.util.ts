@@ -45,7 +45,7 @@ export const signin = async (signin: SigninRequest = adminAccount) => {
 };
 
 type CreateUserRequest = CreateUserDto;
-type CreateUserResponse = Awaited<ReturnType<typeof UsersService.prototype.create>>;
+type CreateUserResponse = Awaited<ReturnType<typeof UsersService.prototype.createByAdmin>>;
 /**
  * Create a user.
  *
