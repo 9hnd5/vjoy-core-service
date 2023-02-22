@@ -1,9 +1,7 @@
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
-import { exec } from "child_process";
 import { USER_STATUS } from "modules/users/users.constants";
-import test from "node:test";
 import * as request from "supertest";
 import { generateNumber } from "utils/helpers";
 import { signin } from "../test.util";
