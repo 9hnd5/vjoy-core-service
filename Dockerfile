@@ -1,6 +1,7 @@
 # Base image
 FROM node:18-alpine
 ARG env
+ENV env=${env}
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -14,7 +15,7 @@ RUN npm i
 COPY . .
 
 # Run API Test
-RUN npm run test:e2e
+RUN npm run test-e2e:${env}
 
 # Build production
 # Creates a "dist" folder with the production build
@@ -22,5 +23,4 @@ ENV NODE_ENV production
 RUN npm run build
 
 # Run the web service on container startup.
-ENV env=${env}
 CMD npm run start:${env}
