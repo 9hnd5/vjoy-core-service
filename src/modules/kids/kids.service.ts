@@ -5,13 +5,14 @@ import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { Kid } from "entities/kid.entity";
 import { transformQueries } from "utils/helpers";
+import { User } from "entities/user.entity";
 
 @Injectable()
 export class KidsService {
   constructor(@InjectModel(Kid) private kidModel: typeof Kid) {}
 
   async create(createKidDto: CreateKidDto) {
-    const rs = await this.kidModel.create({ ...createKidDto });
+    const rs = await this.kidModel.create(createKidDto);
     return rs;
   }
 
@@ -21,7 +22,7 @@ export class KidsService {
       where: userId ? { parentId: userId } : {},
       ...obj.pagination,
       order: obj.sort,
-      include: Role,
+      include: [Role, User],
       paranoid: !includeDeleted,
     });
     return rs;

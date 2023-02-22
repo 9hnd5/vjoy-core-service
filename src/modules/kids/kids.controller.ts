@@ -1,19 +1,27 @@
-import { Get, Post, Body, Patch, Param, Delete, Query, Inject } from "@nestjs/common";
+import { Get, Post, Body, Patch, Param, Delete, Query, Inject, BadRequestException } from "@nestjs/common";
 import { KidsService } from "./kids.service";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
 import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { Controller } from "decorators/controller.decorator";
+import { RolesService } from "modules/users/roles.service";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 
 @Controller()
 export class KidsController {
-  constructor(private readonly kidsService: KidsService, @Inject("REQUEST") private request: any) {}
+  constructor(
+    private readonly kidsService: KidsService,
+    private readonly rolesService: RolesService, 
+    @Inject("REQUEST") private request: any
+  ) {}
 
   @AdminOrSameUser()
   @Post("users/:userId/kids")
-  createKid(@Body() createKidDto: CreateKidDto) {
-    return this.kidsService.create(createKidDto);
+  async createKid(@Body() createKidDto: CreateKidDto) {
+    const role = await this.rolesService.findOneByCode(ROLE_CODE.KID_FREE);
+    if (!role) throw new BadRequestException("Role not found");
+    return this.kidsService.create({ ...createKidDto, roleId: role.id });
   }
 
   @Authorize({ action: "list", resource: "kids" })

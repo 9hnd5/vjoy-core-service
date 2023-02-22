@@ -10,12 +10,17 @@ export class RolesService {
   ) {}
 
   async findAll() {
-    const rs = await this.roleModel.findAll<Role>();
+    const rs = await this.roleModel.findAndCountAll<Role>();
     return rs;
   }
 
   async findOne(id: number) {
     const rs = await this.roleModel.findByPk(id);
+    return rs;
+  }
+
+  async findOneByCode(code: string) {
+    const rs = await this.roleModel.findOne({ where: { code } });
     return rs;
   }
 }

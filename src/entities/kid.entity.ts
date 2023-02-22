@@ -58,6 +58,9 @@ export class Kid extends Model<KidAttributes, KidCreationAttributes> {
   @Column({ allowNull: false })
   parentId: number;
 
+  @BelongsTo(() => User)
+  parent: User;
+
   @ForeignKey(() => Role)
   @Column({ type: DataType.INTEGER, allowNull: false })
   roleId: number;

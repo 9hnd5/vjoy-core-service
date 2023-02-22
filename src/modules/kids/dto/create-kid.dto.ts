@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
+import { IsDefined, IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
 
 class LearningGoalDto {
   @IsNumber()
@@ -15,7 +15,7 @@ export class CreateKidDto {
   @IsNotEmpty()
   firstname: string;
 
-  @IsNotEmpty()
+  @IsDefined()
   lastname: string;
 
   @Matches(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/, {
@@ -30,6 +30,7 @@ export class CreateKidDto {
   parentId: number;
 
   @IsNumber()
+  @IsOptional()
   roleId: number;
 
   @IsOptional()
