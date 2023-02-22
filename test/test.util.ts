@@ -74,3 +74,18 @@ export const deleteUser = async (id: number, accessToken: string): Promise<objec
   const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, { headers: { Authorization: `Bearer ${accessToken}` } });
   return data;
 };
+
+
+export const expectError = (body: any) => {
+  const { code, message } = body.error;
+  expect(code).not.toBeNull();
+  expect(message).not.toBeNull();
+}
+
+export const expectErrors = (body: any) => {
+  const errors = body.error;
+  expect(errors.length).toBeGreaterThan(0);
+  const { code, message } = errors[0];
+  expect(code).not.toBeNull();
+  expect(message).not.toBeNull();
+}
