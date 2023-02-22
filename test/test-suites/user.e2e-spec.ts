@@ -53,7 +53,7 @@ describe("UsersController E2E Test", () => {
           expect(user.firstname).toEqual(testUser.firstname.trim());
           expect(user.lastname).toEqual(testUser.lastname.trim());
           expect(user.status).toEqual(USER_STATUS.ACTIVATED);
-          // expect(user).not.toHaveProperty("password");
+          expect(user).not.toHaveProperty("password");
         });
     });
 
@@ -146,7 +146,7 @@ describe("UsersController E2E Test", () => {
           expect(user.lastname).toEqual(updateData.lastname.trim());
           expect(user.id).toEqual(testUser.id);
           expect(user.roleId).not.toEqual(testUser.roleId);
-          // expect(user).not.toHaveProperty("password");
+          expect(user).not.toHaveProperty("password");
         });
     });
 
