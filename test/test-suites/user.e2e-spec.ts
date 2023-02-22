@@ -12,10 +12,10 @@ describe("UsersController E2E Test", () => {
   let userToken = "";
   let adminToken = "";
   let testUser: {[k: string]: any} = {
-    firstname: " testUser ",
-    lastname: " testUser ",
-    email: `user-test-${generateNumber(3)}@gmail.com`,
-    phone: "0931336283",
+    firstname: "testUser",
+    lastname: "testUser",
+    email: `user-test-${generateNumber(6)}@gmail.com`,
+    phone: `${generateNumber(10)}`,
     roleId: 4,
     password: 'fdf324fddsfa@321'
   };
@@ -43,13 +43,14 @@ describe("UsersController E2E Test", () => {
         .expect(HttpStatus.CREATED)
         .expect((response) => {
           const user = response.body.data;
+          testUser = {...testUser, id: user.id};
+          
           expect(user.email).toEqual(testUser.email);
           expect(user.roleId).toEqual(testUser.roleId);
           expect(user.firstname).toEqual(testUser.firstname.trim());
           expect(user.lastname).toEqual(testUser.lastname.trim());
           expect(user.status).toEqual(USER_STATUS.ACTIVATED);
-
-          testUser = {...testUser, ...user};
+          expect(user).not.toHaveProperty("password");
         });
     });
 
@@ -73,6 +74,7 @@ describe("UsersController E2E Test", () => {
         .send(testUser)
         .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
+          console.log(response.body);
           const { code, message } = response.body.error;
           expect(code).not.toBeNull();
           expect(message).not.toBeNull();
@@ -105,13 +107,18 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/1`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN);
+        .expect(HttpStatus.FORBIDDEN)
+        .expect((response: request.Response) => {
+          const { code, message } = response.body.error;
+          expect(code).not.toBeNull();
+          expect(message).not.toBeNull();
+        });
     });
 
     it("Should succeed due to user is the same", () => {
       const updateData = {
-        firstname: ' first name upate ', 
-        lastname: ' last name update ',
+        firstname: 'first name upate', 
+        lastname: 'last name update',
         id: generateNumber(4)};
       return request(app.getHttpServer())
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
@@ -123,6 +130,7 @@ describe("UsersController E2E Test", () => {
           expect(user.firstname).toEqual(updateData.firstname.trim());
           expect(user.lastname).toEqual(updateData.lastname.trim());
           expect(user.id).toEqual(testUser.id);
+          expect(user).not.toHaveProperty("password");
         });
     });
 
@@ -152,11 +160,28 @@ describe("UsersController E2E Test", () => {
         });
     });
 
+    it("Update phone & firstname should response otpToken & user data", () => {
+      const updateData = {
+        phone: `${generateNumber(10)}`,
+        firstname: 'update firstname'
+      };
+      return request(app.getHttpServer())
+        .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
+        .send(updateData)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.OK)
+        .expect((response) => {
+          const {otpToken, firstname} = response.body.data;
+          expect(otpToken).not.toBeNull();
+          expect(firstname).toEqual(updateData.firstname);
+        });
+    });
+
 
     it("Admin update email & phone should response the user data", () => {
       const updateData = {
-        firstname: ' first name update ', 
-        lastname: ' last name update ', 
+        firstname: 'first name update', 
+        lastname: 'last name update', 
         phone: `${generateNumber(10)}`,
         email: `user-test-${generateNumber(4)}@gmail.com`,
         id: generateNumber(4)
