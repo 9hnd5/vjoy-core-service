@@ -3,7 +3,7 @@ import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { User } from "entities/user.entity";
 import * as request from "supertest";
-import { signin } from "./test.util";
+import { signin } from "../test.util";
 
 describe("KidsController E2E Test", () => {
   let app: INestApplication;

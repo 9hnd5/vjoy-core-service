@@ -2,7 +2,7 @@ import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import * as request from "supertest";
-import { signin } from "./test.util";
+import { signin } from "../test.util";
 
 describe("UsersController E2E Test", () => {
   let app: INestApplication;
