@@ -4,6 +4,7 @@ import { AppModule } from "app.module";
 import { User } from "entities/user.entity";
 import * as request from "supertest";
 import { signin } from "../test.util";
+import { API_CORE_PREFIX } from "../test.util";
 
 describe("KidsController E2E Test", () => {
   let app: INestApplication;
@@ -13,7 +14,6 @@ describe("KidsController E2E Test", () => {
   let kidAdmin;
   let kidUser;
   let userModel: typeof User;
-  const url = "/api/v1/dev/core";
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -31,7 +31,7 @@ describe("KidsController E2E Test", () => {
 
   it("Create new parent (POST)api/users", () => {
     return request(app.getHttpServer())
-      .post(`${url}/users`)
+      .post(`${API_CORE_PREFIX}/users`)
       .send({
         firstname: "testParent",
         lastname: "testParent",
@@ -48,7 +48,7 @@ describe("KidsController E2E Test", () => {
 
   it("Should signin successfully and return userToken", () => {
     return request(app.getHttpServer())
-      .post(`${url}/auth/login`)
+      .post(`${API_CORE_PREFIX}/auth/login`)
       .send({ type: "email", email: parent.email, password: "123456" })
       .expect(HttpStatus.CREATED)
       .expect((response) => {
@@ -75,12 +75,12 @@ describe("KidsController E2E Test", () => {
       };
     });
     it("Should fail due to user unauthorized", () => {
-      return request(app.getHttpServer()).post(`${url}/users/${parent.id}/kids`).expect(HttpStatus.UNAUTHORIZED);
+      return request(app.getHttpServer()).post(`${API_CORE_PREFIX}/users/${parent.id}/kids`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user is not the same", () => {
       return request(app.getHttpServer())
-        .post(`${url}/users/1/kids`)
+        .post(`${API_CORE_PREFIX}/users/1/kids`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
@@ -88,7 +88,7 @@ describe("KidsController E2E Test", () => {
 
     it("Should succeed due to user is the same", () => {
       return request(app.getHttpServer())
-        .post(`${url}/users/${parent.id}/kids`)
+        .post(`${API_CORE_PREFIX}/users/${parent.id}/kids`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.CREATED)
@@ -97,7 +97,7 @@ describe("KidsController E2E Test", () => {
 
     it("Should succeed due to user is admin", () => {
       return request(app.getHttpServer())
-        .post(`${url}/users/${parent.id}/kids`)
+        .post(`${API_CORE_PREFIX}/users/${parent.id}/kids`)
         .send(testAdmin)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.CREATED)
@@ -112,13 +112,13 @@ describe("KidsController E2E Test", () => {
     });
     it("Should fail due to user unauthorized", () => {
       return request(app.getHttpServer())
-        .patch(`${url}/users/${parent.id}/kids/${kidUser.id}`)
+        .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}`)
         .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user is not the same", () => {
       return request(app.getHttpServer())
-        .patch(`${url}/users/1/kids/${kidUser.id}`)
+        .patch(`${API_CORE_PREFIX}/users/1/kids/${kidUser.id}`)
         .send(testKid)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
@@ -126,7 +126,7 @@ describe("KidsController E2E Test", () => {
 
     it("Should succeed due to user is the same", () => {
       return request(app.getHttpServer())
-        .patch(`${url}/users/${parent.id}/kids/${kidUser.id}`)
+        .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}`)
         .send(testKid)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK);
@@ -134,7 +134,7 @@ describe("KidsController E2E Test", () => {
 
     it("Should succeed due to user is admin", () => {
       return request(app.getHttpServer())
-        .patch(`${url}/users/${parent.id}/kids/${kidUser.id}`)
+        .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}`)
         .send(testKid)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK);
@@ -143,19 +143,19 @@ describe("KidsController E2E Test", () => {
 
   describe("Get kids (GET)api/kids", () => {
     it("Should fail due to user unauthorized", () => {
-      return request(app.getHttpServer()).get(`${url}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`).expect(HttpStatus.UNAUTHORIZED);
+      return request(app.getHttpServer()).get(`${API_CORE_PREFIX}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user lacking sufficient privileges", () => {
       return request(app.getHttpServer())
-        .get(`${url}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
+        .get(`${API_CORE_PREFIX}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should succeed due to user having sufficient privileges", () => {
       return request(app.getHttpServer())
-        .get(`${url}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
+        .get(`${API_CORE_PREFIX}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .expect((response) => {
@@ -168,27 +168,27 @@ describe("KidsController E2E Test", () => {
   describe("Get one kid (GET)api/users/:userId/kids/:kidId", () => {
     it("Should fail due to user unauthorized", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/${parent.id}/kids/${kidUser.id}/`)
+        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}/`)
         .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user is not the same", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/1/kids/${kidUser.id}/`)
+        .get(`${API_CORE_PREFIX}/users/1/kids/${kidUser.id}/`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should succeed due to user is the same", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/${parent.id}/kids/${kidUser.id}/`)
+        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}/`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK);
     });
 
     it("Should succeed due to user is admin", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/${parent.id}/kids/${kidUser.id}/`)
+        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}/`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK);
     });
@@ -196,26 +196,26 @@ describe("KidsController E2E Test", () => {
 
   describe("Get kids by parent (GET)api/users/:userId/kids", () => {
     it("Should fail due to user unauthorized", () => {
-      return request(app.getHttpServer()).get(`${url}/users/${parent.id}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`).expect(HttpStatus.UNAUTHORIZED);
+      return request(app.getHttpServer()).get(`${API_CORE_PREFIX}/users/${parent.id}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user is not the same", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/1/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
+        .get(`${API_CORE_PREFIX}/users/1/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should succeed due to user is the same", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/${parent.id}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
+        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK);
     });
 
     it("Should succeed due to user is admin", () => {
       return request(app.getHttpServer())
-        .get(`${url}/users/${parent.id}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
+        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK);
     });
@@ -223,26 +223,26 @@ describe("KidsController E2E Test", () => {
 
   describe("Delete kid (DELETE)api/users/:userId/kids/:id", () => {
     it("Should fail due to user unauthorized", () => {
-      return request(app.getHttpServer()).delete(`${url}/users/${parent.id}/kids/${kidUser.id}`).expect(HttpStatus.UNAUTHORIZED);
+      return request(app.getHttpServer()).delete(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should succeed due to user having sufficient privileges", () => {
       return request(app.getHttpServer())
-        .delete(`${url}/users/${parent.id}/kids/${kidUser.id}`)
+        .delete(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK);
     });
 
     it("Should succeed due to user having sufficient privileges (Hard delete)", () => {
       return request(app.getHttpServer())
-        .delete(`${url}/users/${parent.id}/kids/${kidUser.id}?hardDelete=true`)
+        .delete(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidUser.id}?hardDelete=true`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK);
     });
 
     it("Should succeed due to user having sufficient privileges (Hard delete)", () => {
       return request(app.getHttpServer())
-        .delete(`${url}/users/${parent.id}/kids/${kidAdmin.id}?hardDelete=true`)
+        .delete(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kidAdmin.id}?hardDelete=true`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK);
     });

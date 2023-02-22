@@ -8,9 +8,9 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "ENV=dev nest start --watch",
+    "start": "ENV=dev nest start --watch",
     "start:debug": "ENV=dev nest start --debug --watch",
+    "start:dev": "ENV=staging node dist/main",
     "start:staging": "ENV=staging node dist/main",
     "start:prod": "ENV=prod node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
@@ -18,7 +18,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "ENV=dev jest --config ./test/jest-e2e.json"
+    "test-e2e:dev": "ENV=dev jest --config ./test/jest-e2e.json",
+    "test-e2e:staging": "ENV=staging jest --config ./test/jest-e2e.json",
+    "test-e2e:prod": "ENV=staging jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/axios": "^2.0.0",
