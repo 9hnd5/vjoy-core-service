@@ -11,8 +11,7 @@ describe("UsersController E2E Test", () => {
   let app: INestApplication;
   let userToken = "";
   let adminToken = "";
-  let testUser = {
-    id: null,
+  let testUser: {[k: string]: any} = {
     firstname: " testUser ",
     lastname: " testUser ",
     email: `user-test-${generateNumber(3)}@gmail.com`,

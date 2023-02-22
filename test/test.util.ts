@@ -4,7 +4,7 @@ import { CreateUserDto } from "modules/users/dto/create-user.dto";
 import { UsersService } from "modules/users/users.service";
 
 const baseUrl = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}`;
-export const API_CORE_PREFIX = `"/api/v1/${process.env.ENV}/core`;
+export const API_CORE_PREFIX = `/api/v1/${process.env.ENV}/core`;
 
 export const adminAccount = {
   email: "admin@vus-etsc.edu.vn",
