@@ -69,7 +69,7 @@ export class AuthService {
 
   createApiKey = async (data: CreateApiKeyDto) => {
     const { type, name, description } = data;
-    const env = process.env.NODE_ENV!;
+    const env = process.env.ENV!;
     const payload = { name, type, env };
     const apiToken = await this.jwtService.signAsync(payload, { secret: this.secret });
     const newApiKey = await this.apiKeyModel.create({

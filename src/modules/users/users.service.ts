@@ -1,17 +1,17 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common/exceptions";
 import { InjectModel } from "@nestjs/sequelize";
-import { AuthService } from "modules/auth/auth.service";
 import { Role } from "entities/role.entity";
+import { User } from "entities/user.entity";
+import { AUTH_ERROR_MESSAGE } from "modules/auth/auth.constants";
+import { AuthService } from "modules/auth/auth.service";
+import { SmsService } from "modules/sms/sms.service";
+import { Op } from "sequelize";
+import { SMS_TEMPLATE } from "utils/constants";
+import { transformQueries } from "utils/helpers";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { User } from "entities/user.entity";
 import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
-import { Op } from "sequelize";
-import { generateNumber, transformQueries } from "utils/helpers";
-import { SmsService } from "modules/sms/sms.service";
-import { BadRequestException, UnauthorizedException } from "@nestjs/common/exceptions";
-import { AUTH_ERROR_MESSAGE } from "modules/auth/auth.constants";
-import { SMS_TEMPLATE } from "utils/constants";
 
 @Injectable()
 export class UsersService {
