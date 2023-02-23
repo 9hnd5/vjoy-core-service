@@ -157,7 +157,10 @@ describe("UsersController E2E Test", () => {
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
-        .expect((response) => {
+        .expect(async (response) => {
+          const user  = await userModel.findByPk(testUser.id);
+          expect(user?.email).toEqual(testUser.email);
+
           const {otpToken} = response.body.data;
           expect(otpToken).not.toBeNull();
         });
@@ -170,7 +173,10 @@ describe("UsersController E2E Test", () => {
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
-        .expect((response) => {
+        .expect(async (response) => {
+          const user  = await userModel.findByPk(testUser.id);
+          expect(user?.phone).toEqual(testUser.phone);
+
           const {otpToken} = response.body.data;
           expect(otpToken).not.toBeNull();
         });
