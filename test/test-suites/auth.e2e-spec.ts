@@ -17,6 +17,7 @@ describe("Auth (e2e)", () => {
   let userToken: string;
   let newUser: User["dataValues"];
   let apiKey: ApiKey["dataValues"];
+  let agent: request.SuperAgentTest;
   const apiToken = API_TOKEN;
   const user = {
     email: "api-test@vus-etsc.edu.vn",
@@ -49,7 +50,8 @@ describe("Auth (e2e)", () => {
     app.enableVersioning();
     app.setGlobalPrefix("api");
     await app.init();
-
+    agent = request.agent(app.getHttpServer());
+    agent.set("api-token", apiToken);
     //signin as admin
     const result1 = await signin();
     adminToken = result1.accessToken;
@@ -85,37 +87,33 @@ describe("Auth (e2e)", () => {
   });
 
   it("should create api-key success due to user is admin", () => {
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/api-key`)
       .set("Authorization", `Bearer ${adminToken}`)
-      .set("api-token", `${apiToken}`)
       .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-name-description" })
       .expect((res) => (apiKey = res.body.data))
       .expect(HttpStatus.CREATED);
   });
 
   it("should create api-key fail due to user is not admin", () => {
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/api-key`)
       .set("Authorization", `Bearer ${userToken}`)
-      .set("api-token", `${apiToken}`)
       .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-description" })
       .expect(HttpStatus.FORBIDDEN);
   });
 
   it("should delete api-key success due to user is admin", () => {
-    return request(app.getHttpServer())
+    return agent
       .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
       .set("Authorization", `Bearer ${adminToken}`)
-      .set("api-token", `${apiToken}`)
       .expect(HttpStatus.OK);
   });
 
   it("should delete api-key fail due to user is not admin", () => {
-    return request(app.getHttpServer())
+    return agent
       .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
       .set("Authorization", `Bearer ${userToken}`)
-      .set("api-token", `${apiToken}`)
       .expect(HttpStatus.FORBIDDEN);
   });
 
@@ -126,9 +124,8 @@ describe("Auth (e2e)", () => {
       password: "123456",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { email, accessToken } = response.body.data;
@@ -146,9 +143,8 @@ describe("Auth (e2e)", () => {
       password: "123456",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -165,9 +161,8 @@ describe("Auth (e2e)", () => {
       password: "12345",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -183,9 +178,8 @@ describe("Auth (e2e)", () => {
       phone: "0366033333",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { data } = response.body;
@@ -201,9 +195,8 @@ describe("Auth (e2e)", () => {
       phone: "123456789",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { data } = response.body;
@@ -220,9 +213,8 @@ describe("Auth (e2e)", () => {
       phone: "0366033335",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -238,9 +230,8 @@ describe("Auth (e2e)", () => {
       phone: "0366033334",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/login`)
-      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -251,9 +242,8 @@ describe("Auth (e2e)", () => {
   });
 
   it("/auth/otp", () => {
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/otp`)
-      .set("api-token", `${apiToken}`)
       .send(verifySuccess)
       .expect((response: request.Response) => {
         const { accessToken } = response.body.data;
@@ -270,9 +260,8 @@ describe("Auth (e2e)", () => {
       otpCode: "8634",
     };
 
-    return request(app.getHttpServer())
+    return agent
       .post(`${API_CORE_PREFIX}/auth/otp`)
-      .set("api-token", `${apiToken}`)
       .send(verifyDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;

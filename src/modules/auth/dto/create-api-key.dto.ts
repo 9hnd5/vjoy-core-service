@@ -1,5 +1,5 @@
 import { Exclude, Expose } from "class-transformer";
-import { IsNotEmpty, IsOptional, IsString, Matches } from "class-validator";
+import { Allow, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 @Exclude()
 export class CreateApiKeyDto {
@@ -15,6 +15,7 @@ export class CreateApiKeyDto {
   description?: string;
 
   @Expose()
-  @Matches(/vjoy-(web|mobile)/)
+  @Allow()
+  // @Matches(/vjoy-(web|mobile)/)
   type: string;
 }

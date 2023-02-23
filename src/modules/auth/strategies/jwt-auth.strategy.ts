@@ -20,10 +20,10 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy, "jwt") {
   async validate(request: Request, payload: any) {
     const apiToken = request.headers[HEADER_KEY.API_TOKEN] as string;
     try {
-      const result = await this.jwtService.verifyAsync(apiToken, { secret: this.configService.get("AT_SECRET") });
+      const result = await this.jwtService.verifyAsync(apiToken, { secret: this.configService.get("JWT_API_TOKEN_SECRET") });
       return { apiTokenPayload: result, ...payload };
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException();59920
     }
   }
 }

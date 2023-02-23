@@ -5,14 +5,14 @@ import { User } from "entities/user.entity";
 import { USER_STATUS } from "modules/users/users.constants";
 import * as request from "supertest";
 import { generateNumber } from "utils/helpers";
-import { API_TOKEN, expectError, expectErrors, signin } from "../test.util";
-import { API_CORE_PREFIX } from "../test.util";
+import { API_CORE_PREFIX, API_TOKEN, expectError, expectErrors, signin } from "../test.util";
 
 describe("UsersController E2E Test", () => {
   let app: INestApplication;
   let userModel: typeof User;
   let userToken = "";
   let adminToken = "";
+  let agent: request.SuperAgentTest;
   const apiToken = API_TOKEN;
   let testUser: { [k: string]: any } = {
     firstname: "testUser",
@@ -32,16 +32,16 @@ describe("UsersController E2E Test", () => {
     app.enableVersioning();
     app.setGlobalPrefix("api");
     await app.init();
-
+    agent = request.agent(app.getHttpServer());
+    agent.set("api-token", apiToken);
     const { accessToken } = await signin();
     adminToken = accessToken;
   });
 
   describe("Create new user (POST)api/users", () => {
     it("Should succeed due to user sufficient privileges", () => {
-      return request(app.getHttpServer())
+      return agent
         .post(`${API_CORE_PREFIX}/users`)
-        .set("api-token", `${apiToken}`)
         .send(testUser)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.CREATED)
@@ -59,9 +59,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("Should signin successfully and return userToken", () => {
-      return request(app.getHttpServer())
+      return agent
         .post(`${API_CORE_PREFIX}/auth/login`)
-        .set("api-token", `${apiToken}`)
         .send({ type: "email", email: testUser.email, password: testUser.password })
         .expect(HttpStatus.CREATED)
         .expect((response) => {
@@ -74,9 +73,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("should fail due to user unauthorized", () => {
-      return request(app.getHttpServer())
+      return agent
         .post(`${API_CORE_PREFIX}/users`)
-        .set("api-token", `${apiToken}`)
         .send(testUser)
         .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
@@ -85,9 +83,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("should fail due to user insufficient privileges", () => {
-      return request(app.getHttpServer())
+      return agent
         .post(`${API_CORE_PREFIX}/users`)
-        .set("api-token", `${apiToken}`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN)
@@ -99,9 +96,8 @@ describe("UsersController E2E Test", () => {
 
   describe("Update user (PATCH)api/users/:id", () => {
     it("Should fail due to user unauthorized", () => {
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
           // expectError(response.body);
@@ -109,9 +105,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("Should fail due to user is not the same", () => {
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/1`)
-        .set("api-token", `${apiToken}`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN)
@@ -126,9 +121,8 @@ describe("UsersController E2E Test", () => {
         phone: 3423432432,
         id: generateNumber(4),
       };
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect((response) => {
@@ -143,9 +137,8 @@ describe("UsersController E2E Test", () => {
         id: generateNumber(4),
         roleId: 1, //admin
       };
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
@@ -161,9 +154,8 @@ describe("UsersController E2E Test", () => {
 
     it("Same user updates email should succeed & response otpToken", () => {
       const updateData = { email: `user-test-${generateNumber(6)}@gmail.com` };
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
@@ -178,9 +170,8 @@ describe("UsersController E2E Test", () => {
 
     it("Same user updates phone should succeed & response otpToken", () => {
       const updateData = { phone: `${generateNumber(10)}` };
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
@@ -198,9 +189,8 @@ describe("UsersController E2E Test", () => {
         phone: `${generateNumber(10)}`,
         firstname: "update firstname",
       };
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
@@ -219,9 +209,8 @@ describe("UsersController E2E Test", () => {
         email: `user-test-${generateNumber(4)}@gmail.com`,
         id: generateNumber(4),
       };
-      return request(app.getHttpServer())
+      return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .send(updateData)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
@@ -238,9 +227,8 @@ describe("UsersController E2E Test", () => {
 
   describe("Get users (GET)api/users", () => {
     it("should fail due to user unauthorized", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
-        .set("api-token", `${apiToken}`)
         .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
           // expectError(response.body);
@@ -248,9 +236,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("Should succeed because user having sufficient privileges", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect((response) => {
           const { data } = response.body;
@@ -264,9 +251,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("Should fail due to user lacking sufficient privileges", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN)
         .expect((response: request.Response) => {
@@ -277,23 +263,18 @@ describe("UsersController E2E Test", () => {
 
   describe("Get user (GET)api/users/:id", () => {
     it("Should fail due to user unauthorized", () => {
-      return request(app.getHttpServer())
-        .get(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
-        .expect(HttpStatus.UNAUTHORIZED);
+      return agent.get(`${API_CORE_PREFIX}/users/${testUser.id}`).expect(HttpStatus.UNAUTHORIZED);
     });
     it("Should fail due to user is not the same", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users/1`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should succeed due to user is the same", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
         .expect((response) => {
@@ -303,9 +284,8 @@ describe("UsersController E2E Test", () => {
         });
     });
     it("Should Succeed due to user is admin", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .expect((response) => {
@@ -318,24 +298,19 @@ describe("UsersController E2E Test", () => {
 
   describe("Delete user (DELETE)api/users/:id", () => {
     it("Should fail due to user unauthorize", () => {
-      return request(app.getHttpServer())
-        .delete(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
-        .expect(HttpStatus.UNAUTHORIZED);
+      return agent.delete(`${API_CORE_PREFIX}/users/${testUser.id}`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user is not the same", () => {
-      return request(app.getHttpServer())
+      return agent
         .get(`${API_CORE_PREFIX}/users/1`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should Succeed due to user having sufficient privileges", () => {
-      return request(app.getHttpServer())
+      return agent
         .delete(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
         .expect(async (response) => {
@@ -345,9 +320,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("Same user should soft-delete only", () => {
-      return request(app.getHttpServer())
+      return agent
         .delete(`${API_CORE_PREFIX}/users/${testUser.id}?hardDelete=true`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
         .expect(async (response) => {
@@ -357,9 +331,8 @@ describe("UsersController E2E Test", () => {
     });
 
     it("Admin should hard-delete", () => {
-      return request(app.getHttpServer())
+      return agent
         .delete(`${API_CORE_PREFIX}/users/${testUser.id}?hardDelete=true`)
-        .set("api-token", `${apiToken}`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .expect(async (response) => {

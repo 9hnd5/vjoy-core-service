@@ -28,7 +28,7 @@ export class AuthService {
   ) {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";
-    this.atSecret = configService.get("AT_SECRET") || "";
+    this.atSecret = configService.get("JWT_API_TOKEN_SECRET") || "";
   }
 
   login(data: LoginDto) {
