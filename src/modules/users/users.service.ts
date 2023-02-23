@@ -12,6 +12,7 @@ import { transformQueries } from "utils/helpers";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
+import { isEmpty } from "lodash";
 
 @Injectable()
 export class UsersService {
@@ -26,14 +27,13 @@ export class UsersService {
   ) {}
 
   async createByAdmin(createUserDto: CreateUserDto) {
-    const pass = createUserDto.password??"123456";
+    const pass = createUserDto.password ?? "123456";
     const password = await this.authService.createPassword(pass);
-    const rs = await this.userModel.create({
+    return await this.userModel.create({
       ...createUserDto,
       password,
       status: USER_STATUS.ACTIVATED,
     });
-    return rs;
   }
 
   async findAll(query?, includeDeleted = false) {
@@ -59,16 +59,24 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto) {
     try {
       const role = this.request.user?.roleCode;
-
       if (role === "admin") {
         const rs = await this.userModel.update(updateUserDto, { where: { id: id }, returning: true });
         return rs[1][0].get();
       }
 
-      const { email, phone, ...others } = updateUserDto;
-      const rs = await this.userModel.update(others, { where: { id: id }, returning: true });
+      const { email, phone, roleId, ...others } = updateUserDto;
+
+      let user;
+      if (!isEmpty(others)) {
+        const rs = await this.userModel.update(others, { where: { id: id }, returning: true });
+        user = rs[1][0].get();
+      } else {
+        user = await this.userModel
+          .findByPk(id, { attributes: { exclude: EXCLUDE_FIELDS } })
+          .then((user) => user?.dataValues);
+      }
+
       let otpToken;
-      const user = rs[1][0].get();
       if (email) {
         const existUser = await this.checkExistUser(user.id, { email });
         if (existUser) throw new BadRequestException("Email already exists");
@@ -76,7 +84,7 @@ export class UsersService {
         const otpCode = this.authService.generateOTPCode();
         // send email
         const payload = { userId: user.id, email };
-        otpToken = this.authService.generateOTPToken(otpCode, payload);
+        otpToken = await this.authService.generateOTPToken(otpCode, payload);
       }
       if (phone) {
         const existUser = await this.checkExistUser(user.id, { phone });
@@ -85,7 +93,7 @@ export class UsersService {
         const otpCode = this.authService.generateOTPCode();
         if (user.phone) this.smsService.send(user.phone, eval("`" + SMS_TEMPLATE.OTP + "`"));
         const payload = { userId: user.id, phone };
-        otpToken = this.authService.generateOTPToken(otpCode, payload);
+        otpToken = await this.authService.generateOTPToken(otpCode, payload);
       }
       return { ...user, otpToken };
     } catch {
@@ -100,7 +108,8 @@ export class UsersService {
         { email: verifyResult.email, phone: verifyResult.phone },
         { where: { id: verifyResult.userId }, returning: true }
       );
-      return rs[1][0].get();
+      const user = rs[1][0].get();
+      return user;
     } catch {
       throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
     }
