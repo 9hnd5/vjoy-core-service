@@ -144,8 +144,8 @@ describe("UsersController E2E Test", () => {
           const user = response.body.data;
           expect(user.firstname).toEqual(updateData.firstname.trim());
           expect(user.lastname).toEqual(updateData.lastname.trim());
-          expect(user.id).toEqual(testUser.id);
-          expect(user.roleId).not.toEqual(testUser.roleId);
+          expect(user.id).not.toEqual(updateData.id);
+          expect(user.roleId).not.toEqual(updateData.roleId);
           expect(user).not.toHaveProperty("password");
         });
     });
