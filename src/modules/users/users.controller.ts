@@ -13,8 +13,11 @@ export class UsersController {
 
   @Authorize({ action: "create", resource: "users" })
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.createByAdmin(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    return await this.usersService.createByAdmin(createUserDto).then((user) => {
+      delete user.dataValues.password;
+      return user.dataValues;
+    });
   }
 
   @Authorize({ action: "list", resource: "users" })
@@ -31,8 +34,10 @@ export class UsersController {
 
   @AdminOrSameUser()
   @Patch(":userId")
-  update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(userId, updateUserDto);
+  async update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
+    const updatedUser = await this.usersService.update(userId, updateUserDto);
+    delete updatedUser.password;
+    return updatedUser;
   }
 
   @AdminOrSameUser()
@@ -44,7 +49,10 @@ export class UsersController {
   }
 
   @Post("otp")
-  verifyOTP(@Body() data: VerifyOtpDto) {
-    return this.usersService.verifyOtp(data.otpCode, data.otpToken);
+  async verifyOTP(@Body() data: VerifyOtpDto) {
+    return await this.usersService.verifyOtp(data.otpCode, data.otpToken).then((user) => {
+      delete user.password;
+      return user;
+    });
   }
 }
