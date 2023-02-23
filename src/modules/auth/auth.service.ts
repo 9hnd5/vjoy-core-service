@@ -17,6 +17,7 @@ import { LoginDto } from "./dto/login.dto";
 export class AuthService {
   private expiresIn: string;
   private secret: string;
+  private atSecret: string;
   constructor(
     configService: ConfigService,
     private jwtService: JwtService,
@@ -27,6 +28,7 @@ export class AuthService {
   ) {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";
+    this.atSecret = configService.get("AT_SECRET") || "";
   }
 
   login(data: LoginDto) {
@@ -71,7 +73,7 @@ export class AuthService {
     const { type, name, description } = data;
     const env = process.env.ENV!;
     const payload = { name, type, env };
-    const apiToken = await this.jwtService.signAsync(payload, { secret: this.secret });
+    const apiToken = await this.jwtService.signAsync(payload, { secret: this.atSecret });
     const newApiKey = await this.apiKeyModel.create({
       apiToken,
       env,

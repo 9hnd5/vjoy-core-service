@@ -5,6 +5,8 @@ import { UsersService } from "modules/users/users.service";
 import * as crypto from "crypto";
 
 const baseUrl = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}`;
+export const API_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQVBJIGtleSBmb3IgdmpveS13ZWIiLCJ0eXBlIjoidmpveS13ZWIiLCJlbnYiOiJkZXYiLCJpYXQiOjE2NzcxMjYxMzN9.NaWXerIGMk24ITeLjXFr0YaaoRZwcrhk2y4I4p8JJE8";
 export const API_CORE_PREFIX = `/api/v1/${process.env.ENV}/core`;
 
 export const adminAccount = {
@@ -68,7 +70,7 @@ export const createUser = async (param: { newUser?: CreateUserRequest; accessTok
     accessToken,
   } = param;
   const { data } = await instance.post("core/users", newUser, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${accessToken}`, "api-token": API_TOKEN },
   });
   return data as CreateUserResponse;
 };
@@ -83,17 +85,16 @@ export const createUser = async (param: { newUser?: CreateUserRequest; accessTok
 export const deleteUser = async (param: { id: number; accessToken: string }): Promise<object> => {
   const { id, accessToken } = param;
   const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${accessToken}`, "api-token": API_TOKEN },
   });
   return data;
 };
-
 
 export const expectError = (body: any) => {
   const { code, message } = body.error;
   expect(code).not.toBeNull();
   expect(message).not.toBeNull();
-}
+};
 
 export const expectErrors = (body: any) => {
   const errors = body.error;
@@ -101,4 +102,4 @@ export const expectErrors = (body: any) => {
   const { code, message } = errors[0];
   expect(code).not.toBeNull();
   expect(message).not.toBeNull();
-}
+};

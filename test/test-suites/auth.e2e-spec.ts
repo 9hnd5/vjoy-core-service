@@ -7,7 +7,7 @@ import { AuthService } from "modules/auth/auth.service";
 import { USER_STATUS } from "modules/users/users.constants";
 import { Op } from "sequelize";
 import * as request from "supertest";
-import { API_CORE_PREFIX, createUser, deleteUser, signin } from "../test.util";
+import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, signin } from "../test.util";
 
 describe("Auth (e2e)", () => {
   let app: INestApplication;
@@ -17,6 +17,7 @@ describe("Auth (e2e)", () => {
   let userToken: string;
   let newUser: User["dataValues"];
   let apiKey: ApiKey["dataValues"];
+  const apiToken = API_TOKEN;
   const user = {
     email: "api-test@vus-etsc.edu.vn",
     password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK",
@@ -87,6 +88,7 @@ describe("Auth (e2e)", () => {
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/api-key`)
       .set("Authorization", `Bearer ${adminToken}`)
+      .set("api-token", `${apiToken}`)
       .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-name-description" })
       .expect((res) => (apiKey = res.body.data))
       .expect(HttpStatus.CREATED);
@@ -96,6 +98,7 @@ describe("Auth (e2e)", () => {
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/api-key`)
       .set("Authorization", `Bearer ${userToken}`)
+      .set("api-token", `${apiToken}`)
       .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-description" })
       .expect(HttpStatus.FORBIDDEN);
   });
@@ -104,6 +107,7 @@ describe("Auth (e2e)", () => {
     return request(app.getHttpServer())
       .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
       .set("Authorization", `Bearer ${adminToken}`)
+      .set("api-token", `${apiToken}`)
       .expect(HttpStatus.OK);
   });
 
@@ -111,6 +115,7 @@ describe("Auth (e2e)", () => {
     return request(app.getHttpServer())
       .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
       .set("Authorization", `Bearer ${userToken}`)
+      .set("api-token", `${apiToken}`)
       .expect(HttpStatus.FORBIDDEN);
   });
 
@@ -123,6 +128,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { email, accessToken } = response.body.data;
@@ -142,6 +148,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -160,6 +167,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -177,6 +185,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { data } = response.body;
@@ -194,6 +203,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { data } = response.body;
@@ -212,6 +222,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -229,6 +240,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/login`)
+      .set("api-token", `${apiToken}`)
       .send(loginDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
@@ -241,6 +253,7 @@ describe("Auth (e2e)", () => {
   it("/auth/otp", () => {
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/otp`)
+      .set("api-token", `${apiToken}`)
       .send(verifySuccess)
       .expect((response: request.Response) => {
         const { accessToken } = response.body.data;
@@ -259,6 +272,7 @@ describe("Auth (e2e)", () => {
 
     return request(app.getHttpServer())
       .post(`${API_CORE_PREFIX}/auth/otp`)
+      .set("api-token", `${apiToken}`)
       .send(verifyDTO)
       .expect((response: request.Response) => {
         const { code, message } = response.body.error;
