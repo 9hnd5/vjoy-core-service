@@ -1,29 +1,34 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
+import { ApiKey } from "entities/api-key.entity";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
 import { SmsService } from "modules/sms/sms.service";
 import { SMS_TEMPLATE } from "utils/constants";
 import { USER_STATUS } from "../users/users.constants";
 import { AUTH_ERROR_MESSAGE, OTP_TOKEN_EXPIRES, ROLE_CODE } from "./auth.constants";
+import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
 export class AuthService {
   private expiresIn: string;
   private secret: string;
+  private atSecret: string;
   constructor(
     configService: ConfigService,
     private jwtService: JwtService,
     private smsService: SmsService,
     @InjectModel(User) private userModel: typeof User,
-    @InjectModel(Role) private roleModel: typeof Role
+    @InjectModel(Role) private roleModel: typeof Role,
+    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey
   ) {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";
+    this.atSecret = configService.get("JWT_API_TOKEN_SECRET") || "";
   }
 
   login(data: LoginDto) {
@@ -63,6 +68,27 @@ export class AuthService {
     this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
 
   generateOTPCode = () => `${Math.floor(Math.random() * 9000) + 1000}`; // 4 digits;
+
+  createApiKey = async (data: CreateApiKeyDto) => {
+    const { type, name, description } = data;
+    const env = process.env.ENV!;
+    const payload = { name, type, env };
+    const apiToken = await this.jwtService.signAsync(payload, { secret: this.atSecret });
+    const newApiKey = await this.apiKeyModel.create({
+      apiToken,
+      env,
+      type,
+      name,
+      description,
+    });
+    return newApiKey.dataValues;
+  };
+
+  deleteApiKey = async (id: number) => {
+    const existApiKey = await this.apiKeyModel.findOne({ where: { id } });
+    if (!existApiKey) throw new NotFoundException();
+    return this.apiKeyModel.destroy({ where: { id } });
+  };
 
   private generateUserToken = async (user: User) => {
     const {

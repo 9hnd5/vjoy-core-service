@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 import { SequelizeModule } from "@nestjs/sequelize";
+import { ApiKey } from "entities/api-key.entity";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
 import { SmsModule } from "modules/sms/sms.module";
@@ -12,7 +13,7 @@ import { AuthorizeGuard } from "./guards/authorize.guard";
 import { JwtAuthStrategy } from "./strategies/jwt-auth.strategy";
 
 @Module({
-  imports: [JwtModule.register({}), SmsModule, SequelizeModule.forFeature([Role, User])],
+  imports: [JwtModule.register({}), SmsModule, SequelizeModule.forFeature([Role, User, ApiKey])],
   controllers: [AuthController],
   providers: [
     AuthService,

@@ -2,8 +2,11 @@ import axios from "axios";
 import { AuthService } from "modules/auth/auth.service";
 import { CreateUserDto } from "modules/users/dto/create-user.dto";
 import { UsersService } from "modules/users/users.service";
+import * as crypto from "crypto";
 
 const baseUrl = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}`;
+export const API_TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQVBJIGtleSBmb3IgdmpveS13ZWIiLCJ0eXBlIjoidmpveS13ZWIiLCJlbnYiOiJkZXYiLCJpYXQiOjE2NzcxMjYxMzN9.NaWXerIGMk24ITeLjXFr0YaaoRZwcrhk2y4I4p8JJE8";
 export const API_CORE_PREFIX = `/api/v1/${process.env.ENV}/core`;
 
 export const adminAccount = {
@@ -56,9 +59,18 @@ type CreateUserResponse = Awaited<ReturnType<typeof UsersService.prototype.creat
  * @param accessToken The access token to use.
  * @returns The created user.
  */
-export const createUser = async (newUser: CreateUserRequest, accessToken: string) => {
+export const createUser = async (param: { newUser?: CreateUserRequest; accessToken: string }) => {
+  const {
+    newUser = {
+      firstname: "APITEST-firstname",
+      lastname: "APITEST-lastname",
+      email: `APITEST-${crypto.randomUUID()}@gmail.com`,
+      roleId: 4,
+    },
+    accessToken,
+  } = param;
   const { data } = await instance.post("core/users", newUser, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: { Authorization: `Bearer ${accessToken}`, "api-token": API_TOKEN },
   });
   return data as CreateUserResponse;
 };
@@ -70,17 +82,19 @@ export const createUser = async (newUser: CreateUserRequest, accessToken: string
  * @param {string} accessToken - The access token of the user.
  * @returns {Promise<object>} - The data of the deleted user.
  */
-export const deleteUser = async (id: number, accessToken: string): Promise<object> => {
-  const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, { headers: { Authorization: `Bearer ${accessToken}` } });
+export const deleteUser = async (param: { id: number; accessToken: string }): Promise<object> => {
+  const { id, accessToken } = param;
+  const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, {
+    headers: { Authorization: `Bearer ${accessToken}`, "api-token": API_TOKEN },
+  });
   return data;
 };
-
 
 export const expectError = (body: any) => {
   const { code, message } = body.error;
   expect(code).not.toBeNull();
   expect(message).not.toBeNull();
-}
+};
 
 export const expectErrors = (body: any) => {
   const errors = body.error;
@@ -88,4 +102,4 @@ export const expectErrors = (body: any) => {
   const { code, message } = errors[0];
   expect(code).not.toBeNull();
   expect(message).not.toBeNull();
-}
+};
