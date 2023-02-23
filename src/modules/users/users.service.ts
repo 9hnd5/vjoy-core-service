@@ -33,7 +33,8 @@ export class UsersService {
       password,
       status: USER_STATUS.ACTIVATED,
     });
-    return rs;
+    const { password: pw, ...user } = rs.dataValues;
+    return user;
   }
 
   async findAll(query?, includeDeleted = false) {
@@ -62,7 +63,8 @@ export class UsersService {
 
       if (role === "admin") {
         const rs = await this.userModel.update(updateUserDto, { where: { id: id }, returning: true });
-        return rs[1][0].get();
+        const { password: pw, ...user } = rs[1][0].get();
+        return user;
       }
 
       const { email, phone, ...others } = updateUserDto;
