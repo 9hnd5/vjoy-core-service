@@ -5,9 +5,9 @@ import { ApiKey } from "entities/api-key.entity";
 import { User } from "entities/user.entity";
 import { AuthService } from "modules/auth/auth.service";
 import { USER_STATUS } from "modules/users/users.constants";
-import { Op } from "sequelize";
 import * as request from "supertest";
-import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, signin } from "../test.util";
+import { generateNumber } from "utils/helpers";
+import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, signin } from "../test.util";
 
 describe("Auth (e2e)", () => {
   let app: INestApplication;
@@ -15,31 +15,14 @@ describe("Auth (e2e)", () => {
   let verifySuccess;
   let adminToken: string;
   let userToken: string;
-  let newUser: User["dataValues"];
   let apiKey: ApiKey["dataValues"];
   let agent: request.SuperAgentTest;
   const apiToken = API_TOKEN;
-  const user = {
-    email: "api-test@vus-etsc.edu.vn",
-    password: "$2b$10$28xJRsHjH05F/TIbN76tL.akQT07qqPh6Zu2sac9O2pgOnKuRugyK",
-    phone: "0366033333",
-    roleId: 1,
-    status: USER_STATUS.ACTIVATED,
-  };
-
-  const userDeactived = {
-    email: "api-test-deactived@vus-etsc.edu.vn",
-    phone: "0366033334",
-    roleId: 1,
-    status: USER_STATUS.DEACTIVED,
-  };
-
-  const userDeleted = {
-    email: "api-test-deleted@vus-etsc.edu.vn",
-    phone: "0366033335",
-    roleId: 1,
-    status: USER_STATUS.ACTIVATED,
-  };
+  let user: { [k: string]: any };
+  let userDeactived: { [k: string]: any };
+  let userDeleted: { [k: string]: any };
+  let userCreatedByPhone;
+  const password = "123456";
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -53,221 +36,269 @@ describe("Auth (e2e)", () => {
     agent = request.agent(app.getHttpServer());
     agent.set("api-token", apiToken);
     //signin as admin
-    const result1 = await signin();
-    adminToken = result1.accessToken;
+    const adminUser = await signin();
+    adminToken = adminUser.accessToken;
 
     //create new user
-    newUser = await createUser({ accessToken: adminToken });
-    //sigin with new user;
-    const result2 = await signin({ email: newUser.email!, password: "123456" });
-    userToken = result2.accessToken;
+    const user1 = {
+      firstname: "login-test",
+      lastname: "login-test",
+      email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
+      phone: `${generateNumber(10)}`,
+      roleId: 4,
+    };
+
+    const user2 = {
+      firstname: "login-test-deactived",
+      lastname: "login-test-deactived",
+      email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
+      phone: `${generateNumber(10)}`,
+      roleId: 4,
+    };
+
+    const user3 = {
+      firstname: "login-test-deleted",
+      lastname: "login-test-deleted",
+      email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
+      phone: `${generateNumber(10)}`,
+      roleId: 4,
+    };
+    const createdUser1: User["dataValues"] = await createUser({ newUser: user1, accessToken: adminToken });
+    const createdUser2: User["dataValues"] = await createUser({ newUser: user2, accessToken: adminToken });
+    const createdUser3: User["dataValues"] = await createUser({ newUser: user3, accessToken: adminToken });
+    user = { id: createdUser1.id, ...user1 };
+    userDeactived = { id: createdUser2.id, ...user2 };
+    userDeleted = { id: createdUser3.id, ...user3 };
 
     userModel = moduleRef.get("UserRepository");
-    await userModel.bulkCreate([user, userDeactived, userDeleted]);
-    await userModel.destroy({ where: { email: "api-test-deleted@vus-etsc.edu.vn" } });
+    // deactive user
+    await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
+    // soft delete user
+    await userModel.destroy({ where: { id: userDeleted.id } });
 
+    // gen success token
     const authService = moduleRef.get(AuthService);
     const otpCode = authService.generateOTPCode();
-    const otpToken = await authService.generateOTPToken(otpCode, { userId: 1, roleId: 1 });
+    const otpToken = await authService.generateOTPToken(otpCode, { userId: adminUser.id, roleId: adminUser.roleId });
     verifySuccess = { otpCode, otpToken };
   });
 
   afterAll(async () => {
-    await userModel.destroy({
-      where: {
-        [Op.or]: [{ email: { [Op.like]: "api-test%@vus-etsc.edu.vn" } }, { phone: "123456789" }],
-      },
-      force: true,
-    });
-
     //Delete new user was created before
-    await deleteUser({ id: newUser.id, accessToken: adminToken });
+    await deleteUser({ id: user.id, accessToken: adminToken });
+    await deleteUser({ id: userDeactived.id, accessToken: adminToken });
+    await deleteUser({ id: userDeleted.id, accessToken: adminToken });
+    await deleteUser({ id: userCreatedByPhone.id, accessToken: adminToken });
 
     await app.close();
   });
 
-  it("should create api-key success due to user is admin", () => {
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/api-key`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-name-description" })
-      .expect((res) => (apiKey = res.body.data))
-      .expect(HttpStatus.CREATED);
+  describe("Sign in by email (POST) auth/login", () => {
+    it("Should sign in successfully and return userToken", () => {
+      const loginDTO = {
+        type: "email",
+        email: user.email,
+        password,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect((response: request.Response) => {
+          const { email, accessToken, refreshToken } = response.body.data;
+          userToken = accessToken;
+          expect(email).toEqual(loginDTO.email);
+          expect(accessToken).not.toBeNull();
+          expect(refreshToken).not.toBeNull();
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("Should sign in failed due to user not exist", () => {
+      const loginDTO = {
+        type: "email",
+        email: `email-${generateNumber(10)}@vus-etsc.edu.vn`,
+        password,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should sign in failed due to wrong password", () => {
+      const loginDTO = {
+        type: "email",
+        email: user.email,
+        password: `${generateNumber(6)}`,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should sign in failed due to not providing api-key", () => {
+      const loginDTO = {
+        type: "email",
+        email: user.email,
+        password
+      };
+      return request(app.getHttpServer())
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
   });
 
-  it("should create api-key fail due to user is not admin", () => {
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/api-key`)
-      .set("Authorization", `Bearer ${userToken}`)
-      .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-description" })
-      .expect(HttpStatus.FORBIDDEN);
+  describe("Create new api-key (POST)api/api-key", () => {
+    it("should create api-key success due to user is admin", () => {
+      const keyData = { name: "APITEST-name", type: "vjoy-web", description: "APITEST-name-description" };
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/api-key`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send(keyData)
+        .expect((response: request.Response) => {
+          apiKey = response.body.data;
+
+          expect(apiKey.name).toEqual(keyData.name);
+          expect(apiKey.type).toEqual(keyData.type);
+          expect(apiKey.description).toEqual(keyData.description);
+          expect(apiKey).toHaveProperty("apiToken");
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("should create api-key fail due to user is not admin", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/api-key`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-description" })
+        .expect(HttpStatus.FORBIDDEN);
+    });
   });
 
-  it("should delete api-key success due to user is admin", () => {
-    return agent
-      .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
-      .set("Authorization", `Bearer ${adminToken}`)
-      .expect(HttpStatus.OK);
+  describe("Sign in by phone (POST) auth/login", () => {
+    it("Should sign in successfully and return otpToken", () => {
+      const loginDTO = {
+        type: "phone",
+        phone: user.phone,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect((response: request.Response) => {
+          const { data } = response.body;
+          expect(data).toHaveProperty("otpToken");
+          expect(data).not.toHaveProperty("otpCode");
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("Should create new user and return otpToken due to user not exist", () => {
+      const loginDTO = {
+        type: "phone",
+        phone: `${generateNumber(10)}`,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect(async (response: request.Response) => {
+          const { data } = response.body;
+          
+          userCreatedByPhone = await userModel.findOne({ where: { phone: loginDTO.phone } });
+          expect(userCreatedByPhone?.phone).toEqual(loginDTO.phone);
+          expect(userCreatedByPhone?.status).toEqual(USER_STATUS.NEW);
+          expect(data).toHaveProperty("otpToken");
+          expect(data).not.toHaveProperty("otpCode");
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("Should sign in failed due to user deactived", () => {
+      const loginDTO = {
+        type: "phone",
+        phone: userDeactived.phone,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should sign in failed due to user deleted", () => {
+      const loginDTO = {
+        type: "phone",
+        phone: userDeleted.phone,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/login`)
+        .send(loginDTO)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
   });
 
-  it("should delete api-key fail due to user is not admin", () => {
-    return agent
-      .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
-      .set("Authorization", `Bearer ${userToken}`)
-      .expect(HttpStatus.FORBIDDEN);
+  describe("Verify Otp (POST) auth/otp", () => {
+    it("Should verify successfully and return userToken", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/otp`)
+        .send(verifySuccess)
+        .expect((response: request.Response) => {
+          const { accessToken, refreshToken } = response.body.data;
+          expect(accessToken).not.toBeNull();
+          expect(refreshToken).not.toBeNull();
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("Should verify failed due to invalid otp", () => {
+      const verifyDTO = {
+        otpToken:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEzLCJyb2xlSWQiOjQsImlhdCI6MTY3NTkzNjkyNywiZXhwIjoxNjc1OTM3MjI3fQ.bH7gCcM73l7drMish8o_h1ALga-gpKtTdL4s5keRyHU",
+        otpCode: "8634",
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/otp`)
+        .send(verifyDTO)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
   });
 
-  it("/auth/login (POST by email)", () => {
-    const loginDTO = {
-      type: "email",
-      email: user.email,
-      password: "123456",
-    };
+  describe("Delete api-key (DELETE)api/api-key", () => {
+    it("should delete api-key success due to user is admin", () => {
+      return agent
+        .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.OK);
+    });
 
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { email, accessToken } = response.body.data;
-
-        expect(email).toEqual(loginDTO.email);
-        expect(accessToken).not.toBeNull();
-      })
-      .expect(HttpStatus.CREATED);
-  });
-
-  it("should not login by email if user not exist", () => {
-    const loginDTO = {
-      type: "email",
-      email: "a@vus-etsc.edu.vn",
-      password: "123456",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { code, message } = response.body.error;
-        expect(code).not.toBeNull();
-        expect(message).not.toBeNull();
-      })
-      .expect(HttpStatus.UNAUTHORIZED);
-  });
-
-  it("should not login by email if wrong password", () => {
-    const loginDTO = {
-      type: "email",
-      email: user.email,
-      password: "12345",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { code, message } = response.body.error;
-        expect(code).not.toBeNull();
-        expect(message).not.toBeNull();
-      })
-      .expect(HttpStatus.UNAUTHORIZED);
-  });
-
-  it("/auth/login (POST by phone user exist)", () => {
-    const loginDTO = {
-      type: "phone",
-      phone: "0366033333",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { data } = response.body;
-        expect(data).toHaveProperty("otpToken");
-        expect(data).not.toHaveProperty("otpCode");
-      })
-      .expect(HttpStatus.CREATED);
-  });
-
-  it("/auth/login (POST by phone user not exist)", () => {
-    const loginDTO = {
-      type: "phone",
-      phone: "123456789",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { data } = response.body;
-
-        expect(data).toHaveProperty("otpToken");
-        expect(data).not.toHaveProperty("otpCode");
-      })
-      .expect(HttpStatus.CREATED);
-  });
-
-  it("should not login by phone if user deleted", () => {
-    const loginDTO = {
-      type: "phone",
-      phone: "0366033335",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { code, message } = response.body.error;
-        expect(code).not.toBeNull();
-        expect(message).not.toBeNull();
-      })
-      .expect(HttpStatus.UNAUTHORIZED);
-  });
-
-  it("should not login by phone if user deactived", () => {
-    const loginDTO = {
-      type: "phone",
-      phone: "0366033334",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/login`)
-      .send(loginDTO)
-      .expect((response: request.Response) => {
-        const { code, message } = response.body.error;
-        expect(code).not.toBeNull();
-        expect(message).not.toBeNull();
-      })
-      .expect(HttpStatus.UNAUTHORIZED);
-  });
-
-  it("/auth/otp", () => {
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/otp`)
-      .send(verifySuccess)
-      .expect((response: request.Response) => {
-        const { accessToken } = response.body.data;
-
-        expect(accessToken).not.toBeNull();
-      })
-      .expect(HttpStatus.CREATED);
-  });
-
-  it("should not verify otp", () => {
-    const verifyDTO = {
-      otpToken:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEzLCJyb2xlSWQiOjQsImlhdCI6MTY3NTkzNjkyNywiZXhwIjoxNjc1OTM3MjI3fQ.bH7gCcM73l7drMish8o_h1ALga-gpKtTdL4s5keRyHU",
-      otpCode: "8634",
-    };
-
-    return agent
-      .post(`${API_CORE_PREFIX}/auth/otp`)
-      .send(verifyDTO)
-      .expect((response: request.Response) => {
-        const { code, message } = response.body.error;
-        expect(code).not.toBeNull();
-        expect(message).not.toBeNull();
-      })
-      .expect(HttpStatus.UNAUTHORIZED);
+    it("should delete api-key fail due to user is not admin", () => {
+      return agent
+        .delete(`${API_CORE_PREFIX}/auth/api-key/${apiKey.id}`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
   });
 });
