@@ -3,16 +3,16 @@ import { BadRequestException, UnauthorizedException } from "@nestjs/common/excep
 import { InjectModel } from "@nestjs/sequelize";
 import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
-import { AUTH_ERROR_MESSAGE } from "modules/auth/auth.constants";
+import { AUTH_ERROR_MESSAGE, ROLE_CODE } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
 import { SmsService } from "modules/sms/sms.service";
 import { Op } from "sequelize";
 import { SMS_TEMPLATE } from "utils/constants";
-import { transformQueries } from "utils/helpers";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
 import { isEmpty } from "lodash";
+import { QueryDto } from "dtos/query.dto";
 
 @Injectable()
 export class UsersService {
@@ -36,11 +36,11 @@ export class UsersService {
     });
   }
 
-  async findAll(query?, includeDeleted = false) {
-    const obj: any = transformQueries(query);
+  async findAll(query?: QueryDto, includeDeleted = false) {
     const rs = await this.userModel.findAndCountAll<User>({
-      ...obj.pagination,
-      order: obj.sort,
+      limit: query?.limit,
+      offset: query?.offset,
+      order: query?.sort,
       attributes: { exclude: EXCLUDE_FIELDS },
       include: Role,
       paranoid: !includeDeleted,
@@ -59,12 +59,13 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto) {
     try {
       const role = this.request.user?.roleCode;
-      if (role === "admin") {
+      if (role === ROLE_CODE.ADMIN) {
         const rs = await this.userModel.update(updateUserDto, { where: { id: id }, returning: true });
         return rs[1][0].get();
       }
 
-      const { email, phone, roleId, ...others } = updateUserDto;
+      const { email, phone, ...others } = updateUserDto;
+      delete others.roleId;
 
       let user;
       if (!isEmpty(others)) {

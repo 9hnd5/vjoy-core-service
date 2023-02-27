@@ -1,27 +1,27 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { Role } from "entities/role.entity";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { Kid } from "entities/kid.entity";
-import { transformQueries } from "utils/helpers";
 import { User } from "entities/user.entity";
+import { QueryDto } from "dtos/query.dto";
 
 @Injectable()
 export class KidsService {
-  constructor(@InjectModel(Kid) private kidModel: typeof Kid) {}
+  constructor(@InjectModel(Kid) private kidModel: typeof Kid, @InjectModel(User) private userModel: typeof User) {}
 
   async create(createKidDto: CreateKidDto) {
     const rs = await this.kidModel.create(createKidDto);
     return rs;
   }
 
-  async findAll(userId?: number, query?, includeDeleted = false) {
-    const obj: any = transformQueries(query);
-    const rs = await this.kidModel.findAndCountAll<Kid>({
+  async findAll(userId?: number, query?: QueryDto, includeDeleted = false) {
+    const rs = await this.kidModel.findAndCountAll({
       where: userId ? { parentId: userId } : {},
-      ...obj.pagination,
-      order: obj.sort,
+      limit: query?.limit,
+      offset: query?.offset,
+      order: query?.sort,
       include: [Role, User],
       paranoid: !includeDeleted,
     });
@@ -34,6 +34,12 @@ export class KidsService {
   }
 
   async update(userId: number, kidId: number, updateUserDto: UpdateKidDto) {
+    const { parentId } = updateUserDto;
+    if (parentId) {
+      const user = await this.userModel.findByPk(parentId);
+      if(!user) throw new BadRequestException("Parent is not exists");
+    }
+    
     await this.kidModel.update({ ...updateUserDto }, { where: { id: kidId, parentId: userId } });
     const rs = await this.kidModel.findByPk(kidId);
     return rs;

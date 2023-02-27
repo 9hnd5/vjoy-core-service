@@ -7,6 +7,7 @@ import { CreateKidDto } from "modules/kids/dto/create-kid.dto";
 import { UpdateKidDto } from "modules/kids/dto/update-kid.dto";
 import { Op } from "sequelize";
 import * as request from "supertest";
+import { generateNumber } from "utils/helpers";
 import { API_CORE_PREFIX, API_TOKEN, createUser, signin } from "../test.util";
 
 describe("KidsController E2E Test", () => {
@@ -149,7 +150,7 @@ describe("KidsController E2E Test", () => {
   describe("Update kid (PATCH)api/users/:id/kids/:kidId", () => {
     let updateKidDto: UpdateKidDto;
     beforeAll(() => {
-      updateKidDto = { firstname: "test-user-update", parentId: 0, roleId: 1 };
+      updateKidDto = { firstname: "test-user-update", parentId: 1, roleId: 1 };
     });
 
     it("Should fail due to user unauthorized", () => {
@@ -172,6 +173,14 @@ describe("KidsController E2E Test", () => {
         .send(updateKidDto)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("Should fail due to user is admin but parentId is not exists", () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByAdmin"].id}`)
+        .send({ firstname: "test-user-update", parentId: generateNumber(10), roleId: 1 })
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.BAD_REQUEST)
     });
 
     it("Should succeed due to user is the same", async () => {
@@ -197,7 +206,7 @@ describe("KidsController E2E Test", () => {
         .then((res) => {
           const updatedKid = res.body.data;
           expect(updatedKid.firstname).toBe(updateKidDto.firstname);
-          expect(updatedKid.parentId).toBe(0); // admin allow update parentId
+          expect(updatedKid.parentId).toBe(1); // admin allow update parentId
           expect(updatedKid.roleId).toBe(1); // admin allow to change role from kid to admin
         });
     });
@@ -362,7 +371,7 @@ describe("KidsController E2E Test", () => {
 
     it("Should succeed due to user having sufficient privileges (Hard delete)", async () => {
       return agent
-        .delete(`${API_CORE_PREFIX}/users/${0}/kids/${kid["createdByAdmin"].id}?hardDelete=true`) // changed to 0 by updated before
+        .delete(`${API_CORE_PREFIX}/users/${1}/kids/${kid["createdByAdmin"].id}?hardDelete=true`) // changed to 0 by updated before
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .then(async () => {

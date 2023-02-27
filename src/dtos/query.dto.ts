@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 import { Transform, Type } from "class-transformer";
-import { IsArray, IsNumber, IsOptional } from "class-validator";
+import { IsArray, IsNumber, IsOptional, IsPositive, Min } from "class-validator";
 export class QueryDto {
   @IsOptional()
   @Type(() => Array<[string, string]>)
@@ -16,20 +16,21 @@ export class QueryDto {
     }
   })
   @IsArray({ each: true })
-  sort: Array<Array<[string, string]>>[];
+  sort: Array<[string, string]>;
 
   @IsOptional()
-  @IsNumber()
-  page: number = 1;
+  @IsPositive()
+  page?: number;
+
   @IsOptional()
-  @IsNumber()
-  pageSize: number = 10;
+  @IsPositive()
+  pageSize?: number;
 
   get limit() {
     return this.pageSize;
   }
 
   get offset() {
-    return (this.page - 1) * this.pageSize;
+    return this.page && this.pageSize && (this.page - 1) * this.pageSize;
   }
 }

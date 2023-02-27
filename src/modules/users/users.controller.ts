@@ -6,6 +6,8 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { Controller } from "decorators/controller.decorator";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { ROLE_CODE } from "modules/auth/auth.constants";
+import { QueryDto } from "dtos/query.dto";
 
 @Controller("users")
 export class UsersController {
@@ -22,7 +24,7 @@ export class UsersController {
 
   @Authorize({ action: "list", resource: "users" })
   @Get()
-  findAll(@Query() query) {
+  findAll(@Query() query: QueryDto) {
     return this.usersService.findAll(query);
   }
 
@@ -44,7 +46,7 @@ export class UsersController {
   @Delete(":userId")
   remove(@Param("userId") userId: number, @Query("hardDelete") hardDelete: boolean) {
     const role = this.request.user?.roleCode;
-    const isHardDelete = role === "admin" && hardDelete;
+    const isHardDelete = role === ROLE_CODE.ADMIN && hardDelete;
     return this.usersService.remove(userId, isHardDelete);
   }
 
