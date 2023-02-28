@@ -6,6 +6,7 @@ import { GlobalExceptionFilter } from "filters/global-exception.filter";
 import { ResponseInterceptor } from "interceptors/response.interceptor";
 import { KidsModule } from "modules/kids/kids.module";
 import { SmsModule } from "modules/sms/sms.module";
+import { RouteValidation } from "pipes/route-validation.pipe";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -19,11 +20,19 @@ const validationProvider = {
   useValue: new ValidationPipe({
     whitelist: true,
     transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
     forbidNonWhitelisted: true,
   }),
 };
 
-const exceptionProvider = {
+const routeValidationProvider = {
+  provide: APP_PIPE,
+  useClass: RouteValidation,
+};
+
+const globalExceptionFilterProvider = {
   provide: APP_FILTER,
   useClass: GlobalExceptionFilter,
 };
@@ -54,6 +63,6 @@ const exceptionProvider = {
     SmsModule,
   ],
   controllers: [],
-  providers: [responseProvider, validationProvider, exceptionProvider],
+  providers: [responseProvider, validationProvider, routeValidationProvider, globalExceptionFilterProvider],
 })
 export class AppModule {}
