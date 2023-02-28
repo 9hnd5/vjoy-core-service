@@ -1,10 +1,12 @@
-import { Module, UnprocessableEntityException, ValidationError, ValidationPipe } from "@nestjs/common";
+import { Module, ValidationPipe } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { SequelizeModule } from "@nestjs/sequelize";
+import { GlobalExceptionFilter } from "filters/global-exception.filter";
 import { ResponseInterceptor } from "interceptors/response.interceptor";
 import { KidsModule } from "modules/kids/kids.module";
 import { SmsModule } from "modules/sms/sms.module";
+import { RouteValidation } from "pipes/route-validation.pipe";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
 
@@ -17,10 +19,22 @@ const validationProvider = {
   provide: APP_PIPE,
   useValue: new ValidationPipe({
     whitelist: true,
-    exceptionFactory(errors: ValidationError[]) {
-      return new UnprocessableEntityException(errors);
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
     },
+    forbidNonWhitelisted: true,
   }),
+};
+
+const routeValidationProvider = {
+  provide: APP_PIPE,
+  useClass: RouteValidation,
+};
+
+const globalExceptionFilterProvider = {
+  provide: APP_FILTER,
+  useClass: GlobalExceptionFilter,
 };
 
 @Module({
@@ -46,9 +60,9 @@ const validationProvider = {
     AuthModule,
     KidsModule,
     UsersModule,
-    SmsModule
+    SmsModule,
   ],
   controllers: [],
-  providers: [responseProvider, validationProvider],
+  providers: [responseProvider, validationProvider, routeValidationProvider, globalExceptionFilterProvider],
 })
 export class AppModule {}
