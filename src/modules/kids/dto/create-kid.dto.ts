@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsDefined, IsNotEmpty, IsNumber, IsOptional, Matches, ValidateNested } from "class-validator";
+import { IsDefined, IsNotEmpty, IsNumber, IsOptional, IsPositive, Matches, Min, ValidateNested } from "class-validator";
 
 class LearningGoalDto {
   @IsNumber()
@@ -26,7 +26,7 @@ export class CreateKidDto {
   @Matches(/^[FM]$/, { message: "gender must be M or F" })
   gender: string;
 
-  @IsNumber()
+  @IsPositive()
   parentId: number;
 
   @IsNumber()

@@ -119,6 +119,19 @@ describe("UsersController E2E Test", () => {
       const updateData = {
         firstname: "",
         phone: 3423432432,
+      };
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
+        .send(updateData)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect((response) => {
+          expectErrors(response.body);
+        });
+    });
+
+    it("Should failed due to invalid data (exist id)", () => {
+      const updateData = {
+        phone: 3423432432,
         id: generateNumber(4),
       };
       return agent
@@ -134,7 +147,6 @@ describe("UsersController E2E Test", () => {
       const updateData = {
         firstname: "fistname update",
         lastname: "last name update",
-        id: generateNumber(4),
         roleId: 1, //admin
       };
       return agent
@@ -146,7 +158,6 @@ describe("UsersController E2E Test", () => {
           const user = response.body.data;
           expect(user.firstname).toEqual(updateData.firstname.trim());
           expect(user.lastname).toEqual(updateData.lastname.trim());
-          expect(user.id).not.toEqual(updateData.id);
           expect(user.roleId).not.toEqual(updateData.roleId);
           expect(user).not.toHaveProperty("password");
         });
@@ -207,7 +218,6 @@ describe("UsersController E2E Test", () => {
         lastname: "last name update",
         phone: `${generateNumber(10)}`,
         email: `user-test-${generateNumber(4)}@gmail.com`,
-        id: generateNumber(4),
       };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
