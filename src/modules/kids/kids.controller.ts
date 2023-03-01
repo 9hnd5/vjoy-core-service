@@ -7,7 +7,7 @@ import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { Controller } from "decorators/controller.decorator";
 import { RolesService } from "modules/users/roles.service";
 import { ROLE_CODE } from "modules/auth/auth.constants";
-import { QueryDto } from "dtos/query.dto";
+import { QueryKidDto } from "./dto/query-kid.dto";
 
 @Controller()
 export class KidsController {
@@ -29,13 +29,13 @@ export class KidsController {
 
   @Authorize({ action: "list", resource: "kids" })
   @Get("kids")
-  findAllKids(@Query() query: QueryDto) {
+  findAllKids(@Query() query: QueryKidDto) {
     return this.kidsService.findAll(undefined, query);
   }
 
   @AdminOrSameUser()
   @Get("users/:userId/kids")
-  findAllKidsByUser(@Param("userId") userId: number, @Query() query: QueryDto) {
+  findAllKidsByUser(@Param("userId") userId: number, @Query() query: QueryKidDto) {
     return this.kidsService.findAll(userId, query);
   }
 

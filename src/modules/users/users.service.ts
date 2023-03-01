@@ -10,9 +10,9 @@ import { Op } from "sequelize";
 import { SMS_TEMPLATE } from "utils/constants";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
+import { EXCLUDE_FIELDS, USER_ERROR_MESSAGE, USER_STATUS } from "./users.constants";
 import { isEmpty } from "lodash";
-import { QueryDto } from "dtos/query.dto";
+import { QueryUserDto } from "./dto/query-user.dto";
 
 @Injectable()
 export class UsersService {
@@ -27,6 +27,16 @@ export class UsersService {
   ) {}
 
   async createByAdmin(createUserDto: CreateUserDto) {
+    const { email, phone } = createUserDto;
+    if (email) {
+      const existUser = await this.checkExistUser({email});
+      if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.EMAIL_EXISTS);
+    }
+    if (phone) {
+      const existUser = await this.checkExistUser({phone});
+      if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.PHONE_EXISTS);
+    }
+
     const pass = createUserDto.password ?? "123456";
     const password = await this.authService.createPassword(pass);
     return await this.userModel.create({
@@ -36,7 +46,7 @@ export class UsersService {
     });
   }
 
-  async findAll(query?: QueryDto, includeDeleted = false) {
+  async findAll(query?: QueryUserDto, includeDeleted = false) {
     const rs = await this.userModel.findAndCountAll<User>({
       limit: query?.limit,
       offset: query?.offset,
@@ -58,13 +68,25 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     try {
+      // check user exists
+      const { email, phone, ...others } = updateUserDto;
+      if (email) {
+        const existUser = await this.checkExistUser({ email }, id);
+        if (existUser) throw USER_ERROR_MESSAGE.EMAIL_EXISTS;
+      }
+      if (phone) {
+        const existUser = await this.checkExistUser({ phone }, id);
+        if (existUser) throw USER_ERROR_MESSAGE.PHONE_EXISTS;
+      }
+
+      // do update by admin
       const role = this.request.user?.roleCode;
       if (role === ROLE_CODE.ADMIN) {
         const rs = await this.userModel.update(updateUserDto, { where: { id: id }, returning: true });
         return rs[1][0].get();
       }
 
-      const { email, phone, ...others } = updateUserDto;
+      // do update by user
       delete others.roleId;
 
       let user;
@@ -79,26 +101,20 @@ export class UsersService {
 
       let otpToken;
       if (email) {
-        const existUser = await this.checkExistUser(user.id, { email });
-        if (existUser) throw new BadRequestException("Email already exists");
-
         const otpCode = this.authService.generateOTPCode();
         // send email
         const payload = { userId: user.id, email };
         otpToken = await this.authService.generateOTPToken(otpCode, payload);
       }
       if (phone) {
-        const existUser = await this.checkExistUser(user.id, { phone });
-        if (existUser) throw new BadRequestException("Phone already exists");
-
         const otpCode = this.authService.generateOTPCode();
         if (user.phone) this.smsService.send(user.phone, eval("`" + SMS_TEMPLATE.OTP + "`"));
         const payload = { userId: user.id, phone };
         otpToken = await this.authService.generateOTPToken(otpCode, payload);
       }
       return { ...user, otpToken };
-    } catch {
-      throw new BadRequestException("There was an error when updating");
+    } catch (error) {
+      throw new BadRequestException(error??"There was an error when updating");
     }
   }
 
@@ -123,13 +139,14 @@ export class UsersService {
     return true;
   }
 
-  private async checkExistUser(id, condition) {
+  private async checkExistUser(condition, id?) {
     return await this.userModel.findOne({
       where: {
-        [Op.not]: id,
+        [Op.not]: { id: id??0 },
         ...condition,
       },
       paranoid: false,
+      attributes: ["id"]
     });
   }
 }

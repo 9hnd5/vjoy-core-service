@@ -5,3 +5,8 @@ export const USER_STATUS = {
 };
 
 export const EXCLUDE_FIELDS = ['password']
+
+export const USER_ERROR_MESSAGE = {
+  EMAIL_EXISTS: "Email already exists",
+  PHONE_EXISTS: "Phone already exists",
+};
