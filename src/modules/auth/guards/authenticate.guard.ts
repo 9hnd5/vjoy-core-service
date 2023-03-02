@@ -1,6 +1,7 @@
-import { ExecutionContext, Injectable } from "@nestjs/common";
+import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
+import { HEADER_KEY } from "utils/constants";
 import { ADMIN_OR_SAME_USER_KEY } from "../decorators/admin-or-same-user.decorator";
 import { AUTHORIZE_KEY, Permission } from "../decorators/authorize.decorator";
 
@@ -10,6 +11,10 @@ export class AuthenticateGuard extends AuthGuard("jwt") {
     super();
   }
   canActivate(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest();
+    const apiToken = request.headers[HEADER_KEY.API_TOKEN];
+    if (!apiToken) throw new UnauthorizedException();
+
     const permission = this.reflector.getAllAndOverride(AUTHORIZE_KEY, [
       context.getHandler(),
       context.getClass(),
