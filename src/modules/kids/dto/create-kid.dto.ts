@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsDefined, IsNotEmpty, IsNumber, IsOptional, IsPositive, Matches, Min, ValidateNested } from "class-validator";
+import { IsDefined, IsNotEmpty, IsNumber, IsOptional, IsPositive, Matches, ValidateNested } from "class-validator";
 
 class LearningGoalDto {
   @IsNumber()

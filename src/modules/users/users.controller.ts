@@ -7,7 +7,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { Controller } from "decorators/controller.decorator";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import { ROLE_CODE } from "modules/auth/auth.constants";
-import { QueryDto } from "dtos/query.dto";
+import { QueryUserDto } from "./dto/query-user.dto";
 
 @Controller("users")
 export class UsersController {
@@ -24,7 +24,7 @@ export class UsersController {
 
   @Authorize({ action: "list", resource: "users" })
   @Get()
-  findAll(@Query() query: QueryDto) {
+  findAll(@Query() query: QueryUserDto) {
     return this.usersService.findAll(query);
   }
 

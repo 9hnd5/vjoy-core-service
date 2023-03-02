@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 import { Transform, Type } from "class-transformer";
-import { IsArray, IsNumber, IsOptional, IsPositive, Min } from "class-validator";
+import { IsArray, IsInt, IsOptional, IsPositive } from "class-validator";
 export class QueryDto {
   @IsOptional()
   @Type(() => Array<[string, string]>)
@@ -20,10 +20,12 @@ export class QueryDto {
 
   @IsOptional()
   @IsPositive()
+  @IsInt()
   page?: number;
 
   @IsOptional()
   @IsPositive()
+  @IsInt()
   pageSize?: number;
 
   get limit() {

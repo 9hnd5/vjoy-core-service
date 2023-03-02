@@ -5,7 +5,7 @@ import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { Kid } from "entities/kid.entity";
 import { User } from "entities/user.entity";
-import { QueryDto } from "dtos/query.dto";
+import { QueryKidDto } from "./dto/query-kid.dto";
 
 @Injectable()
 export class KidsService {
@@ -16,7 +16,7 @@ export class KidsService {
     return rs;
   }
 
-  async findAll(userId?: number, query?: QueryDto, includeDeleted = false) {
+  async findAll(userId?: number, query?: QueryKidDto, includeDeleted = false) {
     const rs = await this.kidModel.findAndCountAll({
       where: userId ? { parentId: userId } : {},
       limit: query?.limit,
