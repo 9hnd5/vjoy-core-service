@@ -1,5 +1,6 @@
 import { Type } from "class-transformer";
-import { IsDefined, IsNotEmpty, IsNumber, IsOptional, IsPositive, Matches, ValidateNested } from "class-validator";
+import { IsDefined, IsIn, IsNotEmpty, IsNumber, IsOptional, IsPositive, Matches, ValidateNested } from "class-validator";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 
 class LearningGoalDto {
   @IsNumber()
@@ -29,9 +30,9 @@ export class CreateKidDto {
   @IsPositive()
   parentId: number;
 
-  @IsNumber()
+  @IsIn(Object.values(ROLE_CODE))
   @IsOptional()
-  roleId: number;
+  roleCode: string;
 
   @IsOptional()
   profilePicture?: string;

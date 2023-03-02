@@ -46,7 +46,7 @@ export class AuthService {
       const verifyResult = await this.verifyOTPToken(otpCode, otpToken);
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.userId },
-        attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
+        attributes: ["id", "firstname", "lastname", "email", "password", "roleCode"],
         include: Role,
       })) as User;
       existUser.status = USER_STATUS.ACTIVATED;
@@ -96,12 +96,12 @@ export class AuthService {
       firstname,
       lastname,
       email,
-      roleId,
-      role: { permissions, code: roleCode },
+      roleCode,
+      role: { permissions },
     } = user;
-    const payload = { userId: id, roleId, roleCode };
+    const payload = { userId: id, roleCode };
     const accessToken = await this.jwtService.signAsync(payload, { secret: this.secret, expiresIn: this.expiresIn });
-    return { id, firstname, lastname, email, roleId, permissions, accessToken };
+    return { id, firstname, lastname, email, roleCode, permissions, accessToken };
   };
 
   private async loginByEmail(userEmail: string, userPassword: string) {
@@ -110,7 +110,7 @@ export class AuthService {
         email: userEmail,
         status: USER_STATUS.ACTIVATED,
       },
-      attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
+      attributes: ["id", "firstname", "lastname", "email", "password", "roleCode"],
       include: Role,
     });
     if (!existUser) throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
@@ -129,11 +129,10 @@ export class AuthService {
       if (existUser.deletedAt) throw new UnauthorizedException(AUTH_ERROR_MESSAGE.USER_DELETED);
       if (existUser.status === USER_STATUS.DEACTIVED)
         throw new UnauthorizedException(AUTH_ERROR_MESSAGE.USER_DEACTIVATED);
-      payload = { userId: existUser.id, roleId: existUser.roleId };
+      payload = { userId: existUser.id, roleCode: existUser.roleCode };
     } else {
-      const role = (await this.roleModel.findOne({ where: { code: ROLE_CODE.PARENT } })) as Role;
-      const newUser = await this.userModel.create({ phone: userPhone, roleId: role.id });
-      payload = { userId: newUser.id, roleId: newUser.roleId };
+      const newUser = await this.userModel.create({ phone: userPhone, roleCode: ROLE_CODE.PARENT });
+      payload = { userId: newUser.id, roleCode: newUser.roleCode };
     }
 
     const otpCode = this.generateOTPCode();

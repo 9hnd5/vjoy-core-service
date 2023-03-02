@@ -86,8 +86,7 @@ export class UsersService {
         return rs[1][0].get();
       }
 
-      // do update by user
-      delete others.roleId;
+      delete others.roleCode;
 
       let user;
       if (!isEmpty(others)) {

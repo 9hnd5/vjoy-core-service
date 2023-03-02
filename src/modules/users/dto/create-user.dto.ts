@@ -1,5 +1,6 @@
 
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
+import { IsEmail, IsIn, IsNotEmpty, IsOptional } from "class-validator";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -19,8 +20,8 @@ export class CreateUserDto {
   @IsNotEmpty()
   phone?: string;
 
-  @IsNumber()
-  roleId: number;
+  @IsIn(Object.values(ROLE_CODE))
+  roleCode: string;
 
   @IsOptional()
   provider?: string;

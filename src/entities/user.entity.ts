@@ -21,7 +21,7 @@ export type UserAttributes = {
   email?: string;
   password?: string;
   phone?: string;
-  roleId: number;
+  roleCode: string;
   status: number;
   provider?: string;
   socialId?: string;
@@ -56,10 +56,10 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
   status: number;
 
   @ForeignKey(() => Role)
-  @Column({ type: DataType.INTEGER, allowNull: false })
-  roleId: number;
+  @Column({ type: DataType.STRING(255), allowNull: false })
+  roleCode: string;
 
-  @BelongsTo(() => Role)
+  @BelongsTo(() => Role, { targetKey: "code" })
   role: Role;
 
   @Column(DataType.STRING(255))

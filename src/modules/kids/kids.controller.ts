@@ -1,4 +1,4 @@
-import { Get, Post, Body, Patch, Param, Delete, Query, Inject, BadRequestException } from "@nestjs/common";
+import { Get, Post, Body, Patch, Param, Delete, Query, Inject } from "@nestjs/common";
 import { KidsService } from "./kids.service";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
@@ -20,11 +20,9 @@ export class KidsController {
   @AdminOrSameUser()
   @Post("users/:userId/kids")
   async createKid(@Param("userId") userId: number, @Body() createKidDto: CreateKidDto) {
-    const kidFree = await this.rolesService.findOneByCode(ROLE_CODE.KID_FREE);
-    if (!kidFree) throw new BadRequestException("Role not found");
     const role = this.request.user?.roleCode;
-    const roleId = role === ROLE_CODE.ADMIN ? createKidDto.roleId ?? kidFree.id : kidFree.id;
-    return this.kidsService.create({ ...createKidDto, parentId: userId, roleId });
+    const roleCode = role === ROLE_CODE.ADMIN ? createKidDto.roleCode ?? ROLE_CODE.KID_FREE : ROLE_CODE.KID_FREE;
+    return this.kidsService.create({ ...createKidDto, parentId: userId, roleCode });
   }
 
   @Authorize({ action: "list", resource: "kids" })
@@ -51,7 +49,7 @@ export class KidsController {
     const role = this.request.user?.roleCode;
     if (role !== ROLE_CODE.ADMIN) {
       delete updateKidDto.parentId;
-      delete updateKidDto.roleId;
+      delete updateKidDto.roleCode;
     }
     return this.kidsService.update(userId, kidId, updateKidDto);
   }
