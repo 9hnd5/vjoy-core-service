@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { ApiKey } from "entities/api-key.entity";
 import { User } from "entities/user.entity";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
 import { USER_STATUS } from "modules/users/users.constants";
 import * as request from "supertest";
@@ -38,14 +39,14 @@ describe("Auth (e2e)", () => {
     //signin as admin
     const adminUser = await signin();
     adminToken = adminUser.accessToken;
-
+    
     //create new user
     const user1 = {
       firstname: "login-test",
       lastname: "login-test",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
-      roleId: 4,
+      roleCode: ROLE_CODE.PARENT,
     };
 
     const user2 = {
@@ -53,7 +54,7 @@ describe("Auth (e2e)", () => {
       lastname: "login-test-deactived",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
-      roleId: 4,
+      roleCode: ROLE_CODE.PARENT,
     };
 
     const user3 = {
@@ -61,7 +62,7 @@ describe("Auth (e2e)", () => {
       lastname: "login-test-deleted",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
-      roleId: 4,
+      roleCode: ROLE_CODE.PARENT,
     };
     const createdUser1: User["dataValues"] = await createUser({ newUser: user1, accessToken: adminToken });
     const createdUser2: User["dataValues"] = await createUser({ newUser: user2, accessToken: adminToken });
@@ -69,7 +70,7 @@ describe("Auth (e2e)", () => {
     user = { id: createdUser1.id, ...user1 };
     userDeactived = { id: createdUser2.id, ...user2 };
     userDeleted = { id: createdUser3.id, ...user3 };
-
+    
     userModel = moduleRef.get("UserRepository");
     // deactive user
     await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
@@ -79,7 +80,7 @@ describe("Auth (e2e)", () => {
     // gen success token
     const authService = moduleRef.get(AuthService);
     const otpCode = authService.generateOTPCode();
-    const otpToken = await authService.generateOTPToken(otpCode, { userId: adminUser.id, roleId: adminUser.roleId });
+    const otpToken = await authService.generateOTPToken(otpCode, { userId: adminUser.id, roleCode: adminUser.roleCode });
     verifySuccess = { otpCode, otpToken };
   });
 

@@ -25,7 +25,7 @@ export type KidAttributes = {
   dob: string;
   gender: string;
   parentId: number;
-  roleId: number;
+  roleCode: string;
   profilePicture?: string;
   avatarCode?: string;
   buddyCode?: string;
@@ -62,10 +62,10 @@ export class Kid extends Model<KidAttributes, KidCreationAttributes> {
   parent: User;
 
   @ForeignKey(() => Role)
-  @Column({ type: DataType.INTEGER, allowNull: false })
-  roleId: number;
+  @Column({ type: DataType.STRING(255), allowNull: false })
+  roleCode: string;
 
-  @BelongsTo(() => Role)
+  @BelongsTo(() => Role, { targetKey: "code" })
   role: Role;
 
   @Column(DataType.STRING(255))

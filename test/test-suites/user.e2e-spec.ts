@@ -2,6 +2,7 @@ import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { User } from "entities/user.entity";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 import { USER_STATUS } from "modules/users/users.constants";
 import * as request from "supertest";
 import { generateNumber } from "utils/helpers";
@@ -19,7 +20,7 @@ describe("UsersController E2E Test", () => {
     lastname: "testUser",
     email: `user-test-${generateNumber(6)}@gmail.com`,
     phone: `${generateNumber(10)}`,
-    roleId: 4,
+    roleCode: ROLE_CODE.PARENT,
     password: "fdf324fddsfa@321",
   };
 
@@ -50,7 +51,7 @@ describe("UsersController E2E Test", () => {
           testUser = { ...testUser, id: user.id };
 
           expect(user.email).toEqual(testUser.email);
-          expect(user.roleId).toEqual(testUser.roleId);
+          expect(user.roleCode).toEqual(testUser.roleCode);
           expect(user.firstname).toEqual(testUser.firstname.trim());
           expect(user.lastname).toEqual(testUser.lastname.trim());
           expect(user.status).toEqual(USER_STATUS.ACTIVATED);
@@ -147,7 +148,7 @@ describe("UsersController E2E Test", () => {
       const updateData = {
         firstname: "fistname update",
         lastname: "last name update",
-        roleId: 1, //admin
+        roleCode: ROLE_CODE.ADMIN,
       };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
@@ -158,7 +159,7 @@ describe("UsersController E2E Test", () => {
           const user = response.body.data;
           expect(user.firstname).toEqual(updateData.firstname.trim());
           expect(user.lastname).toEqual(updateData.lastname.trim());
-          expect(user.roleId).not.toEqual(updateData.roleId);
+          expect(user.roleCode).not.toEqual(updateData.roleCode);
           expect(user).not.toHaveProperty("password");
         });
     });

@@ -3,6 +3,7 @@ import { AuthService } from "modules/auth/auth.service";
 import { CreateUserDto } from "modules/users/dto/create-user.dto";
 import { UsersService } from "modules/users/users.service";
 import * as crypto from "crypto";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 
 const baseUrl = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}`;
 export const API_TOKEN =
@@ -65,7 +66,7 @@ export const createUser = async (param: { newUser?: CreateUserRequest; accessTok
       firstname: "APITEST-firstname",
       lastname: "APITEST-lastname",
       email: `APITEST-${crypto.randomUUID()}@gmail.com`,
-      roleId: 4,
+      roleCode: ROLE_CODE.PARENT,
     },
     accessToken,
   } = param;

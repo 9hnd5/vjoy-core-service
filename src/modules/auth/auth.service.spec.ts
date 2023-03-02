@@ -7,7 +7,7 @@ import { User } from "entities/user.entity";
 import { SmsModule } from "modules/sms/sms.module";
 import { SmsService } from "modules/sms/sms.service";
 import { USER_STATUS } from "modules/users/users.constants";
-import { AUTH_ERROR_MESSAGE } from "./auth.constants";
+import { AUTH_ERROR_MESSAGE, ROLE_CODE } from "./auth.constants";
 import { AuthService } from "./auth.service";
 
 describe("AuthService", () => {
@@ -33,7 +33,7 @@ describe("AuthService", () => {
     lastname: "Huy",
     phone: "0931335283",
     email: "huy.nguyendinh@vus-etsc.edu.vn",
-    roleId: 1,
+    roleCode: ROLE_CODE.ADMIN,
     role: {
       permissions: [{ resource: "*", action: "*" }],
     },
@@ -44,7 +44,7 @@ describe("AuthService", () => {
     firstname: mockUser.firstname,
     lastname: mockUser.lastname,
     email: mockUser.email,
-    roleId: mockUser.roleId,
+    roleCode: mockUser.roleCode,
     permissions: mockUser.role.permissions,
     accessToken: "accessToken",
   };

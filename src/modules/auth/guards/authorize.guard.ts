@@ -40,7 +40,7 @@ export class AuthorizeGuard implements CanActivate {
   private async isHasPermission(context: ExecutionContext, permission: Permission) {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    const role = await this.roleModel.findOne({ where: { id: user.roleId } });
+    const role = await this.roleModel.findOne({ where: { code: user.roleCode } });
     if (!role) return false;
     if (role.code === ROLE_CODE.ADMIN) return true;
 
