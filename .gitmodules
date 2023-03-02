@@ -1,0 +1,3 @@
+[submodule "nest-common-module"]
+	path = nest-common-module
+	url = git@bitbucket.org:thanhvus/nest-common-module.git
