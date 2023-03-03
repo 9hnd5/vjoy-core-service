@@ -13,27 +13,27 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { EXCLUDE_FIELDS, USER_ERROR_MESSAGE, USER_STATUS } from "./users.constants";
 import { isEmpty } from "lodash";
 import { QueryUserDto } from "./dto/query-user.dto";
+import { MailService } from "modules/mail/mail.service";
 
 @Injectable()
 export class UsersService {
-  private secret: string;
-
   constructor(
     @InjectModel(User) private userModel: typeof User,
 
     @Inject("REQUEST") private request: any,
     private readonly authService: AuthService,
+    private mailService: MailService,
     private smsService: SmsService
   ) {}
 
   async createByAdmin(createUserDto: CreateUserDto) {
     const { email, phone } = createUserDto;
     if (email) {
-      const existUser = await this.checkExistUser({email});
+      const existUser = await this.checkExistUser({ email });
       if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.EMAIL_EXISTS);
     }
     if (phone) {
-      const existUser = await this.checkExistUser({phone});
+      const existUser = await this.checkExistUser({ phone });
       if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.PHONE_EXISTS);
     }
 
@@ -101,7 +101,14 @@ export class UsersService {
       let otpToken;
       if (email) {
         const otpCode = this.authService.generateOTPCode();
-        // send email
+        if (user.email) {
+          const mail = {
+            to: user.email,
+            subject: "OTP update email",
+            text: eval("`" + SMS_TEMPLATE.OTP + "`"),
+          };
+          this.mailService.send(mail);
+        }
         const payload = { userId: user.id, email };
         otpToken = await this.authService.generateOTPToken(otpCode, payload);
       }
@@ -113,7 +120,7 @@ export class UsersService {
       }
       return { ...user, otpToken };
     } catch (error) {
-      throw new BadRequestException(error??"There was an error when updating");
+      throw new BadRequestException(error ?? "There was an error when updating");
     }
   }
 
@@ -141,11 +148,11 @@ export class UsersService {
   private async checkExistUser(condition, id?) {
     return await this.userModel.findOne({
       where: {
-        [Op.not]: { id: id??0 },
+        [Op.not]: { id: id ?? 0 },
         ...condition,
       },
       paranoid: false,
-      attributes: ["id"]
+      attributes: ["id"],
     });
   }
 }
