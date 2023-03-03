@@ -23,6 +23,7 @@ type SigninRequest = {
 const instance = axios.create();
 instance.interceptors.request.use((request) => {
   request.baseURL = baseUrl;
+  request.headers.set("api-token", API_TOKEN);
   return request;
 });
 instance.interceptors.response.use(
@@ -71,7 +72,7 @@ export const createUser = async (param: { newUser?: CreateUserRequest; accessTok
     accessToken,
   } = param;
   const { data } = await instance.post("core/users", newUser, {
-    headers: { Authorization: `Bearer ${accessToken}`, "api-token": API_TOKEN },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
   return data as CreateUserResponse;
 };
@@ -86,7 +87,7 @@ export const createUser = async (param: { newUser?: CreateUserRequest; accessTok
 export const deleteUser = async (param: { id: number; accessToken: string }): Promise<object> => {
   const { id, accessToken } = param;
   const { data } = await instance.delete(`core/users/${id}?hardDelete=true`, {
-    headers: { Authorization: `Bearer ${accessToken}`, "api-token": API_TOKEN },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
   return data;
 };
