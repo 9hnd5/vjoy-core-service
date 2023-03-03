@@ -4,22 +4,29 @@ import * as SendGrid from "@sendgrid/mail";
 
 @Injectable()
 export class MailService {
-  private from: string;
+  private sender: { email: string, name?: string }
 
   constructor(configService: ConfigService) {
-    SendGrid.setApiKey(configService.get("EMAIL_KEY") || "");
-    this.from = configService.get("EMAIL_ADDRESS") || "";
+    SendGrid.setApiKey(configService.get("SENDGRID_API_KEY")!);
+    this.sender = {
+      email: configService.get("SENDGRID_SENDER_EMAIL")!,
+      name: configService.get("SENDGRID_SENDER_NAME") || ""
+    }
   }
 
-  async send(mailDto: any) {
+  send(mailData: { to: string, subject: string, text: string }) {
     const mail = {
-      from: {
-        email: this.from,
-        name: "V-JOY",
-      },
-      ...mailDto,
+      from: this.sender,
+      ...mailData
     };
-    const transport = await SendGrid.send(mail);
-    return transport;
+    SendGrid.send(mail);
+  }
+
+  sendHtml(mailData: { to: string, subject: string, html: string }) {
+    const mail = {
+      from: this.sender,
+      ...mailData
+    };
+    SendGrid.send(mail);
   }
 }
