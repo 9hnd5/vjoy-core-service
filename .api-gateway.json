@@ -1,0 +1,277 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api-id",
+    "description": "API gateway vus-vjoy",
+    "version": "1.0.0"
+  },
+  "schemes": ["https"],
+  "produces": ["application/json"],
+  "basePath": "/api",
+  "paths": {
+    "/v1/dev/core/{resource=**}": {
+      "get": {
+        "operationId": "core-get",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "post": {
+        "operationId": "core-post",
+        "responses": {
+          "201": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "put": {
+        "operationId": "core-put",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "patch": {
+        "operationId": "core-patch",
+        "responses": {
+          "201": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "delete": {
+        "operationId": "core-delete",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "options": {
+        "operationId": "core-options",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "parameters": [
+        {
+          "name": "resource",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/v1/dev/content/{resource=**}": {
+      "get": {
+        "operationId": "content-get",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "post": {
+        "operationId": "content-post",
+        "responses": {
+          "201": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "put": {
+        "operationId": "content-put",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "patch": {
+        "operationId": "content-patch",
+        "responses": {
+          "201": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "delete": {
+        "operationId": "content-delete",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "options": {
+        "operationId": "content-options",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "parameters": [
+        {
+          "name": "resource",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/v1/dev/file-uploader/{resource=**}": {
+      "get": {
+        "operationId": "file-upload-get",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "post": {
+        "operationId": "file-upload-post",
+        "responses": {
+          "201": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "put": {
+        "operationId": "file-upload-put",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "patch": {
+        "operationId": "file-upload-patch",
+        "responses": {
+          "201": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "delete": {
+        "operationId": "file-upload-delete",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "options": {
+        "operationId": "file-upload-option",
+        "responses": {
+          "200": {
+            "description": "Successfully"
+          }
+        },
+        "x-google-backend": {
+          "address": "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
+          "path_translation": "APPEND_PATH_TO_ADDRESS",
+          "disable_auth": true
+        }
+      },
+      "parameters": [
+        {
+          "name": "resource",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    }
+  }
+}

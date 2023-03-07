@@ -1,54 +1,85 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
 import { InjectModel } from "@nestjs/sequelize";
-import { Role } from "entities/role.entity";
-import { CreateKidDto } from "./dto/create-kid.dto";
-import { UpdateKidDto } from "./dto/update-kid.dto";
 import { Kid } from "entities/kid.entity";
+import { Role } from "entities/role.entity";
 import { User } from "entities/user.entity";
+import { Request } from "express";
+import { ROLE_CODE } from "modules/auth/auth.constants";
+import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
+import { UpdateKidDto } from "./dto/update-kid.dto";
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class KidsService {
-  constructor(@InjectModel(Kid) private kidModel: typeof Kid, @InjectModel(User) private userModel: typeof User) {}
+  constructor(
+    @InjectModel(Kid) private kidModel: typeof Kid,
+    @InjectModel(User) private userModel: typeof User,
+    @Inject(REQUEST) private request: Request
+  ) {}
 
-  async create(createKidDto: CreateKidDto) {
-    const rs = await this.kidModel.create(createKidDto);
-    return rs;
+  async create(createKidDto: CreateKidDto, parentId: number) {
+    const parent = await this.userModel.findByPk(parentId);
+    if (!parent) throw new BadRequestException("Parent Not Found");
+
+    const signinUser = this.request.user!;
+    if (signinUser.roleCode !== ROLE_CODE.ADMIN) createKidDto.roleCode = ROLE_CODE.KID_FREE;
+
+    return this.kidModel.create({ ...createKidDto, parentId });
   }
 
-  async findAll(userId?: number, query?: QueryKidDto, includeDeleted = false) {
-    const rs = await this.kidModel.findAndCountAll({
-      where: userId ? { parentId: userId } : {},
-      limit: query?.limit,
-      offset: query?.offset,
-      order: query?.sort,
-      include: [Role, User],
+  findAll(query: QueryKidDto, parentId?: number) {
+    const { includeDeleted = false, limit, offset, sort: order } = query;
+    return this.kidModel.findAndCountAll({
+      ...(parentId && { where: { parentId } }),
+      limit,
+      offset,
+      order,
+      include: [
+        { model: Role, attributes: ["id", "name", "code"] },
+        { model: User, attributes: ["id", "firstname", "lastname"] },
+      ],
       paranoid: !includeDeleted,
+      attributes: ["id", "firstname", "lastname", "gender", "dob", "updatedAt"],
     });
-    return rs;
   }
 
-  async findOne(userId: number, kidId: number, includeDeleted = false) {
-    const rs = await this.kidModel.findOne({ where: { id: kidId, parentId: userId }, paranoid: !includeDeleted });
-    return rs;
-  }
-
-  async update(userId: number, kidId: number, updateUserDto: UpdateKidDto) {
-    const { parentId } = updateUserDto;
-    if (parentId) {
-      const user = await this.userModel.findByPk(parentId);
-      if(!user) throw new BadRequestException("Parent is not exists");
-    }
-    
-    await this.kidModel.update({ ...updateUserDto }, { where: { id: kidId, parentId: userId } });
-    const rs = await this.kidModel.findByPk(kidId);
-    return rs;
-  }
-
-  async remove(userId: number, kidId: number, hardDelete = false) {
-    await this.kidModel.destroy({ where: { id: kidId, parentId: userId }, force: hardDelete }).catch(() => {
-      return false;
+  async findOne(parentId: number, kidId: number, includeDeleted = false) {
+    const kid = await this.kidModel.findOne({
+      where: { id: kidId, parentId },
+      include: [
+        { model: Role, attributes: ["id", "name", "code"] },
+        { model: User, attributes: ["id", "firstname", "lastname"] },
+      ],
+      paranoid: !includeDeleted,
+      attributes: ["id", "firstname", "lastname", "gender", "dob", "updatedAt"],
     });
-    return true;
+    if (!kid) throw new NotFoundException("Kid Not Found");
+
+    return kid;
+  }
+
+  async update(parentId: number, kidId: number, updateUserDto: UpdateKidDto) {
+    const { roleCode, parentId: newParentId } = updateUserDto;
+
+    const kid = await this.kidModel.findOne({ where: { id: kidId, parentId } });
+    if (!kid) throw new NotFoundException("Kid Not Found");
+
+    const signinUser = this.request.user!;
+    if (signinUser.roleCode !== ROLE_CODE.ADMIN && roleCode && newParentId)
+      throw new BadRequestException("Not Enough Permission");
+
+    kid.set(updateUserDto);
+    return kid.save();
+  }
+
+  async remove(parentId: number, kidId: number, hardDelete = false) {
+    const kid = await this.kidModel.findOne({ where: { id: kidId, parentId }, paranoid: false });
+    if (!kid) throw new NotFoundException("Kid Not Found");
+
+    const signinUser = this.request.user!;
+    if (signinUser.roleCode !== ROLE_CODE.ADMIN && hardDelete) throw new BadRequestException("Not Enough Permission");
+
+    return kid.destroy({ force: hardDelete });
   }
 }

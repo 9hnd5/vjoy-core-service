@@ -24,7 +24,7 @@ const validationProvider = {
     transformOptions: {
       enableImplicitConversion: true,
     },
-    forbidNonWhitelisted: true,
+    forbidNonWhitelisted: false,
   }),
 };
 

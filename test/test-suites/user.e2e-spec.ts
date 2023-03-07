@@ -140,7 +140,7 @@ describe("UsersController E2E Test", () => {
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect((response) => {
-          expectErrors(response.body);
+          expect(response.body.data.id).not.toBe(updateData.id);
         });
     });
 

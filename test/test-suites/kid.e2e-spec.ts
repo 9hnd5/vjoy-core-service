@@ -50,6 +50,7 @@ describe("KidsController E2E Test", () => {
       },
       accessToken: adminToken,
     });
+
     const { accessToken: parentToken } = await signin({ email: parent.email!, password: "123456" });
     userToken = parentToken;
   });
@@ -63,7 +64,6 @@ describe("KidsController E2E Test", () => {
         dob: "2022-02-02",
         gender: "M",
         roleCode: ROLE_CODE.ADMIN,
-        parentId: 1,
       };
     });
     it("Should fail due to user unauthorized", () => {
@@ -102,19 +102,19 @@ describe("KidsController E2E Test", () => {
     it("Should fail due to parentId is not allow pass to body", () => {
       return agent
         .post(`${API_CORE_PREFIX}/users/${parent.id}/kids`)
-        .send(createKidDto)
+        .send({ ...createKidDto, parentId: 1 })
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.CREATED)
         .expect((res) => {
-          const result = res.body.data;
-          expect(result.parentId).not.toEqual(createKidDto.parentId);
+          const data = res.body.data;
+          expect(data.parentId).not.toBe(1);
         });
     });
 
     it("Should succeed due to user is the same", () => {
       return agent
         .post(`${API_CORE_PREFIX}/users/${parent.id}/kids`)
-        .send({ ...createKidDto, parentId: parent.id })
+        .send(createKidDto)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.CREATED)
         .expect((res) => {
@@ -132,7 +132,7 @@ describe("KidsController E2E Test", () => {
     it("Should succeed due to user is admin", () => {
       return agent
         .post(`${API_CORE_PREFIX}/users/${parent.id}/kids`)
-        .send({ ...createKidDto, parentId: parent.id })
+        .send(createKidDto)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.CREATED)
         .expect((res) => {
@@ -151,7 +151,7 @@ describe("KidsController E2E Test", () => {
   describe("Update kid (PATCH)api/users/:id/kids/:kidId", () => {
     let updateKidDto: UpdateKidDto;
     beforeAll(() => {
-      updateKidDto = { firstname: "test-user-update", parentId: 1, roleCode: ROLE_CODE.ADMIN };
+      updateKidDto = { firstname: "test-user-update", roleCode: ROLE_CODE.ADMIN };
     });
 
     it("Should fail due to user unauthorized", () => {
@@ -177,24 +177,34 @@ describe("KidsController E2E Test", () => {
     });
 
     it("Should fail due to user is admin but parentId is not exists", () => {
+      const parentId = generateNumber(10);
       return agent
-        .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByAdmin"].id}`)
-        .send({ firstname: "test-user-update", parentId: generateNumber(10), roleCode: ROLE_CODE.ADMIN })
+        .patch(`${API_CORE_PREFIX}/users/${parentId}/kids/${kid["createdByAdmin"].id}`)
+        .send(updateKidDto)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.BAD_REQUEST)
+        .expect(HttpStatus.NOT_FOUND);
     });
 
-    it("Should succeed due to user is the same", async () => {
+    it("Should fail due to user is not allow update role", async () => {
       return agent
         .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}`)
         .send(updateKidDto)
         .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should success due to user is the same", async () => {
+      const data = {
+        firstname: updateKidDto.firstname,
+      };
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}`)
+        .send(data)
+        .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
-        .then((res) => {
+        .expect((res) => {
           const updatedKid = res.body.data;
-          expect(updatedKid.firstname).toBe(updateKidDto.firstname);
-          expect(updatedKid.parentId).not.toBe(updateKidDto.parentId); //Not allow change parent to admin
-          expect(updatedKid.roleCode).not.toBe(updateKidDto.roleCode); //Not allow change role to admin
+          expect(updatedKid.firstname).toBe(data.firstname);
         });
     });
 
@@ -207,7 +217,7 @@ describe("KidsController E2E Test", () => {
         .then((res) => {
           const updatedKid = res.body.data;
           expect(updatedKid.firstname).toBe(updateKidDto.firstname);
-          expect(updatedKid.parentId).toBe(1); // admin allow update parentId
+          expect(updatedKid.parentId).toBe(parent.id); // admin allow update parentId
           expect(updatedKid.roleCode).toBe(ROLE_CODE.ADMIN); // admin allow to change role from kid to admin
         });
     });
@@ -264,28 +274,32 @@ describe("KidsController E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/users/undefined/kids/undefined/`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.BAD_REQUEST); //Actual 500
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it("Should succeed due to user is the same", () => {
+      const parentId = kid["createdByParent"].parentId;
+      const kidId = kid["createdByParent"].id;
       return agent
-        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}/`)
+        .get(`${API_CORE_PREFIX}/users/${parentId}/kids/${kidId}/`)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(HttpStatus.OK)
         .expect((res) => {
-          const kid = res.body.data;
-          expect(kid.parentId).toEqual(parent.id);
+          const responseData = res.body.data;
+          expect(responseData.parent.id).toEqual(parentId);
         });
     });
 
     it("Should succeed due to user is admin", () => {
+      const parentId = kid["createdByAdmin"].parentId;
+      const kidId = kid["createdByAdmin"].id;
       return agent
-        .get(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}/`)
+        .get(`${API_CORE_PREFIX}/users/${parentId}/kids/${kidId}/`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .expect((res) => {
-          const kid = res.body.data;
-          expect(kid.parentId).toEqual(parent.id);
+          const responseData = res.body.data;
+          expect(responseData.parent.id).toEqual(parentId);
         });
     });
   });
@@ -359,20 +373,22 @@ describe("KidsController E2E Test", () => {
         });
     });
 
-    it("Should succeed due to user having sufficient privileges (Hard delete)", async () => {
+    it("Should fail due to user is not admin (Hard delete)", async () => {
       return agent
         .delete(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}?hardDelete=true`)
-        .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
-        .then(async () => {
-          const deletedKid = await kidModel.findOne({ where: { id: kid["createdByParent"].id } });
-          expect(deletedKid).toBeNull();
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => {
+          const { error } = res.body;
+          expect(error).not.toBeNull();
         });
     });
 
     it("Should succeed due to user having sufficient privileges (Hard delete)", async () => {
       return agent
-        .delete(`${API_CORE_PREFIX}/users/${1}/kids/${kid["createdByAdmin"].id}?hardDelete=true`) // changed to 0 by updated before
+        .delete(
+          `${API_CORE_PREFIX}/users/${kid["createdByAdmin"].parentId}/kids/${kid["createdByAdmin"].id}?hardDelete=true`
+        ) // changed to 0 by updated before
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .then(async () => {
