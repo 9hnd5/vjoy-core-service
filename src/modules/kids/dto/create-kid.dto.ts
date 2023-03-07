@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsDefined, IsIn, IsNotEmpty, IsNumber, IsOptional, IsPositive, Matches, ValidateNested } from "class-validator";
+import { IsIn, IsNotEmpty, IsNumber, IsOptional, Length, Matches, ValidateNested } from "class-validator";
 import { ROLE_CODE } from "modules/auth/auth.constants";
 
 class LearningGoalDto {
@@ -14,9 +14,11 @@ class LearningGoalDto {
 
 export class CreateKidDto {
   @IsNotEmpty()
+  @Length(1, 255)
   firstname: string;
 
-  @IsDefined()
+  @IsNotEmpty()
+  @Length(1, 255)
   lastname: string;
 
   @Matches(/^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/, {
@@ -27,23 +29,24 @@ export class CreateKidDto {
   @Matches(/^[FM]$/, { message: "gender must be M or F" })
   gender: string;
 
-  @IsPositive()
-  parentId: number;
-
   @IsIn(Object.values(ROLE_CODE))
   @IsOptional()
   roleCode: string;
 
   @IsOptional()
+  @Length(1, 255)
   profilePicture?: string;
 
   @IsOptional()
+  @Length(1, 255)
   avatarCode?: string;
 
   @IsOptional()
+  @Length(1, 255)
   buddyCode?: string;
 
   @IsOptional()
+  @Length(1, 255)
   buddyName?: string;
 
   @IsOptional()
