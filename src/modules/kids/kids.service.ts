@@ -8,6 +8,7 @@ import { Request } from "express";
 import { ROLE_CODE } from "modules/auth/auth.constants";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
+import { I18nService } from "nestjs-i18n";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 
 @Injectable({ scope: Scope.REQUEST })
@@ -15,6 +16,7 @@ export class KidsService {
   constructor(
     @InjectModel(Kid) private kidModel: typeof Kid,
     @InjectModel(User) private userModel: typeof User,
+    private readonly i18n: I18nService
     @Inject(REQUEST) private request: Request
   ) {}
 
