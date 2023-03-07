@@ -60,13 +60,14 @@ export class KidsService {
   }
 
   async update(parentId: number, kidId: number, updateUserDto: UpdateKidDto) {
-    const { roleCode } = updateUserDto;
+    const { roleCode, parentId: newParentId } = updateUserDto;
 
     const kid = await this.kidModel.findOne({ where: { id: kidId, parentId } });
     if (!kid) throw new NotFoundException("Kid Not Found");
 
     const signinUser = this.request.user!;
-    if (signinUser.roleCode !== ROLE_CODE.ADMIN && roleCode) throw new BadRequestException("Not Enough Permission");
+    if (signinUser.roleCode !== ROLE_CODE.ADMIN && roleCode && newParentId)
+      throw new BadRequestException("Not Enough Permission");
 
     kid.set(updateUserDto);
     return kid.save();
@@ -79,6 +80,6 @@ export class KidsService {
     const signinUser = this.request.user!;
     if (signinUser.roleCode !== ROLE_CODE.ADMIN && hardDelete) throw new BadRequestException("Not Enough Permission");
 
-    return kid.destroy();
+    return kid.destroy({ force: hardDelete });
   }
 }

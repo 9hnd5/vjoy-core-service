@@ -11,9 +11,9 @@ import { KidsService } from "./kids.service";
 export class KidsController {
   constructor(private readonly kidsService: KidsService) {}
 
-  @AdminOrSameUser()
-  @Post("users/:userId/kids")
-  async createKid(@Param("userId") parentId: number, @Body() createKidDto: CreateKidDto) {
+  @AdminOrSameUser("parentId")
+  @Post("users/:parentId/kids")
+  async createKid(@Param("parentId") parentId: number, @Body() createKidDto: CreateKidDto) {
     return this.kidsService.create(createKidDto, parentId);
   }
 
@@ -23,27 +23,31 @@ export class KidsController {
     return this.kidsService.findAll(query);
   }
 
-  @AdminOrSameUser()
-  @Get("users/:userId/kids")
-  findAllKidsByUser(@Param("userId") userId: number, @Query() query: QueryKidDto) {
-    return this.kidsService.findAll(query, userId);
+  @AdminOrSameUser("parentId")
+  @Get("users/:parentId/kids")
+  findAllKidsByUser(@Param("parentId") parentId: number, @Query() query: QueryKidDto) {
+    return this.kidsService.findAll(query, parentId);
   }
 
-  @AdminOrSameUser()
-  @Get("users/:userId/kids/:kidId")
-  findOneKid(@Param("userId") userId: number, @Param("kidId") kidId: number) {
-    return this.kidsService.findOne(userId, kidId);
+  @AdminOrSameUser("parentId")
+  @Get("users/:parentId/kids/:kidId")
+  findOneKid(@Param("parentId") parentId: number, @Param("kidId") kidId: number) {
+    return this.kidsService.findOne(parentId, kidId);
   }
 
-  @AdminOrSameUser()
-  @Patch("users/:userId/kids/:kidId")
-  updateKid(@Param("userId") userId: number, @Param("kidId") kidId: number, @Body() updateKidDto: UpdateKidDto) {
-    return this.kidsService.update(userId, kidId, updateKidDto);
+  @AdminOrSameUser("parentId")
+  @Patch("users/:parentId/kids/:kidId")
+  updateKid(@Param("parentId") parentId: number, @Param("kidId") kidId: number, @Body() updateKidDto: UpdateKidDto) {
+    return this.kidsService.update(parentId, kidId, updateKidDto);
   }
 
-  @AdminOrSameUser()
-  @Delete("users/:userId/kids/:kidId")
-  removeKid(@Param("userId") userId: number, @Param("kidId") kidId: number, @Query("hardDelete") hardDelete: boolean) {
-    return this.kidsService.remove(userId, kidId, hardDelete);
+  @AdminOrSameUser("parentId")
+  @Delete("users/:parentId/kids/:kidId")
+  removeKid(
+    @Param("parentId") parentId: number,
+    @Param("kidId") kidId: number,
+    @Query("hardDelete") hardDelete: boolean
+  ) {
+    return this.kidsService.remove(parentId, kidId, hardDelete);
   }
 }
