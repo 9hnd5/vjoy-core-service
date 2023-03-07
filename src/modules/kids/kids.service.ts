@@ -66,7 +66,7 @@ export class KidsService {
     if (!kid) throw new NotFoundException("Kid Not Found");
 
     const signinUser = this.request.user!;
-    if (signinUser.roleCode !== ROLE_CODE.ADMIN && roleCode && newParentId)
+    if (signinUser.roleCode !== ROLE_CODE.ADMIN && (roleCode || newParentId))
       throw new BadRequestException("Not Enough Permission");
 
     kid.set(updateUserDto);
