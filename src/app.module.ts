@@ -5,6 +5,7 @@ import { SequelizeModule } from "@nestjs/sequelize";
 import { GlobalExceptionFilter } from "filters/global-exception.filter";
 import { ResponseInterceptor } from "interceptors/response.interceptor";
 import { KidsModule } from "modules/kids/kids.module";
+import { MailModule } from "modules/mail/mail.module";
 import { SmsModule } from "modules/sms/sms.module";
 import { RouteValidation } from "pipes/route-validation.pipe";
 import { AuthModule } from "./modules/auth/auth.module";
@@ -60,6 +61,7 @@ const globalExceptionFilterProvider = {
     AuthModule,
     KidsModule,
     UsersModule,
+    MailModule,
     SmsModule,
   ],
   controllers: [],
