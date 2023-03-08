@@ -1,19 +1,15 @@
+import { ApiKey, InjectCoreModel, Role, ROLE_CODE, User, USER_STATUS } from "@common";
 import { Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
-import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
-import { ApiKey } from "entities/api-key.entity";
-import { Role } from "entities/role.entity";
-import { User } from "entities/user.entity";
 import { Request } from "express";
-import { SmsService } from "modules/sms/sms.service";
-import { USER_STATUS } from "../users/users.constants";
-import { OTP_TOKEN_EXPIRES, ROLE_CODE } from "./auth.constants";
+import { SmsService } from "@common";
+import { I18nService } from "nestjs-i18n";
+import { OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { LoginDto } from "./dto/login.dto";
-import { I18nService } from "nestjs-i18n";
 
 @Injectable({ scope: Scope.REQUEST })
 export class AuthService {
@@ -26,10 +22,10 @@ export class AuthService {
     private jwtService: JwtService,
     private smsService: SmsService,
     private readonly i18n: I18nService,
-    @InjectModel(User) private userModel: typeof User,
-    @InjectModel(Role) private roleModel: typeof Role,
-    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey,
-    @Inject(REQUEST) private request: Request,
+    @InjectCoreModel(User) private userModel: typeof User,
+    @InjectCoreModel(Role) private roleModel: typeof Role,
+    @InjectCoreModel(ApiKey) private apiKeyModel: typeof ApiKey,
+    @Inject(REQUEST) private request: Request
   ) {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";

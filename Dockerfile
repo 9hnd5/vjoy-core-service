@@ -15,11 +15,13 @@ RUN npm i
 COPY . .
 
 # Run API Test
-# RUN npm run test-e2e:${env}
+RUN npm run test-e2e:${env}
 
 # Build production
 # Creates a "dist" folder with the production build
 ENV NODE_ENV production
+ENV SERVICE core
+
 RUN npm run build
 
 # Run the web service on container startup.

@@ -3,7 +3,7 @@ import { AuthService } from "modules/auth/auth.service";
 import { CreateUserDto } from "modules/users/dto/create-user.dto";
 import { UsersService } from "modules/users/users.service";
 import * as crypto from "crypto";
-import { ROLE_CODE } from "modules/auth/auth.constants";
+import { ROLE_CODE } from "@common";
 
 const baseUrl = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}`;
 export const API_TOKEN =

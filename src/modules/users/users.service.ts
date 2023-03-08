@@ -1,26 +1,20 @@
+import { InjectCoreModel, MailService, Role, ROLE_CODE, SmsService, User, UserAttributes, USER_STATUS } from "@common";
 import { Inject, Injectable } from "@nestjs/common";
 import { BadRequestException, UnauthorizedException } from "@nestjs/common/exceptions";
-import { InjectModel } from "@nestjs/sequelize";
-import { Role } from "entities/role.entity";
-import { User, UserAttributes } from "entities/user.entity";
 import { Request } from "express";
-import { ROLE_CODE } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
-import { MailService } from "modules/mail/mail.service";
-import { SmsService } from "modules/sms/sms.service";
 import { I18nService } from "nestjs-i18n";
 import { Op, WhereOptions } from "sequelize";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { QueryUserDto } from "./dto/query-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
+import { EXCLUDE_FIELDS } from "./users.constants";
 
 @Injectable()
 export class UsersService {
   private lang: string | undefined;
   constructor(
-    @InjectModel(User) private userModel: typeof User,
-
+    @InjectCoreModel(User) private userModel: typeof User,
     @Inject("REQUEST") private request: Request,
     private readonly authService: AuthService,
     private mailService: MailService,

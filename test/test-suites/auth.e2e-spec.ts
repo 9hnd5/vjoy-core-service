@@ -1,13 +1,9 @@
+import { ApiKey, generateNumber, ROLE_CODE, User, USER_STATUS } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
-import { ApiKey } from "entities/api-key.entity";
-import { User } from "entities/user.entity";
-import { ROLE_CODE } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
-import { USER_STATUS } from "modules/users/users.constants";
 import * as request from "supertest";
-import { generateNumber } from "utils/helpers";
 import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, signin } from "../test.util";
 
 describe("Auth (e2e)", () => {
@@ -39,7 +35,7 @@ describe("Auth (e2e)", () => {
     //signin as admin
     const adminUser = await signin();
     adminToken = adminUser.accessToken;
-    
+
     //create new user
     const user1 = {
       firstname: "login-test",
@@ -70,8 +66,8 @@ describe("Auth (e2e)", () => {
     user = { id: createdUser1.id, ...user1 };
     userDeactived = { id: createdUser2.id, ...user2 };
     userDeleted = { id: createdUser3.id, ...user3 };
-    
-    userModel = moduleRef.get("UserRepository");
+
+    userModel = moduleRef.get("core_UserRepository");
     // deactive user
     await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
     // soft delete user
@@ -80,7 +76,10 @@ describe("Auth (e2e)", () => {
     // gen success token
     const authService = await moduleRef.resolve(AuthService);
     const otpCode = authService.generateOTPCode();
-    const otpToken = await authService.generateOTPToken(otpCode, { userId: adminUser.id, roleCode: adminUser.roleCode });
+    const otpToken = await authService.generateOTPToken(otpCode, {
+      userId: adminUser.id,
+      roleCode: adminUser.roleCode,
+    });
     verifySuccess = { otpCode, otpToken };
   });
 
@@ -151,7 +150,7 @@ describe("Auth (e2e)", () => {
       const loginDTO = {
         type: "email",
         email: user.email,
-        password
+        password,
       };
       return request(app.getHttpServer())
         .post(`${API_CORE_PREFIX}/auth/login`)
@@ -216,7 +215,7 @@ describe("Auth (e2e)", () => {
         .send(loginDTO)
         .expect(async (response: request.Response) => {
           const { data } = response.body;
-          
+
           userCreatedByPhone = await userModel.findOne({ where: { phone: loginDTO.phone } });
           expect(userCreatedByPhone?.phone).toEqual(loginDTO.phone);
           expect(userCreatedByPhone?.status).toEqual(USER_STATUS.NEW);

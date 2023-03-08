@@ -1,11 +1,8 @@
+import { InjectCoreModel, Kid, Role, User } from "@common";
 import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { REQUEST } from "@nestjs/core";
-import { InjectModel } from "@nestjs/sequelize";
-import { Kid } from "entities/kid.entity";
-import { Role } from "entities/role.entity";
-import { User } from "entities/user.entity";
 import { Request } from "express";
-import { ROLE_CODE } from "modules/auth/auth.constants";
+import { ROLE_CODE } from "@common";
 import { I18nService } from "nestjs-i18n";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
@@ -15,8 +12,8 @@ import { UpdateKidDto } from "./dto/update-kid.dto";
 export class KidsService {
   private lang: string | undefined;
   constructor(
-    @InjectModel(Kid) private kidModel: typeof Kid,
-    @InjectModel(User) private userModel: typeof User,
+    @InjectCoreModel(Kid) private kidModel: typeof Kid,
+    @InjectCoreModel(User) private userModel: typeof User,
     @Inject(REQUEST) private request: Request,
     private readonly i18n: I18nService
   ) {

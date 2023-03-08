@@ -1,13 +1,10 @@
+import { CoreDbModule, Kid, User } from "@common";
 import { Module } from "@nestjs/common";
-import { KidsService } from "./kids.service";
 import { KidsController } from "./kids.controller";
-import { SequelizeModule } from "@nestjs/sequelize";
-import { Kid } from "entities/kid.entity";
-import { UsersModule } from "modules/users/users.module";
-import { User } from "entities/user.entity";
+import { KidsService } from "./kids.service";
 
 @Module({
-  imports: [UsersModule, SequelizeModule.forFeature([Kid, User])],
+  imports: [CoreDbModule.forFeature([Kid, User])],
   controllers: [KidsController],
   providers: [KidsService],
 })

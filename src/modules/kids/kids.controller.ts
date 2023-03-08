@@ -1,7 +1,6 @@
+import { AdminOrSameUser, Authorize } from "@common";
+import { Controller } from "@common";
 import { Body, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
-import { Controller } from "decorators/controller.decorator";
-import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
-import { Authorize } from "modules/auth/decorators/authorize.decorator";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";

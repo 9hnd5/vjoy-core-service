@@ -1,13 +1,11 @@
 import { Get, Post, Body, Patch, Param, Delete, Query, Inject } from "@nestjs/common";
-import { Authorize } from "modules/auth/decorators/authorize.decorator";
-import { AdminOrSameUser } from "modules/auth/decorators/admin-or-same-user.decorator";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { Controller } from "decorators/controller.decorator";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
-import { ROLE_CODE } from "modules/auth/auth.constants";
+import { ROLE_CODE } from "@common";
 import { QueryUserDto } from "./dto/query-user.dto";
+import { AdminOrSameUser, Authorize, Controller } from "@common";
 
 @Controller("users")
 export class UsersController {

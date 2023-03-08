@@ -1,11 +1,8 @@
+import { generateNumber, ROLE_CODE, User, USER_STATUS } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
-import { User } from "entities/user.entity";
-import { ROLE_CODE } from "modules/auth/auth.constants";
-import { USER_STATUS } from "modules/users/users.constants";
 import * as request from "supertest";
-import { generateNumber } from "utils/helpers";
 import { API_CORE_PREFIX, API_TOKEN, expectError, expectErrors, signin } from "../test.util";
 
 describe("UsersController E2E Test", () => {
@@ -28,7 +25,7 @@ describe("UsersController E2E Test", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-    userModel = moduleRef.get("UserRepository");
+    userModel = moduleRef.get("core_UserRepository");
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");
