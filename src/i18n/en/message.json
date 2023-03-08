@@ -1,0 +1,10 @@
+{
+  "EMAIL_EXISTS": "Email already exists",
+  "INVALID_CREDENTIAL": "Invalid credendial",
+  "NOT_PERMISSION": "Not Enough Permission",
+  "NOT_FOUND": "#{data} not found",
+  "PHONE_EXISTS": "Phone already exists",
+  "USER_DELETED": "User was deleted",
+  "USER_DEACTIVATED": "User was deactivated",
+  "USER_NOT_EXISTS": "User is not exists"
+}

@@ -7,6 +7,8 @@ import { ResponseInterceptor } from "interceptors/response.interceptor";
 import { KidsModule } from "modules/kids/kids.module";
 import { MailModule } from "modules/mail/mail.module";
 import { SmsModule } from "modules/sms/sms.module";
+import { AcceptLanguageResolver, CookieResolver, HeaderResolver, I18nModule, QueryResolver } from "nestjs-i18n";
+import * as path from "path";
 import { RouteValidation } from "pipes/route-validation.pipe";
 import { AuthModule } from "./modules/auth/auth.module";
 import { UsersModule } from "./modules/users/users.module";
@@ -57,6 +59,23 @@ const globalExceptionFilterProvider = {
         };
       },
       inject: [ConfigService],
+    }),
+    I18nModule.forRootAsync({
+      useFactory: () => {
+        return {
+          fallbackLanguage: "en",
+          loaderOptions: {
+            path: path.join(__dirname, "/i18n/"),
+            watch: true,
+          },
+        };
+      },
+      resolvers: [
+        { use: QueryResolver, options: ["lang", "locale", "l"] },
+        new HeaderResolver(["x-custom-lang"]),
+        new CookieResolver(["lang", "locale", "l"]),
+        AcceptLanguageResolver,
+      ],
     }),
     AuthModule,
     KidsModule,

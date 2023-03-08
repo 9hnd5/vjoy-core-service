@@ -3,38 +3,43 @@ import { BadRequestException, UnauthorizedException } from "@nestjs/common/excep
 import { InjectModel } from "@nestjs/sequelize";
 import { Role } from "entities/role.entity";
 import { User, UserAttributes } from "entities/user.entity";
-import { AUTH_ERROR_MESSAGE, ROLE_CODE } from "modules/auth/auth.constants";
+import { Request } from "express";
+import { ROLE_CODE } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
 import { MailService } from "modules/mail/mail.service";
 import { SmsService } from "modules/sms/sms.service";
+import { I18nService } from "nestjs-i18n";
 import { Op, WhereOptions } from "sequelize";
-import { SMS_TEMPLATE } from "utils/constants";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { QueryUserDto } from "./dto/query-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { EXCLUDE_FIELDS, USER_ERROR_MESSAGE, USER_STATUS } from "./users.constants";
+import { EXCLUDE_FIELDS, USER_STATUS } from "./users.constants";
 
 @Injectable()
 export class UsersService {
+  private lang: string | undefined;
   constructor(
     @InjectModel(User) private userModel: typeof User,
 
-    @Inject("REQUEST") private request: any,
+    @Inject("REQUEST") private request: Request,
     private readonly authService: AuthService,
     private mailService: MailService,
-    private smsService: SmsService
-  ) {}
+    private smsService: SmsService,
+    private readonly i18n: I18nService
+  ) {
+    this.lang = request?.headers?.["x-custom-lang"]?.toString();
+  }
 
   async createByAdmin(createUserDto: CreateUserDto) {
     const { email, phone } = createUserDto;
 
     if (email) {
       const existUser = await this.checkExistUser({ email });
-      if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.EMAIL_EXISTS);
+      if (existUser) throw new BadRequestException(await this.i18n.t("message.EMAIL_EXISTS", { lang: this.lang }));
     }
     if (phone) {
       const existUser = await this.checkExistUser({ phone });
-      if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.PHONE_EXISTS);
+      if (existUser) throw new BadRequestException(await this.i18n.t("message.PHONE_EXISTS", { lang: this.lang }));
     }
 
     const pass = createUserDto.password ?? "123456";
@@ -69,17 +74,17 @@ export class UsersService {
   async update(id: number, updateUserDto: UpdateUserDto) {
     // check user exists
     const user = await this.userModel.findOne({ where: { id } });
-    if (!user) throw new BadRequestException("User does not exists");
+    if (!user) throw new BadRequestException(await this.i18n.t("message.USER_NOT_EXISTS", { lang: this.lang }));
 
     const { email, phone, ...others } = updateUserDto;
 
     if (email) {
       const existUser = await this.checkExistUser({ email }, id);
-      if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.EMAIL_EXISTS);
+      if (existUser) throw new BadRequestException(await this.i18n.t("message.EMAIL_EXISTS", { lang: this.lang }));
     }
     if (phone) {
       const existUser = await this.checkExistUser({ phone }, id);
-      if (existUser) throw new BadRequestException(USER_ERROR_MESSAGE.PHONE_EXISTS);
+      if (existUser) throw new BadRequestException(await this.i18n.t("message.PHONE_EXISTS", { lang: this.lang }));
     }
 
     // do update by admin
@@ -94,8 +99,8 @@ export class UsersService {
       const otpCode = this.authService.generateOTPCode();
       const mail = {
         to: user.email,
-        subject: "OTP update email",
-        text: eval("`" + SMS_TEMPLATE.OTP + "`"),
+        subject: await this.i18n.t("email.OTP_SUBJECT", { lang: this.lang }),
+        text: await this.i18n.t("email.OTP", { args: { otpCode }, lang: this.lang }),
       };
       this.mailService.send(mail);
       const payload = { userId: user.id, email };
@@ -104,7 +109,8 @@ export class UsersService {
 
     if (phone && user.phone) {
       const otpCode = this.authService.generateOTPCode();
-      this.smsService.send(user.phone, eval("`" + SMS_TEMPLATE.OTP + "`"));
+      const smsContent = await this.i18n.t("sms.OTP", { args: { otpCode }, lang: this.lang });
+      this.smsService.send(user.phone, smsContent);
       const payload = { userId: user.id, phone };
       otpToken = await this.authService.generateOTPToken(otpCode, payload);
     }
@@ -122,7 +128,7 @@ export class UsersService {
       const user = rs[1][0].get();
       return user;
     } catch {
-      throw new UnauthorizedException(AUTH_ERROR_MESSAGE.INVALID_CREDENTIAL);
+      throw new UnauthorizedException(await this.i18n.t("message.INVALID_CREDENTIAL", { lang: this.lang }));
     }
   }
 
