@@ -78,7 +78,7 @@ describe("Auth (e2e)", () => {
     await userModel.destroy({ where: { id: userDeleted.id } });
 
     // gen success token
-    const authService = moduleRef.get(AuthService);
+    const authService = await moduleRef.resolve(AuthService);
     const otpCode = authService.generateOTPCode();
     const otpToken = await authService.generateOTPToken(otpCode, { userId: adminUser.id, roleCode: adminUser.roleCode });
     verifySuccess = { otpCode, otpToken };
