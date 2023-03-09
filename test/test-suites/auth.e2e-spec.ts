@@ -1,10 +1,17 @@
-import { ApiKey, generateNumber, ROLE_CODE, User, USER_STATUS } from "@common";
+import {
+  ApiKey, API_CORE_PREFIX,
+  API_TOKEN,
+  createUser,
+  deleteUser,
+  expectError, generateNumber,
+  ROLE_CODE, signin, User,
+  USER_STATUS
+} from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { AuthService } from "modules/auth/auth.service";
 import * as request from "supertest";
-import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, signin } from "../test.util";
 
 describe("Auth (e2e)", () => {
   let app: INestApplication;
