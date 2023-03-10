@@ -74,7 +74,7 @@ describe("Auth (e2e)", () => {
     userDeactived = { id: createdUser2.id, ...user2 };
     userDeleted = { id: createdUser3.id, ...user3 };
 
-    userModel = moduleRef.get("core_UserRepository");
+    userModel = moduleRef.get("UserRepository");
     // deactive user
     await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
     // soft delete user

@@ -25,8 +25,8 @@ describe("KidsController E2E Test", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-    userModel = moduleRef.get("core_UserRepository");
-    kidModel = moduleRef.get("core_KidRepository");
+    userModel = moduleRef.get("UserRepository");
+    kidModel = moduleRef.get("KidRepository");
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");

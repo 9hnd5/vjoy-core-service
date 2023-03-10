@@ -1,6 +1,7 @@
-import { InjectCoreModel, MailService, Role, ROLE_CODE, SmsService, User, UserAttributes, USER_STATUS } from "@common";
+import { MailService, Role, ROLE_CODE, SmsService, User, UserAttributes, USER_STATUS } from "@common";
 import { Inject, Injectable } from "@nestjs/common";
 import { BadRequestException, UnauthorizedException } from "@nestjs/common/exceptions";
+import { InjectModel } from "@nestjs/sequelize";
 import { Request } from "express";
 import { AuthService } from "modules/auth/auth.service";
 import { I18nService } from "nestjs-i18n";
@@ -14,7 +15,7 @@ import { EXCLUDE_FIELDS } from "./users.constants";
 export class UsersService {
   private lang: string | undefined;
   constructor(
-    @InjectCoreModel(User) private userModel: typeof User,
+    @InjectModel(User) private userModel: typeof User,
     @Inject("REQUEST") private request: Request,
     private readonly authService: AuthService,
     private mailService: MailService,
