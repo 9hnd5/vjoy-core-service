@@ -1,10 +1,11 @@
-import { BaseService, InjectCoreModel, Role } from "@common";
+import { BaseService, Role } from "@common";
 import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/sequelize";
 
 @Injectable()
 export class RolesService extends BaseService {
   constructor(
-    @InjectCoreModel(Role)
+    @InjectModel(Role)
     private roleModel: typeof Role
   ) {
     super();

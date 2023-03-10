@@ -1,11 +1,11 @@
-import { ApiKey, InjectCoreModel, Role, ROLE_CODE, User, USER_STATUS } from "@common";
+import { ApiKey, Role, ROLE_CODE, SmsService, User, USER_STATUS } from "@common";
 import { Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { REQUEST } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
+import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import { Request } from "express";
-import { SmsService } from "@common";
 import { I18nService } from "nestjs-i18n";
 import { OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
@@ -22,9 +22,9 @@ export class AuthService {
     private jwtService: JwtService,
     private smsService: SmsService,
     private readonly i18n: I18nService,
-    @InjectCoreModel(User) private userModel: typeof User,
-    @InjectCoreModel(Role) private roleModel: typeof Role,
-    @InjectCoreModel(ApiKey) private apiKeyModel: typeof ApiKey,
+    @InjectModel(User) private userModel: typeof User,
+    @InjectModel(Role) private roleModel: typeof Role,
+    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey,
     @Inject(REQUEST) private request: Request
   ) {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";

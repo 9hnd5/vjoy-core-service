@@ -1,4 +1,4 @@
-import { generateNumber, Kid, ROLE_CODE, User } from "@common";
+import { API_CORE_PREFIX, API_TOKEN, createUser, generateNumber, Kid, ROLE_CODE, signin, User } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
@@ -6,7 +6,6 @@ import { CreateKidDto } from "modules/kids/dto/create-kid.dto";
 import { UpdateKidDto } from "modules/kids/dto/update-kid.dto";
 import { Op } from "sequelize";
 import * as request from "supertest";
-import { API_CORE_PREFIX, API_TOKEN, createUser, signin } from "../test.util";
 
 describe("KidsController E2E Test", () => {
   let app: INestApplication;
@@ -26,8 +25,8 @@ describe("KidsController E2E Test", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
-    userModel = moduleRef.get("core_UserRepository");
-    kidModel = moduleRef.get("core_KidRepository");
+    userModel = moduleRef.get("UserRepository");
+    kidModel = moduleRef.get("KidRepository");
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");
