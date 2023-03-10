@@ -1,5 +1,5 @@
 import { IsOptional } from "class-validator";
-import { QueryDto } from "dtos/query.dto";
+import { QueryDto } from "@common";
 
 export class QueryKidDto extends QueryDto {
   @IsOptional()

@@ -1,5 +1,5 @@
 import { IsEmail, IsIn, IsNotEmpty, IsOptional } from "class-validator";
-import { ROLE_CODE } from "modules/auth/auth.constants";
+import { ROLE_CODE } from "@common";
 
 export class CreateUserDto {
   @IsNotEmpty()

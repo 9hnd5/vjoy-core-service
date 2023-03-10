@@ -1,13 +1,14 @@
+import { BaseService, InjectCoreModel, Role } from "@common";
 import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/sequelize";
-import { Role } from "entities/role.entity";
 
 @Injectable()
-export class RolesService {
+export class RolesService extends BaseService {
   constructor(
-    @InjectModel(Role)
+    @InjectCoreModel(Role)
     private roleModel: typeof Role
-  ) {}
+  ) {
+    super();
+  }
 
   async findAll() {
     const rs = await this.roleModel.findAndCountAll<Role>();

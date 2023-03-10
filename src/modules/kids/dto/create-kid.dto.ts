@@ -1,6 +1,6 @@
 import { Type } from "class-transformer";
 import { IsIn, IsNotEmpty, IsNumber, IsOptional, Length, Matches, ValidateNested } from "class-validator";
-import { ROLE_CODE } from "modules/auth/auth.constants";
+import { ROLE_CODE } from "@common";
 
 class LearningGoalDto {
   @IsNumber()

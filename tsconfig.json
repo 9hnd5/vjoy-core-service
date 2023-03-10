@@ -16,6 +16,10 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@common": ["../nest-common-module/index", "../nest-common-module/*"]
+    }
+  },
+  "include": ["src/**/*", "test/**/*", "nest-common-module/**/*", "global.d.ts"]
 }

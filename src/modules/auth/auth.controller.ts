@@ -1,8 +1,6 @@
+import { AdminOrSameUser, Authorize, Controller } from "@common";
 import { Body, Delete, Get, Param, Post } from "@nestjs/common";
-import { Controller } from "decorators/controller.decorator";
 import { AuthService } from "./auth.service";
-import { AdminOrSameUser } from "./decorators/admin-or-same-user.decorator";
-import { Authorize } from "./decorators/authorize.decorator";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
