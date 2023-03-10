@@ -186,7 +186,7 @@ describe("KidsController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}`)
         .send(updateKidDto)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.BAD_REQUEST);
+        .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should success due to user is the same", async () => {
@@ -373,7 +373,7 @@ describe("KidsController E2E Test", () => {
       return agent
         .delete(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}?hardDelete=true`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.BAD_REQUEST)
+        .expect(HttpStatus.UNAUTHORIZED)
         .expect((res) => {
           const { error } = res.body;
           expect(error).not.toBeNull();

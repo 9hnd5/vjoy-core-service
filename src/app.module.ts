@@ -2,13 +2,16 @@ import { InitialModule } from "@common";
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { SequelizeModule } from "@nestjs/sequelize";
+import { camelCase } from "lodash";
 import { AuthModule } from "modules/auth/auth.module";
 import { KidsModule } from "modules/kids/kids.module";
 import { UsersModule } from "modules/users/users.module";
+import * as path from "path";
 
+const coreEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*.entity*");
 @Module({
   imports: [
-    InitialModule,
+    InitialModule.forRoot({ i18nPath: path.join(__dirname, "i18n") }),
     KidsModule,
     AuthModule,
     UsersModule,
@@ -25,6 +28,11 @@ import { UsersModule } from "modules/users/users.module";
           retryAttempts: 0,
           logging: false,
           autoLoadModels: true,
+          models: [coreEntityPath],
+          modelMatch: (filename, exportMember) => {
+            const modelName = camelCase(filename.substring(0, filename.indexOf(".entity"))).toLowerCase();
+            return modelName === exportMember.toLowerCase();
+          },
         };
       },
       inject: [ConfigService],

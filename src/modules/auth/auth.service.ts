@@ -1,36 +1,30 @@
-import { ApiKey, Role, ROLE_CODE, SmsService, User, USER_STATUS } from "@common";
-import { Inject, Injectable, NotFoundException, Scope, UnauthorizedException } from "@nestjs/common";
+import { ApiKey, BaseService, Role, ROLE_CODE, SmsService, User, USER_STATUS } from "@common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { REQUEST } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
-import { Request } from "express";
-import { I18nService } from "nestjs-i18n";
 import { OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { LoginDto } from "./dto/login.dto";
 
-@Injectable({ scope: Scope.REQUEST })
-export class AuthService {
+@Injectable()
+export class AuthService extends BaseService {
   private expiresIn: string;
   private secret: string;
   private atSecret: string;
-  private lang: string | undefined;
   constructor(
     configService: ConfigService,
     private jwtService: JwtService,
     private smsService: SmsService,
-    private readonly i18n: I18nService,
     @InjectModel(User) private userModel: typeof User,
     @InjectModel(Role) private roleModel: typeof Role,
-    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey,
-    @Inject(REQUEST) private request: Request
+    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey
   ) {
+    super();
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";
     this.atSecret = configService.get("JWT_API_TOKEN_SECRET") || "";
-    this.lang = request?.headers?.["x-custom-lang"]?.toString();
   }
 
   login(data: LoginDto) {
@@ -55,7 +49,7 @@ export class AuthService {
       await existUser.save();
       return this.generateUserToken(existUser);
     } catch {
-      throw new UnauthorizedException(await this.i18n.t("message.INVALID_CREDENTIAL", { lang: this.lang }));
+      throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
     }
   };
 
@@ -115,12 +109,10 @@ export class AuthService {
       attributes: ["id", "firstname", "lastname", "email", "password", "roleCode"],
       include: Role,
     });
-    if (!existUser)
-      throw new UnauthorizedException(await this.i18n.t("message.INVALID_CREDENTIAL", { lang: this.lang }));
+    if (!existUser) throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
     const isPasswordMatch = existUser.password && (await this.comparePassword(userPassword, existUser.password));
-    if (!isPasswordMatch)
-      throw new UnauthorizedException(await this.i18n.t("message.INVALID_CREDENTIAL", { lang: this.lang }));
+    if (!isPasswordMatch) throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
     return this.generateUserToken(existUser);
   }
@@ -130,10 +122,9 @@ export class AuthService {
 
     const existUser = await this.userModel.findOne({ where: { phone: userPhone }, paranoid: false });
     if (existUser) {
-      if (existUser.deletedAt)
-        throw new UnauthorizedException(await this.i18n.t("message.USER_DELETED", { lang: this.lang }));
+      if (existUser.deletedAt) throw new UnauthorizedException(this.i18n.t("message.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new UnauthorizedException(await this.i18n.t("message.USER_DEACTIVATED", { lang: this.lang }));
+        throw new UnauthorizedException(this.i18n.t("message.USER_DEACTIVATED"));
       payload = { userId: existUser.id, roleCode: existUser.roleCode };
     } else {
       const newUser = await this.userModel.create({ phone: userPhone, roleCode: ROLE_CODE.PARENT });
@@ -141,8 +132,8 @@ export class AuthService {
     }
 
     const otpCode = this.generateOTPCode();
-    const smsContent = await this.i18n.t("sms.OTP", { args: { otpCode }, lang: this.lang });
-    this.smsService.send(userPhone, smsContent);
+    const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+    this.smsService.send(userPhone, smsContent as string);
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
   }
 }

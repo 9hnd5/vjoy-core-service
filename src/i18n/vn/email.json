@@ -1,4 +1,6 @@
 {
-  "OTP": "{otpCode} là OTP của bạn. OTP sẽ hết hạn sau 5 phút.",
-  "OTP_SUBJECT": "VUS thông báo OTP"
+  "OTP_SUBJECT": "VJOY - OTP Verification",
+  "OTP_BODY": "{otpCode} là OTP của bạn. OTP sẽ hết hạn sau {min} phút.",
+  "NEW_ACCOUNT_SUBJECT": "VJOY - Thông tin tài khoản",
+  "NEW_ACCOUNT_BODY": "<h4>Thân chào {fullname},</h4><p>Tài khoản của bạn đã được tạo với mật khẩu mặc định là: {pass}</p>"
 }

@@ -1,4 +1,6 @@
 {
-  "OTP": "{otpCode} is your OTP code. It will expire after 5 minutes.",
-  "OTP_SUBJECT": "VUS OTP announcement"
+  "OTP_SUBJECT": "VJOY - OTP Verification",
+  "OTP_BODY": "{otpCode} is your OTP code. It will expire after {min} minutes.",
+  "NEW_ACCOUNT_SUBJECT": "VJOY - New Account Activation",
+  "NEW_ACCOUNT_BODY": "<h4>Dear {fullname},</h4><p>Your account has been created with the temporary password: {pass}</p>"
 }
