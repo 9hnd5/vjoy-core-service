@@ -42,6 +42,7 @@ describe("KidsController E2E Test", () => {
         lastname: "testParent",
         email: "testParent@gmail.com",
         phone: "0931336273",
+        password: "123456",
         roleCode: ROLE_CODE.PARENT,
       },
       accessToken: adminToken,
