@@ -1,28 +1,18 @@
-# Base image
-FROM node:18-alpine
+FROM node:18-alpine as builder
 ARG env
-ENV env=${env}
-# Create app directory
-WORKDIR /usr/src/app
-
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
-
-# Install app dependencies
-RUN npm i
-
-# Bundle app source
+WORKDIR /app
 COPY . .
+RUN yarn install --frozen-lockfile
+RUN yarn test-e2e:${env}
+RUN yarn build
 
-# Run API Test
-RUN npm run test-e2e:${env}
-
-# Build production
-# Creates a "dist" folder with the production build
-ENV NODE_ENV production
-ENV SERVICE core
-
-RUN npm run build
-
-# Run the web service on container startup.
-CMD npm run start:${env}
+FROM node:18-alpine as runner
+ARG env
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json /app/yarn.lock ./
+COPY --from=builder /app/env ./env
+ENV NODE_ENV=production
+ENV env=${env}
+RUN yarn install --frozen-lockfile && yarn cache clean
+CMD yarn start:${env}
