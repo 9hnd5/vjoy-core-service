@@ -11,6 +11,7 @@ import {
 } from "@common";
 import { Injectable } from "@nestjs/common";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common/exceptions";
+import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/sequelize";
 import { OTP_TOKEN_EXPIRES } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
@@ -22,13 +23,16 @@ import { EXCLUDE_FIELDS } from "./users.constants";
 
 @Injectable()
 export class UsersService extends BaseService {
+  private env: string;
   constructor(
     @InjectModel(User) private userModel: typeof User,
     private readonly authService: AuthService,
     private mailService: MailService,
-    private smsService: SmsService
+    private smsService: SmsService,
+    config: ConfigService
   ) {
     super();
+    this.env = config.get("ENV")!;
   }
 
   async createByAdmin(createUserDto: CreateUserDto) {
@@ -45,13 +49,15 @@ export class UsersService extends BaseService {
 
     const pass = createUserDto.password ?? generateNumber(6).toString();
     const password = await this.authService.createPassword(pass);
-    
-    const mail = {
-      to: email,
-      subject: this.i18n.t("email.NEW_ACCOUNT_SUBJECT"),
-      html: this.i18n.t("email.NEW_ACCOUNT_BODY", { args: { fullname: `${firstname} ${lastname}`, pass } }),
-    };
-    this.mailService.sendHtml(mail);
+
+    if (this.env != "test") {
+      const mail = {
+        to: email,
+        subject: this.i18n.t("email.NEW_ACCOUNT_SUBJECT"),
+        html: this.i18n.t("email.NEW_ACCOUNT_BODY", { args: { fullname: `${firstname} ${lastname}`, pass } }),
+      };
+      this.mailService.sendHtml(mail);
+    }
 
     return await this.userModel.create({
       ...createUserDto,
@@ -106,20 +112,26 @@ export class UsersService extends BaseService {
     let otpToken: string | undefined;
     if (email && user.email) {
       const otpCode = this.authService.generateOTPCode();
-      const mail = {
-        to: user.email,
-        subject: this.i18n.t("email.OTP_SUBJECT"),
-        text: this.i18n.t("email.OTP_BODY", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } }),
-      };
-      this.mailService.send(mail);
+
+      if (this.env != "test") {
+        const mail = {
+          to: user.email,
+          subject: this.i18n.t("email.OTP_SUBJECT"),
+          text: this.i18n.t("email.OTP_BODY", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } }),
+        };
+        this.mailService.send(mail);
+      }
       const payload = { userId: user.id, email };
       otpToken = await this.authService.generateOTPToken(otpCode, payload);
     }
 
     if (phone && user.phone) {
       const otpCode = this.authService.generateOTPCode();
-      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
-      this.smsService.send(user.phone, smsContent);
+
+      if (this.env != "test") {
+        const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+        this.smsService.send(user.phone, smsContent);
+      }
       const payload = { userId: user.id, phone };
       otpToken = await this.authService.generateOTPToken(otpCode, payload);
     }
