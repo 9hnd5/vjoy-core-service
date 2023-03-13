@@ -54,7 +54,6 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
     };
 
     const user2 = {
@@ -63,7 +62,6 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
     };
 
     const user3 = {
@@ -72,7 +70,6 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
     };
     const createdUser1: User["dataValues"] = await createUser({ newUser: user1, accessToken: adminToken });
     const createdUser2: User["dataValues"] = await createUser({ newUser: user2, accessToken: adminToken });
