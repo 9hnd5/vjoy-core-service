@@ -1,31 +1,23 @@
-import { Kid, Role, ROLE_CODE, User } from "@common";
-import { BadRequestException, Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
+import { BaseService, Kid, Role, ROLE_CODE, User } from "@common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Request } from "express";
-import { I18nService } from "nestjs-i18n";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 
-@Injectable({ scope: Scope.REQUEST })
-export class KidsService {
-  private lang: string | undefined;
+@Injectable()
+export class KidsService extends BaseService {
   constructor(
     @InjectModel(Kid) private kidModel: typeof Kid,
-    @InjectModel(User) private userModel: typeof User,
-    @Inject(REQUEST) private request: Request,
-    private readonly i18n: I18nService
+    @InjectModel(User) private userModel: typeof User
   ) {
-    this.lang = request?.headers?.["x-custom-lang"]?.toString();
+    super();
   }
 
   async create(createKidDto: CreateKidDto, parentId: number) {
     const parent = await this.userModel.findByPk(parentId);
     if (!parent)
-      throw new BadRequestException(
-        await this.i18n.t("message.NOT_FOUND", { args: { data: parentId }, lang: this.lang })
-      );
+      throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: parentId } }));
 
     const signinUser = this.request.user!;
     if (signinUser.roleCode !== ROLE_CODE.ADMIN) createKidDto.roleCode = ROLE_CODE.KID_FREE;
@@ -59,8 +51,7 @@ export class KidsService {
       paranoid: !includeDeleted,
       attributes: ["id", "firstname", "lastname", "gender", "dob", "updatedAt"],
     });
-    if (!kid)
-      throw new NotFoundException(await this.i18n.t("message.NOT_FOUND", { args: { data: kidId }, lang: this.lang }));
+    if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: kidId } }));
 
     return kid;
   }
@@ -69,12 +60,11 @@ export class KidsService {
     const { roleCode, parentId: newParentId } = updateUserDto;
 
     const kid = await this.kidModel.findOne({ where: { id: kidId, parentId } });
-    if (!kid)
-      throw new NotFoundException(await this.i18n.t("message.NOT_FOUND", { args: { data: kidId }, lang: this.lang }));
+    if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: kidId } }));
 
     const signinUser = this.request.user!;
     if (signinUser.roleCode !== ROLE_CODE.ADMIN && (roleCode || newParentId))
-      throw new BadRequestException(await this.i18n.t("message.NOT_PERMISSION", { lang: this.lang }));
+      throw new UnauthorizedException(this.i18n.t("message.NOT_PERMISSION"));
 
     kid.set(updateUserDto);
     return kid.save();
@@ -82,11 +72,11 @@ export class KidsService {
 
   async remove(parentId: number, kidId: number, hardDelete = false) {
     const kid = await this.kidModel.findOne({ where: { id: kidId, parentId }, paranoid: false });
-    if (!kid) throw new NotFoundException("Kid Not Found");
+    if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: kidId } }));
 
     const signinUser = this.request.user!;
     if (signinUser.roleCode !== ROLE_CODE.ADMIN && hardDelete)
-      throw new BadRequestException(await this.i18n.t("message.NOT_PERMISSION", { lang: this.lang }));
+      throw new UnauthorizedException(this.i18n.t("message.NOT_PERMISSION"));
 
     return kid.destroy({ force: hardDelete });
   }

@@ -7,7 +7,7 @@ import {
   ROLE_CODE,
   signin,
   User,
-  USER_STATUS
+  USER_STATUS,
 } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";

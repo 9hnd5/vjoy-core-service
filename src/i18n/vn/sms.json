@@ -1,3 +1,3 @@
 {
-  "OTP": "{otpCode} là OTP của bạn. OTP sẽ hết hạn sau 5 phút."
+  "OTP": "{otpCode} là OTP của bạn. OTP sẽ hết hạn sau {min} phút."
 }
