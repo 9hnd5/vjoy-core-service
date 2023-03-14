@@ -13,7 +13,6 @@ export class AuthService extends BaseService {
   private expiresIn: string;
   private secret: string;
   private atSecret: string;
-  private env: string;
   constructor(
     configService: ConfigService,
     private jwtService: JwtService,
@@ -25,7 +24,6 @@ export class AuthService extends BaseService {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";
     this.atSecret = configService.get("JWT_API_TOKEN_SECRET") || "";
-    this.env = configService.get("ENV")!;
   }
 
   login(data: LoginDto) {
@@ -133,8 +131,8 @@ export class AuthService extends BaseService {
     }
 
     const otpCode = this.generateOTPCode();
-
-    if (this.env != "test") {
+    console.log("type", this.request.user)
+    if (this.request.user?.apiToken.type != "vjoy-test") {
       const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
       this.smsService.send(userPhone, smsContent as string);
     }

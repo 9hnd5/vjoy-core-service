@@ -11,6 +11,6 @@ export class CreateApiKeyDto {
   description?: string;
 
   @Allow()
-  // @Matches(/vjoy-(web|mobile)/)
+  // @Matches(/vjoy-(web|mobile|test)/)
   type: string;
 }

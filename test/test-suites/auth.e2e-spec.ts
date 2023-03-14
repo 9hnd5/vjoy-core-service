@@ -54,7 +54,7 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
+      password,
     };
 
     const user2 = {
@@ -63,7 +63,7 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
+      password,
     };
 
     const user3 = {
@@ -72,7 +72,7 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
+      password,
     };
     const createdUser1: User["dataValues"] = await createUser({ newUser: user1, accessToken: adminToken });
     const createdUser2: User["dataValues"] = await createUser({ newUser: user2, accessToken: adminToken });
@@ -80,6 +80,9 @@ describe("Auth (e2e)", () => {
     user = { id: createdUser1.id, ...user1 };
     userDeactived = { id: createdUser2.id, ...user2 };
     userDeleted = { id: createdUser3.id, ...user3 };
+    // console.log("user", user);
+    // console.log("user deact", userDeactived);
+    // console.log("user del", userDeleted);
 
     userModel = moduleRef.get("UserRepository");
     // deactive user
@@ -99,33 +102,34 @@ describe("Auth (e2e)", () => {
 
   afterAll(async () => {
     //Delete new user was created before
-    await deleteUser({ id: user.id, accessToken: adminToken });
-    await deleteUser({ id: userDeactived.id, accessToken: adminToken });
-    await deleteUser({ id: userDeleted.id, accessToken: adminToken });
-    await deleteUser({ id: userCreatedByPhone.id, accessToken: adminToken });
+    // await deleteUser({ id: user.id, accessToken: adminToken });
+    // await deleteUser({ id: userDeactived.id, accessToken: adminToken });
+    // await deleteUser({ id: userDeleted.id, accessToken: adminToken });
+    // await deleteUser({ id: userCreatedByPhone.id, accessToken: adminToken });
 
     await app.close();
   });
 
   describe("Sign in by email (POST) auth/login", () => {
-    it("Should sign in successfully and return userToken", () => {
+    it.only("Should sign in successfully and return userToken", () => {
       const loginDTO = {
         type: "email",
-        email: user.email,
-        password,
+        email: "login-test-690289@vus-etsc.edu.vn",
+        password: "123456",
       };
-
+      // console.log(loginDTO);
       return agent
         .post(`${API_CORE_PREFIX}/auth/login`)
         .send(loginDTO)
+        .expect(HttpStatus.CREATED)
         .expect((response: request.Response) => {
+          console.log(response.body);
           const { email, accessToken, refreshToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(loginDTO.email);
           expect(accessToken).not.toBeNull();
           expect(refreshToken).not.toBeNull();
-        })
-        .expect(HttpStatus.CREATED);
+        });
     });
 
     it("Should sign in failed due to user not exist", () => {

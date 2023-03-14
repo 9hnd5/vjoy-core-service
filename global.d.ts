@@ -3,7 +3,7 @@ declare namespace Express {
     user?: {
       userId: number;
       roleCode: string;
-      apiTokenPayload: {
+      apiToken: {
         name: string;
         type: string;
         env: string;
