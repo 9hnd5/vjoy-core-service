@@ -7,11 +7,10 @@ import {
   SmsService,
   User,
   UserAttributes,
-  USER_STATUS,
+  USER_STATUS
 } from "@common";
 import { Injectable } from "@nestjs/common";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common/exceptions";
-import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/sequelize";
 import { OTP_TOKEN_EXPIRES } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
@@ -23,16 +22,13 @@ import { EXCLUDE_FIELDS } from "./users.constants";
 
 @Injectable()
 export class UsersService extends BaseService {
-  private env: string;
   constructor(
     @InjectModel(User) private userModel: typeof User,
     private readonly authService: AuthService,
     private mailService: MailService,
-    private smsService: SmsService,
-    config: ConfigService
+    private smsService: SmsService
   ) {
     super();
-    this.env = config.get("ENV")!;
   }
 
   async createByAdmin(createUserDto: CreateUserDto) {
@@ -49,8 +45,7 @@ export class UsersService extends BaseService {
 
     const pass = createUserDto.password ?? generateNumber(6).toString();
     const password = await this.authService.createPassword(pass);
-
-    if (this.env != "test") {
+    if (this.request.user?.apiToken.type != "vjoy-test") {
       const mail = {
         to: email,
         subject: this.i18n.t("email.NEW_ACCOUNT_SUBJECT"),
@@ -103,7 +98,7 @@ export class UsersService extends BaseService {
     }
 
     // do update by admin
-    const role = this.request.user?.roleCode;
+    const { roleCode: role, apiToken } = this.request.user!;
     if (role === ROLE_CODE.ADMIN) return (await user.update({ ...updateUserDto })).dataValues;
 
     delete others.roleCode;
@@ -112,8 +107,7 @@ export class UsersService extends BaseService {
     let otpToken: string | undefined;
     if (email && user.email) {
       const otpCode = this.authService.generateOTPCode();
-
-      if (this.env != "test") {
+      if (apiToken.type != "vjoy-test") {
         const mail = {
           to: user.email,
           subject: this.i18n.t("email.OTP_SUBJECT"),
@@ -128,7 +122,7 @@ export class UsersService extends BaseService {
     if (phone && user.phone) {
       const otpCode = this.authService.generateOTPCode();
 
-      if (this.env != "test") {
+      if (apiToken.type != "vjoy-test") {
         const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
         this.smsService.send(user.phone, smsContent);
       }

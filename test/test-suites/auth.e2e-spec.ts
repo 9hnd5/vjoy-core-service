@@ -54,7 +54,7 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
+      password,
     };
 
     const user2 = {
@@ -63,7 +63,7 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
+      password,
     };
 
     const user3 = {
@@ -72,7 +72,7 @@ describe("Auth (e2e)", () => {
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
       roleCode: ROLE_CODE.PARENT,
-      password
+      password,
     };
     const createdUser1: User["dataValues"] = await createUser({ newUser: user1, accessToken: adminToken });
     const createdUser2: User["dataValues"] = await createUser({ newUser: user2, accessToken: adminToken });
@@ -114,18 +114,17 @@ describe("Auth (e2e)", () => {
         email: user.email,
         password,
       };
-
       return agent
         .post(`${API_CORE_PREFIX}/auth/login`)
         .send(loginDTO)
+        .expect(HttpStatus.CREATED)
         .expect((response: request.Response) => {
           const { email, accessToken, refreshToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(loginDTO.email);
           expect(accessToken).not.toBeNull();
           expect(refreshToken).not.toBeNull();
-        })
-        .expect(HttpStatus.CREATED);
+        });
     });
 
     it("Should sign in failed due to user not exist", () => {
