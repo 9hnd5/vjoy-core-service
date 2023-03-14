@@ -45,7 +45,6 @@ export class UsersService extends BaseService {
 
     const pass = createUserDto.password ?? generateNumber(6).toString();
     const password = await this.authService.createPassword(pass);
-
     if (this.request.user?.apiToken.type != "vjoy-test") {
       const mail = {
         to: email,
@@ -108,7 +107,6 @@ export class UsersService extends BaseService {
     let otpToken: string | undefined;
     if (email && user.email) {
       const otpCode = this.authService.generateOTPCode();
-
       if (apiToken.type != "vjoy-test") {
         const mail = {
           to: user.email,

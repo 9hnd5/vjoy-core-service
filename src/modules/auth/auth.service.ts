@@ -131,7 +131,6 @@ export class AuthService extends BaseService {
     }
 
     const otpCode = this.generateOTPCode();
-    console.log("type", this.request.user)
     if (this.request.user?.apiToken.type != "vjoy-test") {
       const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
       this.smsService.send(userPhone, smsContent as string);

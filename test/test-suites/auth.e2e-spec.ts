@@ -80,9 +80,6 @@ describe("Auth (e2e)", () => {
     user = { id: createdUser1.id, ...user1 };
     userDeactived = { id: createdUser2.id, ...user2 };
     userDeleted = { id: createdUser3.id, ...user3 };
-    // console.log("user", user);
-    // console.log("user deact", userDeactived);
-    // console.log("user del", userDeleted);
 
     userModel = moduleRef.get("UserRepository");
     // deactive user
@@ -102,28 +99,26 @@ describe("Auth (e2e)", () => {
 
   afterAll(async () => {
     //Delete new user was created before
-    // await deleteUser({ id: user.id, accessToken: adminToken });
-    // await deleteUser({ id: userDeactived.id, accessToken: adminToken });
-    // await deleteUser({ id: userDeleted.id, accessToken: adminToken });
-    // await deleteUser({ id: userCreatedByPhone.id, accessToken: adminToken });
+    await deleteUser({ id: user.id, accessToken: adminToken });
+    await deleteUser({ id: userDeactived.id, accessToken: adminToken });
+    await deleteUser({ id: userDeleted.id, accessToken: adminToken });
+    await deleteUser({ id: userCreatedByPhone.id, accessToken: adminToken });
 
     await app.close();
   });
 
   describe("Sign in by email (POST) auth/login", () => {
-    it.only("Should sign in successfully and return userToken", () => {
+    it("Should sign in successfully and return userToken", () => {
       const loginDTO = {
         type: "email",
-        email: "login-test-690289@vus-etsc.edu.vn",
-        password: "123456",
+        email: user.email,
+        password,
       };
-      // console.log(loginDTO);
       return agent
         .post(`${API_CORE_PREFIX}/auth/login`)
         .send(loginDTO)
         .expect(HttpStatus.CREATED)
         .expect((response: request.Response) => {
-          console.log(response.body);
           const { email, accessToken, refreshToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(loginDTO.email);
