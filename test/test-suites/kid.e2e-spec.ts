@@ -2,6 +2,7 @@ import { API_CORE_PREFIX, API_TOKEN, createUser, generateNumber, Kid, ROLE_CODE,
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
+import { CreateKidByAdminDto } from "modules/kids/dto/create-kid-by-admin.dto";
 import { CreateKidDto } from "modules/kids/dto/create-kid.dto";
 import { UpdateKidDto } from "modules/kids/dto/update-kid.dto";
 import { Op } from "sequelize";
@@ -386,6 +387,186 @@ describe("KidsController E2E Test", () => {
         .delete(
           `${API_CORE_PREFIX}/users/${kid["createdByAdmin"].parentId}/kids/${kid["createdByAdmin"].id}?hardDelete=true`
         ) // changed to 0 by updated before
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.OK)
+        .then(async () => {
+          const deletedKid = await kidModel.findOne({ where: { id: kid["createdByAdmin"].id } });
+          expect(deletedKid).toBeNull();
+        });
+    });
+  });
+
+  describe("Create kid by admin (POST)api/kids", () => {
+    let createKidDto: CreateKidByAdminDto;
+    beforeAll(() => {
+      createKidDto = {
+        firstname: "api-test-firstname",
+        lastname: "api-test-lastname",
+        dob: "2022-02-02",
+        gender: "M",
+        roleCode: ROLE_CODE.KID_PREMIUM,
+        parentId: parent.id,
+      };
+    });
+    it("Should fail due to user unauthorized", () => {
+      return agent.post(`${API_CORE_PREFIX}/kids`).expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should fail due to user is not admin", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/kids`)
+        .send(createKidDto)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("Should fail due to invalid field", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/kids`)
+        .send({ ...createKidDto, gender: null })
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect((res) => {
+          const { error } = res.body;
+          expect(error).not.toBeNull();
+          expect(error[0].code).toBe("gender");
+          expect(error[0].message).not.toBeNull();
+        });
+    });
+
+    it("Should succeed due to user is admin", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/kids`)
+        .send(createKidDto)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.CREATED)
+        .expect((res) => {
+          const result = res.body.data;
+          expect(result.firstname).toBe(createKidDto.firstname);
+          expect(result.lastname).toBe(createKidDto.lastname);
+          expect(result.dob).toBe(createKidDto.dob);
+          expect(result.gender).toBe(createKidDto.gender);
+          expect(result.roleCode).toBe(createKidDto.roleCode);
+          expect(result.parentId).toBe(createKidDto.parentId);
+          kid.createdByAdmin = result;
+        });
+    });
+  });
+
+  describe("Update kid by admin (PATCH)api/kids/:kidId", () => {
+    let updateKidDto: UpdateKidDto;
+    beforeAll(() => {
+      updateKidDto = { firstname: "test-user-update", roleCode: ROLE_CODE.ADMIN };
+    });
+
+    it("Should fail due to user unauthorized", () => {
+      return agent.patch(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}`).expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should fail due to invalid params(kidId)", () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/kids/undefined`)
+        .send(updateKidDto)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should fail due to user is not admin", () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}`)
+        .send(updateKidDto)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("Should fail due to user is admin but parentId is not exists", () => {
+      const parentId = generateNumber(10);
+      return agent
+        .patch(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}`)
+        .send({ ...updateKidDto, parentId })
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.NOT_FOUND);
+    });
+
+    it("Should succeed due to user is admin", async () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}`)
+        .send(updateKidDto)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.OK)
+        .then((res) => {
+          const updatedKid = res.body.data;
+          expect(updatedKid.firstname).toBe(updateKidDto.firstname);
+          expect(updatedKid.roleCode).toBe(ROLE_CODE.ADMIN); // admin allow to change role from kid to admin
+        });
+    });
+  });
+
+  describe("Get one kid (GET)api/kids/:kidId", () => {
+    it("Should fail due to user unauthorized", () => {
+      return agent.get(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}/`).expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should fail due to user is not admin", () => {
+      return agent
+        .get(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}/`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("Should fail due to invalid params(kidId)", () => {
+      return agent
+        .get(`${API_CORE_PREFIX}/kids/undefined`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should succeed due to user is admin", () => {
+      const kidId = kid["createdByAdmin"].id;
+      return agent
+        .get(`${API_CORE_PREFIX}/kids/${kidId}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.OK)
+        .expect((res) => {
+          const responseData = res.body.data;
+          expect(responseData.id).toEqual(kidId);
+        });
+    });
+  });
+
+  describe("Delete kid by admin (DELETE)api/kids/:kidId", () => {
+    it("Should fail due to user unauthorized", () => {
+      return agent.delete(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}`).expect(HttpStatus.UNAUTHORIZED);
+    });
+
+    it("Should fail due to invalid params(kidId)", () => {
+      return agent
+        .delete(`${API_CORE_PREFIX}/kids/undefined`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should fail due to user is not admin", () => {
+      return agent
+        .delete(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}/`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    it("Should succeed due to user having sufficient privileges (Soft Delete)", async () => {
+      return agent
+        .delete(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.OK)
+        .then(async () => {
+          const deletedKid = await kidModel.findOne({ where: { id: kid["createdByAdmin"].id }, paranoid: false });
+          expect(deletedKid).not.toBeNull();
+          expect(deletedKid?.deletedAt).not.toBeNull();
+        });
+    });
+
+    it("Should succeed due to user having sufficient privileges (Hard delete)", async () => {
+      return agent
+        .delete(`${API_CORE_PREFIX}/kids/${kid["createdByAdmin"].id}?hardDelete=true`)
         .set("Authorization", `Bearer ${adminToken}`)
         .expect(HttpStatus.OK)
         .then(async () => {

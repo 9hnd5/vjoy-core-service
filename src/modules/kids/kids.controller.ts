@@ -1,6 +1,7 @@
 import { AdminOrSameUser, Authorize } from "@common";
 import { Controller } from "@common";
 import { Body, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { CreateKidByAdminDto } from "./dto/create-kid-by-admin.dto";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
@@ -48,5 +49,29 @@ export class KidsController {
     @Query("hardDelete") hardDelete: boolean
   ) {
     return this.kidsService.remove(parentId, kidId, hardDelete);
+  }
+
+  @Authorize({ action: "create", resource: "kids" })
+  @Post("kids")
+  async createKidByAdmin(@Body() createKidDto: CreateKidByAdminDto) {
+    return this.kidsService.createByAdmin(createKidDto);
+  }
+
+  @Authorize({ action: "read", resource: "kids" })
+  @Get("kids/:kidId")
+  findOneKidByAdmin(@Param("kidId") kidId: number) {
+    return this.kidsService.findOneByAdmin(kidId);
+  }
+
+  @Authorize({ action: "update", resource: "kids" })
+  @Patch("kids/:kidId")
+  updateKidByAdmin(@Param("kidId") kidId: number, @Body() updateKidDto: UpdateKidDto) {
+    return this.kidsService.updateByAdmin(kidId, updateKidDto);
+  }
+
+  @Authorize({ action: "delete", resource: "kids" })
+  @Delete("kids/:kidId")
+  removeKidByAdmin(@Param("kidId") kidId: number, @Query("hardDelete") hardDelete: boolean) {
+    return this.kidsService.removeByAdmin(kidId, hardDelete);
   }
 }
