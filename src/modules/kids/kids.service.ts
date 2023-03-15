@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/sequelize";
 import { CreateKidByAdminDto } from "./dto/create-kid-by-admin.dto";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { QueryKidDto } from "./dto/query-kid.dto";
+import { UpdateKidByAdminDto } from "./dto/update-kid-by-admin.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 
 @Injectable()
@@ -12,14 +13,11 @@ export class KidsService extends BaseService {
     super();
   }
 
-  async create(createKidDto: CreateKidDto, parentId: number) {
-    const parent = await this.userModel.findByPk(parentId);
-    if (!parent) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: parentId } }));
+  async createByUser(createKidDto: CreateKidDto, parentId: number) {
+    const count = await this.userModel.count({ where: { id: parentId } });
+    if (count <= 0) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: parentId } }));
 
-    const signinUser = this.request.user!;
-    if (signinUser.roleCode !== ROLE_CODE.ADMIN) createKidDto.roleCode = ROLE_CODE.KID_FREE;
-
-    return this.kidModel.create({ ...createKidDto, parentId });
+    return this.kidModel.create({ ...createKidDto, parentId, roleCode: ROLE_CODE.KID_FREE });
   }
 
   findAll(query: QueryKidDto, parentId?: number) {
@@ -38,7 +36,7 @@ export class KidsService extends BaseService {
     });
   }
 
-  async findOne(parentId: number, kidId: number, includeDeleted = false) {
+  async findOneByUser(parentId: number, kidId: number, includeDeleted = false) {
     const kid = await this.kidModel.findOne({
       where: { id: kidId, parentId },
       include: [
@@ -53,21 +51,15 @@ export class KidsService extends BaseService {
     return kid;
   }
 
-  async update(parentId: number, kidId: number, updateUserDto: UpdateKidDto) {
-    const { roleCode, parentId: newParentId } = updateUserDto;
-
+  async updateByUser(parentId: number, kidId: number, updateUserDto: UpdateKidDto) {
     const kid = await this.kidModel.findOne({ where: { id: kidId, parentId } });
     if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: kidId } }));
-
-    const signinUser = this.request.user!;
-    if (signinUser.roleCode !== ROLE_CODE.ADMIN && (roleCode || newParentId))
-      throw new UnauthorizedException(this.i18n.t("message.NOT_PERMISSION"));
 
     kid.set(updateUserDto);
     return kid.save();
   }
 
-  async remove(parentId: number, kidId: number, hardDelete = false) {
+  async removeByUser(parentId: number, kidId: number, hardDelete = false) {
     const kid = await this.kidModel.findOne({ where: { id: kidId, parentId }, paranoid: false });
     if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: kidId } }));
 
@@ -101,7 +93,7 @@ export class KidsService extends BaseService {
     return kid;
   }
 
-  async updateByAdmin(kidId: number, updateUserDto: UpdateKidDto) {
+  async updateByAdmin(kidId: number, updateUserDto: UpdateKidByAdminDto) {
     const kid = await this.kidModel.findOne({ where: { id: kidId } });
     if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: kidId } }));
 

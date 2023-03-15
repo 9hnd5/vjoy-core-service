@@ -4,6 +4,7 @@ import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { CreateKidByAdminDto } from "modules/kids/dto/create-kid-by-admin.dto";
 import { CreateKidDto } from "modules/kids/dto/create-kid.dto";
+import { UpdateKidByAdminDto } from "modules/kids/dto/update-kid-by-admin.dto";
 import { UpdateKidDto } from "modules/kids/dto/update-kid.dto";
 import { Op } from "sequelize";
 import * as request from "supertest";
@@ -60,8 +61,7 @@ describe("KidsController E2E Test", () => {
         firstname: "api-test-firstname",
         lastname: "api-test-lastname",
         dob: "2022-02-02",
-        gender: "M",
-        roleCode: ROLE_CODE.ADMIN,
+        gender: "M"
       };
     });
     it("Should fail due to user unauthorized", () => {
@@ -139,7 +139,7 @@ describe("KidsController E2E Test", () => {
           expect(result.lastname).toBe(createKidDto.lastname);
           expect(result.dob).toBe(createKidDto.dob);
           expect(result.gender).toBe(createKidDto.gender);
-          expect(result.roleCode).toBe(createKidDto.roleCode);
+          expect(result.roleCode).toBe(ROLE_CODE.KID_FREE);
           expect(result.parentId).toBe(parent.id);
           kid.createdByAdmin = result;
         });
@@ -149,7 +149,7 @@ describe("KidsController E2E Test", () => {
   describe("Update kid (PATCH)api/users/:id/kids/:kidId", () => {
     let updateKidDto: UpdateKidDto;
     beforeAll(() => {
-      updateKidDto = { firstname: "test-user-update", roleCode: ROLE_CODE.ADMIN };
+      updateKidDto = { firstname: "test-user-update" };
     });
 
     it("Should fail due to user unauthorized", () => {
@@ -188,7 +188,10 @@ describe("KidsController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${parent.id}/kids/${kid["createdByParent"].id}`)
         .send(updateKidDto)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.UNAUTHORIZED);
+        .expect((res) => {
+          const updatedKid = res.body.data;
+          expect(updatedKid.roleCode).toBe(ROLE_CODE.KID_FREE);
+        });
     });
 
     it("Should success due to user is the same", async () => {
@@ -215,8 +218,8 @@ describe("KidsController E2E Test", () => {
         .then((res) => {
           const updatedKid = res.body.data;
           expect(updatedKid.firstname).toBe(updateKidDto.firstname);
-          expect(updatedKid.parentId).toBe(parent.id); // admin allow update parentId
-          expect(updatedKid.roleCode).toBe(ROLE_CODE.ADMIN); // admin allow to change role from kid to admin
+          expect(updatedKid.parentId).toBe(parent.id);
+          expect(updatedKid.roleCode).toBe(ROLE_CODE.KID_FREE);
         });
     });
   });
@@ -424,7 +427,7 @@ describe("KidsController E2E Test", () => {
       return agent
         .post(`${API_CORE_PREFIX}/kids`)
         .send({ ...createKidDto, gender: null })
-        .set("Authorization", `Bearer ${userToken}`)
+        .set("Authorization", `Bearer ${adminToken}`)
         .expect((res) => {
           const { error } = res.body;
           expect(error).not.toBeNull();
@@ -453,7 +456,7 @@ describe("KidsController E2E Test", () => {
   });
 
   describe("Update kid by admin (PATCH)api/kids/:kidId", () => {
-    let updateKidDto: UpdateKidDto;
+    let updateKidDto: UpdateKidByAdminDto;
     beforeAll(() => {
       updateKidDto = { firstname: "test-user-update", roleCode: ROLE_CODE.ADMIN };
     });
