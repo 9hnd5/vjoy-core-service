@@ -87,7 +87,13 @@ OR
 }
 
 ```
-## BaseURL
-- Core Service: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/core/{resource=**}
-- Content Service: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/content/{resource=**}
-- File Uploader: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/file-uploader/{resource=**}
+## BaseURL & Swagger
+
+### BaseURL: 
+- dev: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/
+- staging: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/staging/
+- prod: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/prod/
+
+### Swagger:
+- core: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/core/api-docs
+- content: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/content/api-docs
