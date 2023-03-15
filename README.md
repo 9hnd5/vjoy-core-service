@@ -1,11 +1,11 @@
 ## Description
 
-vjoy-core-service is a microservice, apart of vjoy backend service. This service takes the responsibility of:
+### vjoy-core-service is a microservice, apart of vjoy backend service. This service takes the responsibility of:
 - Authentication & Authorization.
 - Users management.
 - Kids management.
 - Roles management.
-  ......
+- ......
 
 ## Installation
 ```bash
@@ -24,13 +24,13 @@ $ yarn start:dev
 $ yarn start:prod
 
 # staging mode
-$ yarn start:stag
+$ yarn start:staging
 ```
 
 ## Test
 ```bash
 # e2e tests
-$ yarn test:e2e:dev
+$ yarn test-e2e:dev
 ```
 ## Response Format (Google JSON guide)
 
