@@ -8,13 +8,14 @@ async function bootstrap() {
   app.enableVersioning();
   app.setGlobalPrefix("api");
   const config = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle("Vjoy-Core")
     .setDescription("The documentation vjoy-core")
     .setVersion("1.0")
     .addTag("vjoy-core")
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api-docs", app, document);
+  SwaggerModule.setup("api/v1/dev/core/api-docs", app, document);
   await app.listen(parseInt(process.env.PORT as string));
 }
 bootstrap();
