@@ -1,7 +1,6 @@
 ## Description
 
 vjoy-core-service is a microservice, apart of vjoy backend service. This service takes the responsibility of:
-
 - Authentication & Authorization.
 - Users management.
 - Kids management.
@@ -9,37 +8,30 @@ vjoy-core-service is a microservice, apart of vjoy backend service. This service
   ......
 
 ## Installation
-
 ```bash
-$ npm install
+$ yarn install
 ```
 
 ## Running the app
-
 ```bash
-# development
-$ npm run start
+# development & watch mode
+$ yarn start
 
-# watch mode
-$ npm run start:dev
+# dev mode
+$ yarn start:dev
 
 # production mode
-$ npm run start:prod
+$ yarn start:prod
+
+# staging mode
+$ yarn start:stag
 ```
 
 ## Test
-
 ```bash
-# unit tests
-$ npm run test
-
 # e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+$ yarn test:e2e:dev
 ```
-
 ## Response Format (Google JSON guide)
 
 ### *camelCase* data field.
@@ -94,5 +86,8 @@ OR
   ]
 }
 
-
 ```
+## BaseURL
+- Core Service: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/core/{resource=**}
+- Content Service: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/content/{resource=**}
+- File Uploader: http://vus-vjoy-1ap23wxt.an.gateway.dev/api/v1/dev/file-uploader/{resource=**}
