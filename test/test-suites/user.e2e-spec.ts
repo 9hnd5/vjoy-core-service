@@ -12,11 +12,13 @@ import {
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
+import { AuthService } from "modules/auth/auth.service";
 import * as request from "supertest";
 
 describe("UsersController E2E Test", () => {
   let app: INestApplication;
   let userModel: typeof User;
+  let auService: AuthService;
   let userToken = "";
   let adminToken = "";
   let agent: request.SuperAgentTest;
@@ -35,6 +37,7 @@ describe("UsersController E2E Test", () => {
       imports: [AppModule],
     }).compile();
     userModel = moduleRef.get("UserRepository");
+    auService = moduleRef.get(AuthService);
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");
@@ -310,6 +313,93 @@ describe("UsersController E2E Test", () => {
           expect(user.id).toEqual(testUser.id);
           expect(user).not.toHaveProperty("password");
         });
+    });
+  });
+
+  describe("Change user password (PATCH)api/users/:id/password", () => {
+    let userWithouPassword: User;
+
+    beforeAll(async () => {
+      userWithouPassword = await userModel.create({
+        firstname: "testUser",
+        lastname: "testUser",
+        email: `user-test-${generateNumber(6)}@gmail.com`,
+        phone: `${generateNumber(10)}`,
+        roleCode: ROLE_CODE.PARENT,
+      });
+    });
+
+    afterAll(async () => {
+      await userModel.destroy({ where: { id: userWithouPassword.id }, force: true });
+    });
+    
+    it("should fail due to wrong user id", () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/-1/password`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => expectError(res.body));
+    });
+
+    it("should fail due to user.password is not empty and the old password is incorrect", async () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${testUser.id}/password`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ oldPassword: "wrongPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => expectError(res.body))
+        .then(async () => {
+          const user = await userModel.findByPk(testUser.id);
+          const isMatch = await auService.comparePassword("newPassword", user?.password || "");
+          expect(isMatch).toBe(false);
+        });
+    });
+
+    it("should succeed due to user.password is empty", async () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${userWithouPassword.id}/password`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ oldPassword: "password", newPassword: "newPassword" })
+        .expect(HttpStatus.OK)
+        .then(async () => {
+          const user = await userModel.findByPk(userWithouPassword.id);
+          const isMatch = await auService.comparePassword("newPassword", user?.password || "");
+          expect(isMatch).toBe(true);
+        });
+    });
+
+    it("should succeed due to user.password is not empty and the old password is correct", async () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${testUser.id}/password`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ oldPassword: testUser.password, newPassword: "newPassword" })
+        .expect(HttpStatus.OK)
+        .then(async () => {
+          const user = await userModel.findByPk(userWithouPassword.id);
+          const isMatch = await auService.comparePassword("newPassword", user?.password || "");
+          expect(isMatch).toBe(true);
+        });
+    });
+
+    it("should fail due to user was deleted", async () => {
+      await userWithouPassword.destroy();
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${userWithouPassword.id}/password`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ oldPassword: "oldPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("should fail due to user was deactivated", async () => {
+      userWithouPassword.deletedAt = undefined;
+      userWithouPassword.status = USER_STATUS.DEACTIVED;
+      await userWithouPassword.save();
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/${userWithouPassword.id}/password`)
+        .set("Authorization", `Bearer ${adminToken}`)
+        .send({ oldPassword: "oldPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => expectError(res.body));
     });
   });
 

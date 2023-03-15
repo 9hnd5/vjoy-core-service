@@ -6,5 +6,6 @@
   "PHONE_EXISTS": "Số điện thoại đã tồn tại",
   "USER_DELETED": "Người dùng đã bị xoá",
   "USER_DEACTIVATED": "Người dùng không hoạt động",
-  "USER_NOT_EXISTS": "Người dùng không tồn tại"
+  "USER_NOT_EXISTS": "Người dùng không tồn tại",
+  "USER_PASSWORD_INCORRECT": "Mật khẩu không chính xác"
 }

@@ -6,6 +6,7 @@ import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import { ROLE_CODE } from "@common";
 import { QueryUserDto } from "./dto/query-user.dto";
 import { AdminOrSameUser, Authorize, Controller } from "@common";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Controller("users")
 export class UsersController {
@@ -54,5 +55,11 @@ export class UsersController {
       delete user.password;
       return user;
     });
+  }
+
+  @AdminOrSameUser()
+  @Patch(":userId/password")
+  changePassword(@Param("userId") userId: number, @Body() { oldPassword, newPassword }: ChangePasswordDto) {
+    return this.usersService.changePassword(userId, oldPassword, newPassword);
   }
 }

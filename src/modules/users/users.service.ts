@@ -7,7 +7,7 @@ import {
   SmsService,
   User,
   UserAttributes,
-  USER_STATUS
+  USER_STATUS,
 } from "@common";
 import { Injectable } from "@nestjs/common";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common/exceptions";
@@ -163,5 +163,21 @@ export class UsersService extends BaseService {
       paranoid: false,
     });
     return count > 0;
+  }
+
+  async changePassword(id: number, oldPassword: string, newPassword: string) {
+    const existUser = await this.userModel.findByPk(id, { paranoid: false });
+    if (!existUser) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: "User" } }));
+    if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException("message.USER_DEACTIVATED");
+    if (existUser.deletedAt) throw new BadRequestException("message.USER_DELETED");
+
+    if (!existUser.password) {
+      existUser.password = await this.authService.createPassword(newPassword);
+      return existUser.save();
+    }
+    const isPasswordMatch = await this.authService.comparePassword(oldPassword, existUser.password);
+    if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.USER_PASSWORD_INCORRECT"));
+    existUser.password = await this.authService.createPassword(newPassword);
+    return existUser.save();
   }
 }
