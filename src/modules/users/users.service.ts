@@ -165,7 +165,7 @@ export class UsersService extends BaseService {
     return count > 0;
   }
 
-  async changePassword(id: number, oldPassword: string, newPassword: string) {
+  async changePassword(id: number, newPassword: string, oldPassword?: string) {
     const existUser = await this.userModel.findByPk(id, { paranoid: false });
     if (!existUser) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: "User" } }));
     if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException("message.USER_DEACTIVATED");
@@ -175,7 +175,7 @@ export class UsersService extends BaseService {
       existUser.password = await this.authService.createPassword(newPassword);
       return existUser.save();
     }
-    const isPasswordMatch = await this.authService.comparePassword(oldPassword, existUser.password);
+    const isPasswordMatch = await this.authService.comparePassword(oldPassword ?? "", existUser.password);
     if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.USER_PASSWORD_INCORRECT"));
     existUser.password = await this.authService.createPassword(newPassword);
     return existUser.save();

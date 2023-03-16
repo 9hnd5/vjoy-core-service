@@ -3,7 +3,7 @@ import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
-import { ROLE_CODE } from "@common";
+import { Public, ROLE_CODE, UserId } from "@common";
 import { QueryUserDto } from "./dto/query-user.dto";
 import { AdminOrSameUser, Authorize, Controller } from "@common";
 import { ChangePasswordDto } from "./dto/change-password.dto";
@@ -33,6 +33,12 @@ export class UsersController {
     return this.usersService.findOne(userId);
   }
 
+  @Authorize()
+  @Patch("password")
+  changePassword(@UserId() userId: number, @Body() { oldPassword, newPassword }: ChangePasswordDto) {
+    return this.usersService.changePassword(userId, newPassword, oldPassword);
+  }
+
   @AdminOrSameUser()
   @Patch(":userId")
   async update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
@@ -49,17 +55,12 @@ export class UsersController {
     return this.usersService.remove(userId, isHardDelete);
   }
 
+  @Public()
   @Post("otp")
   async verifyOTP(@Body() data: VerifyOtpDto) {
     return await this.usersService.verifyOtp(data.otpCode, data.otpToken).then((user) => {
       delete user.password;
       return user;
     });
-  }
-
-  @AdminOrSameUser()
-  @Patch(":userId/password")
-  changePassword(@Param("userId") userId: number, @Body() { oldPassword, newPassword }: ChangePasswordDto) {
-    return this.usersService.changePassword(userId, oldPassword, newPassword);
   }
 }
