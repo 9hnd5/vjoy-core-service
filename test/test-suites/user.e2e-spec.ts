@@ -12,11 +12,13 @@ import {
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
+import { AuthService } from "modules/auth/auth.service";
 import * as request from "supertest";
 
 describe("UsersController E2E Test", () => {
   let app: INestApplication;
   let userModel: typeof User;
+  let auService: AuthService;
   let userToken = "";
   let adminToken = "";
   let agent: request.SuperAgentTest;
@@ -35,6 +37,7 @@ describe("UsersController E2E Test", () => {
       imports: [AppModule],
     }).compile();
     userModel = moduleRef.get("UserRepository");
+    auService = moduleRef.get(AuthService);
     app = moduleRef.createNestApplication();
     app.enableVersioning();
     app.setGlobalPrefix("api");
@@ -309,6 +312,76 @@ describe("UsersController E2E Test", () => {
           const user = response.body.data;
           expect(user.id).toEqual(testUser.id);
           expect(user).not.toHaveProperty("password");
+        });
+    });
+  });
+
+  describe("Change user password (PATCH)api/users/:id/password", () => {
+    it("should fail due to account was deleted", async () => {
+      const user = (await userModel.findByPk(testUser.id)) as User;
+      await user.destroy();
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/password`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ oldPassword: "oldPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => expectError(res.body));
+    });
+
+    it("should fail due to account was deactivated", async () => {
+      const user = (await userModel.findByPk(testUser.id, { paranoid: false })) as User;
+      await user.restore();
+      await user.update({ status: USER_STATUS.DEACTIVED });
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/password`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ oldPassword: "oldPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => expectError(res.body));
+    });
+
+    it("should fail due to user.password is not empty and the old password is incorrect", async () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/password`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ oldPassword: "wrongPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.BAD_REQUEST)
+        .expect((res) => expectError(res.body))
+        .then(async () => {
+          const user = await userModel.findByPk(testUser.id);
+          const isMatch = await auService.comparePassword("newPassword", user?.password || "");
+          expect(isMatch).toBe(false);
+        });
+    });
+
+    it("should succeed due to user.password is empty", async () => {
+      const user = (await userModel.findByPk(testUser.id)) as User;
+      user.update({
+        password: null as any,
+        status: USER_STATUS.ACTIVATED,
+      });
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/password`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ newPassword: "newPassword" })
+        .expect(HttpStatus.OK)
+        .then(async () => {
+          const user = await userModel.findByPk(testUser.id);
+          const isMatch = await auService.comparePassword("newPassword", user?.password || "");
+          expect(isMatch).toBe(true);
+        });
+    });
+
+    it("should succeed due to user.password is not empty and the old password is correct", async () => {
+      return agent
+        .patch(`${API_CORE_PREFIX}/users/password`)
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({ oldPassword: "newPassword", newPassword: "newPassword" })
+        .expect(HttpStatus.OK)
+        .then(async () => {
+          const user = await userModel.findByPk(testUser.id);
+          const isMatch = await auService.comparePassword("newPassword", user?.password || "");
+          expect(isMatch).toBe(true);
         });
     });
   });

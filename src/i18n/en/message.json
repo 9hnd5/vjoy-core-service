@@ -6,5 +6,6 @@
   "PHONE_EXISTS": "Phone already exists",
   "USER_DELETED": "User was deleted",
   "USER_DEACTIVATED": "User was deactivated",
-  "USER_NOT_EXISTS": "User is not exists"
+  "USER_NOT_EXISTS": "User is not exists",
+  "USER_PASSWORD_INCORRECT": "The password is incorrect"
 }

@@ -1,4 +1,4 @@
-import { AdminOrSameUser, Authorize, Controller } from "@common";
+import { AdminOrSameUser, Authorize, Controller, Public } from "@common";
 import { Body, Delete, Get, Param, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
@@ -9,6 +9,7 @@ import { VerifyOtpDto } from "./dto/verify-otp.dto";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post("login")
   login(@Body() data: LoginDto) {
     return this.authService.login(data);
@@ -25,6 +26,7 @@ export class AuthController {
     return `User ${userId} the same`;
   }
 
+  @Public()
   @Post("otp")
   verifyOTP(@Body() data: VerifyOtpDto) {
     return this.authService.verifyOTP(data.otpToken, data.otpCode);
