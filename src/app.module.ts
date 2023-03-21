@@ -4,6 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { camelCase } from "lodash";
 import { AuthModule } from "modules/auth/auth.module";
+import { ConfigModule } from "modules/config/config.module";
 import { KidsModule } from "modules/kids/kids.module";
 import { UsersModule } from "modules/users/users.module";
 import * as path from "path";
@@ -15,6 +16,7 @@ const coreEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*
     KidsModule,
     AuthModule,
     UsersModule,
+    ConfigModule,
     SequelizeModule.forRootAsync({
       useFactory: (configService: ConfigService) => {
         return {
