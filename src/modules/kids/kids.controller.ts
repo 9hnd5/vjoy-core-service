@@ -3,7 +3,7 @@ import { Controller } from "@common";
 import { Body, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { CreateKidByAdminDto } from "./dto/create-kid-by-admin.dto";
 import { CreateKidDto } from "./dto/create-kid.dto";
-import { QueryKidDto } from "./dto/query-kid.dto";
+import { FindKidsQueryDto } from "./dto/find-kids-query.dto";
 import { UpdateKidByAdminDto } from "./dto/update-kid-by-admin.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 import { KidsService } from "./kids.service";
@@ -20,13 +20,13 @@ export class KidsController {
 
   @Authorize({ action: "list", resource: "kids" })
   @Get("kids")
-  findAllKids(@Query() query: QueryKidDto) {
+  findAllKids(@Query() query: FindKidsQueryDto) {
     return this.kidsService.findAll(query);
   }
 
   @AdminOrSameUser("parentId")
   @Get("users/:parentId/kids")
-  findAllKidsByUser(@Param("parentId") parentId: number, @Query() query: QueryKidDto) {
+  findAllKidsByUser(@Param("parentId") parentId: number, @Query() query: FindKidsQueryDto) {
     return this.kidsService.findAll(query, parentId);
   }
 

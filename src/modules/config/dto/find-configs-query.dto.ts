@@ -1,8 +1,10 @@
 import { QueryDto, ValidateFilter } from "@common";
-import { Allow, IsOptional } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 class Filter {
-  @Allow()
+  @IsOptional()
+  @IsNotEmpty()
+  @IsString()
   type?: string;
 }
 

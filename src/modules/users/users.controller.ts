@@ -4,7 +4,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 import { Public, ROLE_CODE, UserId } from "@common";
-import { QueryUserDto } from "./dto/query-user.dto";
+import { FindUsersQueryDto } from "./dto/find-users-query.dto";
 import { AdminOrSameUser, Authorize, Controller } from "@common";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
@@ -23,7 +23,7 @@ export class UsersController {
 
   @Authorize({ action: "list", resource: "users" })
   @Get()
-  findAll(@Query() query: QueryUserDto) {
+  findAll(@Query() query: FindUsersQueryDto) {
     return this.usersService.findAll(query);
   }
 
