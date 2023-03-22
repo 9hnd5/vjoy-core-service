@@ -1,9 +1,10 @@
 import { BaseService, Kid, Role, ROLE_CODE, User } from "@common";
 import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
+import { Op, where, fn, col } from "sequelize";
 import { CreateKidByAdminDto } from "./dto/create-kid-by-admin.dto";
 import { CreateKidDto } from "./dto/create-kid.dto";
-import { QueryKidDto } from "./dto/query-kid.dto";
+import { FindKidsQueryDto } from "./dto/find-kids-query.dto";
 import { UpdateKidByAdminDto } from "./dto/update-kid-by-admin.dto";
 import { UpdateKidDto } from "./dto/update-kid.dto";
 
@@ -20,10 +21,16 @@ export class KidsService extends BaseService {
     return this.kidModel.create({ ...createKidDto, parentId, roleCode: ROLE_CODE.KID_FREE });
   }
 
-  findAll(query: QueryKidDto, parentId?: number) {
+  findAll(query: FindKidsQueryDto, parentId?: number) {
     const { includeDeleted = false, limit, offset, sort: order } = query;
+    const { name } = query.filter || {};
     return this.kidModel.findAndCountAll({
-      ...(parentId && { where: { parentId } }),
+      where: {
+        ...(parentId && { parentId }),
+        ...(name && {
+          nameQuery: where(fn("concat", col("firstname"), " ", col("lastname")), { [Op.like]: `%${name}%` }),
+        }),
+      },
       limit,
       offset,
       order,

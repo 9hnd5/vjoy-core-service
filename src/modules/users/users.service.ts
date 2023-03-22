@@ -14,9 +14,9 @@ import { BadRequestException, NotFoundException, UnauthorizedException } from "@
 import { InjectModel } from "@nestjs/sequelize";
 import { OTP_TOKEN_EXPIRES } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
-import { Op, WhereOptions } from "sequelize";
+import { col, fn, Op, where, WhereOptions } from "sequelize";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { QueryUserDto } from "./dto/query-user.dto";
+import { FindUsersQueryDto } from "./dto/find-users-query.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { EXCLUDE_FIELDS } from "./users.constants";
 
@@ -61,11 +61,18 @@ export class UsersService extends BaseService {
     });
   }
 
-  async findAll(query?: QueryUserDto, includeDeleted = false) {
+  async findAll(query: FindUsersQueryDto) {
+    const { includeDeleted = false, limit, offset, sort: order } = query;
+    const { name } = query.filter || {};
     const rs = await this.userModel.findAndCountAll<User>({
-      limit: query?.limit,
-      offset: query?.offset,
-      order: query?.sort,
+      where: {
+        ...(name && {
+          nameQuery: where(fn("concat", col("firstname"), " ", col("lastname")), { [Op.like]: `%${name}%` }),
+        }),
+      },
+      limit,
+      offset,
+      order,
       attributes: { exclude: EXCLUDE_FIELDS },
       include: Role,
       paranoid: !includeDeleted,
