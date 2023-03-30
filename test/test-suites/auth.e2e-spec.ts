@@ -117,14 +117,14 @@ describe("Auth (e2e)", () => {
       return agent
         .post(`${API_CORE_PREFIX}/auth/login`)
         .send(loginDTO)
-        .expect(HttpStatus.CREATED)
         .expect((response: request.Response) => {
           const { email, accessToken, refreshToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(loginDTO.email);
           expect(accessToken).not.toBeNull();
           expect(refreshToken).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.CREATED);
     });
 
     it("Should sign in failed due to user not exist", () => {
