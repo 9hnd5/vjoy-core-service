@@ -86,12 +86,12 @@ describe("Configs E2E Test", () => {
         .post(`${API_CORE_PREFIX}/configs`)
         .send(createDto)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.CREATED)
         .expect((res) => {
           const result = res.body.data;
           expect(result.type).toBe(createDto.type);
           config = result;
-        });
+        })
+        .expect(HttpStatus.CREATED);
     });
   });
 
@@ -113,21 +113,21 @@ describe("Configs E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/configs?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN)
         .expect((response: request.Response) => {
           expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should succeed due to user having sufficient privileges", () => {
       return agent
         .get(`${API_CORE_PREFIX}/configs?page=1&pageSize=10&sort=[["id","ASC"]]&filter={"type":"config"}`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
         .expect((response) => {
           const { data } = response.body;
           expect(data.rows.length).toBeGreaterThan(0);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -164,11 +164,11 @@ describe("Configs E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/configs/${config.id}`)
         .send(updateDto)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
-        .then((res) => {
+        .expect((res) => {
           const updated = res.body.data;
           expect(updated.type).toBe(updateDto.type);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -189,10 +189,10 @@ describe("Configs E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/configs/${id}`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN)
         .expect((response: request.Response) => {
           expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should succeed due to user having sufficient privileges", () => {
@@ -200,11 +200,11 @@ describe("Configs E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/configs/${id}`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
         .expect((res) => {
           const responseData = res.body.data;
           expect(responseData.id).toEqual(id);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -233,22 +233,22 @@ describe("Configs E2E Test", () => {
       return agent
         .delete(`${API_CORE_PREFIX}/configs/${config.id}`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
-        .then(async () => {
+        .expect(async () => {
           const deleted = await configModel.findOne({ where: { id: config.id }, paranoid: false });
           expect(deleted?.deletedAt).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Should succeed due to user is admin (Hard delete)", async () => {
       return agent
         .delete(`${API_CORE_PREFIX}/configs/${config.id}?hardDelete=true`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
-        .then(async () => {
+        .expect(async () => {
           const deleted = await configModel.findOne({ where: { id: config.id } });
           expect(deleted).toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 

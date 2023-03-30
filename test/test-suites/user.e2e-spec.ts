@@ -54,7 +54,6 @@ describe("UsersController E2E Test", () => {
         .post(`${API_CORE_PREFIX}/users`)
         .send(testUser)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.CREATED)
         .expect((response) => {
           const user = response.body.data;
           testUser = { ...testUser, id: user.id };
@@ -65,31 +64,32 @@ describe("UsersController E2E Test", () => {
           expect(user.lastname).toEqual(testUser.lastname.trim());
           expect(user.status).toEqual(USER_STATUS.ACTIVATED);
           expect(user).not.toHaveProperty("password");
-        });
+        })
+        .expect(HttpStatus.CREATED);
     });
 
     it("Should signin successfully and return userToken", () => {
       return agent
         .post(`${API_CORE_PREFIX}/auth/login`)
         .send({ type: "email", email: testUser.email, password: testUser.password })
-        .expect(HttpStatus.CREATED)
         .expect((response) => {
           const { accessToken, refreshToken } = response.body.data;
           userToken = accessToken;
 
           expect(accessToken).not.toBeNull();
           expect(refreshToken).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.CREATED);
     });
 
     it("should fail due to user unauthorized", () => {
       return agent
         .post(`${API_CORE_PREFIX}/users`)
         .send(testUser)
-        .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
           // expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("should fail due to user insufficient privileges", () => {
@@ -97,10 +97,10 @@ describe("UsersController E2E Test", () => {
         .post(`${API_CORE_PREFIX}/users`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN)
         .expect((response: request.Response) => {
           expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.FORBIDDEN);
     });
   });
 
@@ -108,10 +108,10 @@ describe("UsersController E2E Test", () => {
     it("Should fail due to user unauthorized", () => {
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
           // expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to user is not the same", () => {
@@ -119,10 +119,10 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/1`)
         .send(testUser)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN)
         .expect((response: request.Response) => {
           expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.FORBIDDEN);
     });
 
     it("Should failed due to invalid data", () => {
@@ -163,14 +163,14 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect((response) => {
           const user = response.body.data;
           expect(user.firstname).toEqual(updateData.firstname.trim());
           expect(user.lastname).toEqual(updateData.lastname.trim());
           expect(user.roleCode).not.toEqual(updateData.roleCode);
           expect(user).not.toHaveProperty("password");
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Same user updates email should succeed & response otpToken", () => {
@@ -179,14 +179,14 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect(async (response) => {
           const user = await userModel.findByPk(testUser.id);
           expect(user?.email).toEqual(testUser.email);
 
           const { otpToken } = response.body.data;
           expect(otpToken).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Same user updates phone should succeed & response otpToken", () => {
@@ -195,14 +195,14 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect(async (response) => {
           const user = await userModel.findByPk(testUser.id);
           expect(user?.phone).toEqual(testUser.phone);
 
           const { otpToken } = response.body.data;
           expect(otpToken).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Update phone & firstname should response otpToken & user data", () => {
@@ -214,12 +214,12 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect((response) => {
           const { otpToken, firstname } = response.body.data;
           expect(otpToken).not.toBeNull();
           expect(firstname).toEqual(updateData.firstname);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Admin update email & phone should response the user data", () => {
@@ -233,7 +233,6 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
         .expect((response) => {
           const user = response.body.data;
           expect(user.firstname).toEqual(updateData.firstname.trim());
@@ -241,7 +240,8 @@ describe("UsersController E2E Test", () => {
           expect(user.phone).toEqual(updateData.phone);
           expect(user.email).toEqual(updateData.email);
           expect(user.id).toEqual(testUser.id);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -249,10 +249,10 @@ describe("UsersController E2E Test", () => {
     it("should fail due to user unauthorized", () => {
       return agent
         .get(`${API_CORE_PREFIX}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
-        .expect(HttpStatus.UNAUTHORIZED)
         .expect((response: request.Response) => {
           // expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should succeed because user having sufficient privileges", () => {
@@ -274,10 +274,10 @@ describe("UsersController E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.FORBIDDEN)
         .expect((response: request.Response) => {
           expectError(response.body);
-        });
+        })
+        .expect(HttpStatus.FORBIDDEN);
     });
   });
 
@@ -296,23 +296,23 @@ describe("UsersController E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect((response) => {
           const user = response.body.data;
           expect(user.id).toEqual(testUser.id);
           expect(user).not.toHaveProperty("password");
-        });
+        })
+        .expect(HttpStatus.OK);
     });
     it("Should Succeed due to user is admin", () => {
       return agent
         .get(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
         .expect((response) => {
           const user = response.body.data;
           expect(user.id).toEqual(testUser.id);
           expect(user).not.toHaveProperty("password");
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -324,8 +324,8 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/password`)
         .set("Authorization", `Bearer ${userToken}`)
         .send({ oldPassword: "oldPassword", newPassword: "newPassword" })
-        .expect(HttpStatus.BAD_REQUEST)
-        .expect((res) => expectError(res.body));
+        .expect((res) => expectError(res.body))
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it("should fail due to account was deactivated", async () => {
@@ -336,8 +336,8 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/password`)
         .set("Authorization", `Bearer ${userToken}`)
         .send({ oldPassword: "oldPassword", newPassword: "newPassword" })
-        .expect(HttpStatus.BAD_REQUEST)
-        .expect((res) => expectError(res.body));
+        .expect((res) => expectError(res.body))
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it("should fail due to user.password is not empty and the old password is incorrect", async () => {
@@ -345,13 +345,13 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/password`)
         .set("Authorization", `Bearer ${userToken}`)
         .send({ oldPassword: "wrongPassword", newPassword: "newPassword" })
-        .expect(HttpStatus.BAD_REQUEST)
         .expect((res) => expectError(res.body))
-        .then(async () => {
+        .expect(async () => {
           const user = await userModel.findByPk(testUser.id);
           const isMatch = await auService.comparePassword("newPassword", user?.password || "");
           expect(isMatch).toBe(false);
-        });
+        })
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it("should succeed due to user.password is empty", async () => {
@@ -364,12 +364,12 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/password`)
         .set("Authorization", `Bearer ${userToken}`)
         .send({ newPassword: "newPassword" })
-        .expect(HttpStatus.OK)
-        .then(async () => {
+        .expect(async () => {
           const user = await userModel.findByPk(testUser.id);
           const isMatch = await auService.comparePassword("newPassword", user?.password || "");
           expect(isMatch).toBe(true);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("should succeed due to user.password is not empty and the old password is correct", async () => {
@@ -377,12 +377,12 @@ describe("UsersController E2E Test", () => {
         .patch(`${API_CORE_PREFIX}/users/password`)
         .set("Authorization", `Bearer ${userToken}`)
         .send({ oldPassword: "newPassword", newPassword: "newPassword" })
-        .expect(HttpStatus.OK)
-        .then(async () => {
+        .expect(async () => {
           const user = await userModel.findByPk(testUser.id);
           const isMatch = await auService.comparePassword("newPassword", user?.password || "");
           expect(isMatch).toBe(true);
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
@@ -402,33 +402,33 @@ describe("UsersController E2E Test", () => {
       return agent
         .delete(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect(async (response) => {
           const user = await userModel.findByPk(testUser.id, { paranoid: false });
           expect(user?.deletedAt).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Same user should soft-delete only", () => {
       return agent
         .delete(`${API_CORE_PREFIX}/users/${testUser.id}?hardDelete=true`)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect(HttpStatus.OK)
         .expect(async (response) => {
           const user = await userModel.findByPk(testUser.id, { paranoid: false });
           expect(user?.deletedAt).not.toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
 
     it("Admin should hard-delete", () => {
       return agent
         .delete(`${API_CORE_PREFIX}/users/${testUser.id}?hardDelete=true`)
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect(HttpStatus.OK)
         .expect(async (response) => {
           const user = await userModel.findByPk(testUser.id, { paranoid: false });
           expect(user).toBeNull();
-        });
+        })
+        .expect(HttpStatus.OK);
     });
   });
 
