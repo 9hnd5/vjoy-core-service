@@ -1,11 +1,12 @@
 import { ApiKey, BaseService, Role, ROLE_CODE, SmsService, User, USER_STATUS } from "@common";
-import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import { OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
+import { SigninDto, SignupDto } from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
@@ -138,4 +139,31 @@ export class AuthService extends BaseService {
 
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
   }
+
+  signinByEmail = async (data: SigninDto) => {
+    const { email, password } = data;
+
+    const existUser = await this.userModel.findOne({ where: { email }, paranoid: false, include: [Role] });
+    if (existUser) throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
+
+    const newUser = await this.userModel.create({
+      email,
+      password: await this.createPassword(password),
+      roleCode: ROLE_CODE.PARENT,
+    });
+
+    return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+  };
+
+  signupByEmail = async (data: SignupDto) => {
+    const { email, password } = data;
+
+    const existUser = await this.userModel.findOne({ where: { email }, paranoid: false, include: [Role] });
+    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    const isPasswordMatch = await this.comparePassword(password, existUser.password!);
+    if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    return this.generateUserToken(existUser);
+  };
 }
