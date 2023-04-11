@@ -47,7 +47,7 @@ export class AuthController {
 
   @Public()
   @Post("signin/email")
-  signInUpByEmail(@Body() data: SigninDto) {
+  signinUpByEmail(@Body() data: SigninDto) {
     return this.authService.signinByEmail(data);
   }
 

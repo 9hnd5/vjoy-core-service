@@ -120,14 +120,14 @@ describe("Auth (e2e)", () => {
     await app.close();
   });
 
-  describe("Sign-up by email (POST) auth/signup/email", () => {
-    it("Should sign up successfully and return userToken", () => {
+  describe("Sign-in by email (POST) auth/signin/email", () => {
+    it("Should sign in successfully and return userToken", () => {
       const data = {
         email: user.email,
         password,
       };
       return agent
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
         .send(data)
         .expect((response: request.Response) => {
           const { email, accessToken, refreshToken } = response.body.data;
@@ -139,7 +139,7 @@ describe("Auth (e2e)", () => {
         .expect(HttpStatus.CREATED);
     });
 
-    it("Should sign up failed due to user not exist", () => {
+    it("Should sign in failed due to user not exist", () => {
       const data = {
         type: "email",
         email: `email-${generateNumber(10)}@vus-etsc.edu.vn`,
@@ -147,7 +147,7 @@ describe("Auth (e2e)", () => {
       };
 
       return agent
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
         .send(data)
         .expect((response: request.Response) => {
           expectError(response.body);
@@ -155,7 +155,7 @@ describe("Auth (e2e)", () => {
         .expect(HttpStatus.BAD_REQUEST);
     });
 
-    it("Should sign up failed due to wrong password", () => {
+    it("Should sign in failed due to wrong password", () => {
       const data = {
         type: "email",
         email: user.email,
@@ -163,7 +163,7 @@ describe("Auth (e2e)", () => {
       };
 
       return agent
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
         .send(data)
         .expect((response: request.Response) => {
           expectError(response.body);
@@ -171,28 +171,28 @@ describe("Auth (e2e)", () => {
         .expect(HttpStatus.BAD_REQUEST);
     });
 
-    it("Should sign up failed due to not providing api-key", () => {
+    it("Should sign in failed due to not providing api-key", () => {
       const data = {
         type: "email",
         email: user.email,
         password,
       };
       return request(app.getHttpServer())
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
         .send(data)
         .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 
-  describe("Sign-in by email (POST) auth/signin/email", () => {
-    it("Should sign in failed due to user already exists", () => {
+  describe("Sign-up by email (POST) auth/signup/email", () => {
+    it("Should sign up failed due to user already exists", () => {
       const data = {
         email: user.email,
         password,
       };
 
       return agent
-        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .post(`${API_CORE_PREFIX}/auth/signup/email`)
         .send(data)
         .expect((response: request.Response) => {
           expectError(response.body);
@@ -200,13 +200,13 @@ describe("Auth (e2e)", () => {
         .expect(HttpStatus.BAD_REQUEST);
     });
 
-    it("Should sign in successfully and return userToken", () => {
+    it("Should sign up successfully and return userToken", () => {
       const data = {
         email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
         password,
       };
       return agent
-        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .post(`${API_CORE_PREFIX}/auth/signup/email`)
         .send(data)
         .expect((response: request.Response) => {
           const { email, accessToken, refreshToken } = response.body.data;
@@ -218,7 +218,7 @@ describe("Auth (e2e)", () => {
         .expect(HttpStatus.CREATED);
     });
 
-    it("Should sign in failed due to not providing api-key", () => {
+    it("Should sign up failed due to not providing api-key", () => {
       const data = {
         type: "email",
         email: user.email,

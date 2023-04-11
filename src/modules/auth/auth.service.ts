@@ -140,7 +140,7 @@ export class AuthService extends BaseService {
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
   }
 
-  signinByEmail = async (data: SigninDto) => {
+  signupByEmail = async (data: SignupDto) => {
     const { email, password } = data;
 
     const existUser = await this.userModel.findOne({ where: { email }, paranoid: false, include: [Role] });
@@ -155,7 +155,7 @@ export class AuthService extends BaseService {
     return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
   };
 
-  signupByEmail = async (data: SignupDto) => {
+  signinByEmail = async (data: SigninDto) => {
     const { email, password } = data;
 
     const existUser = await this.userModel.findOne({ where: { email }, paranoid: false, include: [Role] });
