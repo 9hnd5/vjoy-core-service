@@ -4,6 +4,7 @@ import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { SigninDto, SignupDto } from "./dto/credential";
 
 @Controller("auth")
 export class AuthController {
@@ -42,5 +43,17 @@ export class AuthController {
   @AdminOrSameUser()
   deleteApiKey(@Param("id") id: number) {
     return this.authService.deleteApiKey(id);
+  }
+
+  @Public()
+  @Post("signin/email")
+  signinUpByEmail(@Body() data: SigninDto) {
+    return this.authService.signinByEmail(data);
+  }
+
+  @Public()
+  @Post("signup/email")
+  signupByEmail(@Body() data: SignupDto) {
+    return this.authService.signupByEmail(data);
   }
 }

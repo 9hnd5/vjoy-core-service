@@ -1,20 +1,20 @@
 import {
-  ApiKey,
   API_CORE_PREFIX,
   API_TOKEN,
+  ApiKey,
+  ROLE_CODE,
+  USER_STATUS,
+  User,
   createUser,
-  deleteUser,
   expectError,
   generateNumber,
-  ROLE_CODE,
-  signin,
-  User,
-  USER_STATUS,
+  signin
 } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import { AuthService } from "modules/auth/auth.service";
+import { Op } from "sequelize";
 import * as request from "supertest";
 
 describe("Auth (e2e)", () => {
@@ -30,7 +30,7 @@ describe("Auth (e2e)", () => {
   let userDeactived: { [k: string]: any };
   let userDeleted: { [k: string]: any };
   let userCreatedByPhone;
-  const password = "123456";
+  const password = "abc@123456";
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -99,12 +99,136 @@ describe("Auth (e2e)", () => {
 
   afterAll(async () => {
     //Delete new user was created before
-    await deleteUser({ id: user.id, accessToken: adminToken });
-    await deleteUser({ id: userDeactived.id, accessToken: adminToken });
-    await deleteUser({ id: userDeleted.id, accessToken: adminToken });
-    await deleteUser({ id: userCreatedByPhone.id, accessToken: adminToken });
+    await userModel.destroy({
+      where: {
+        [Op.or]: [
+          {
+            email: {
+              [Op.startsWith]: "login-test",
+            },
+          },
+          {
+            email: {
+              [Op.startsWith]: "APITEST",
+            },
+          },
+        ],
+      },
+      force: true,
+    });
 
     await app.close();
+  });
+
+  describe("Sign-in by email (POST) auth/signin/email", () => {
+    it("Should sign in successfully and return userToken", () => {
+      const data = {
+        email: user.email,
+        password,
+      };
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .send(data)
+        .expect((response: request.Response) => {
+          const { email, accessToken, refreshToken } = response.body.data;
+          userToken = accessToken;
+          expect(email).toEqual(data.email);
+          expect(accessToken).not.toBeNull();
+          expect(refreshToken).not.toBeNull();
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("Should sign in failed due to user not exist", () => {
+      const data = {
+        type: "email",
+        email: `email-${generateNumber(10)}@vus-etsc.edu.vn`,
+        password,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .send(data)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should sign in failed due to wrong password", () => {
+      const data = {
+        type: "email",
+        email: user.email,
+        password: `${generateNumber(6)}`,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .send(data)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should sign in failed due to not providing api-key", () => {
+      const data = {
+        type: "email",
+        email: user.email,
+        password,
+      };
+      return request(app.getHttpServer())
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .send(data)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+  });
+
+  describe("Sign-up by email (POST) auth/signup/email", () => {
+    it("Should sign up failed due to user already exists", () => {
+      const data = {
+        email: user.email,
+        password,
+      };
+
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .send(data)
+        .expect((response: request.Response) => {
+          expectError(response.body);
+        })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+
+    it("Should sign up successfully and return userToken", () => {
+      const data = {
+        email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
+        password,
+      };
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .send(data)
+        .expect((response: request.Response) => {
+          const { email, accessToken, refreshToken } = response.body.data;
+          userToken = accessToken;
+          expect(email).toEqual(data.email);
+          expect(accessToken).not.toBeNull();
+          expect(refreshToken).not.toBeNull();
+        })
+        .expect(HttpStatus.CREATED);
+    });
+
+    it("Should sign up failed due to not providing api-key", () => {
+      const data = {
+        type: "email",
+        email: user.email,
+        password,
+      };
+      return request(app.getHttpServer())
+        .post(`${API_CORE_PREFIX}/auth/signup/email`)
+        .send(data)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
   });
 
   describe("Sign in by email (POST) auth/login", () => {
