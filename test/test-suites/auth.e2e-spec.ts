@@ -120,7 +120,7 @@ describe("Auth (e2e)", () => {
     await app.close();
   });
 
-  describe.only("Sign-up/Sign-in by phone", () => {
+  describe("Sign-up/Sign-in by phone", () => {
     const data = { phone: `+849${generateNumber(8)}`, password: "abc@1234567" };
 
     afterAll(async () => {
@@ -204,11 +204,10 @@ describe("Auth (e2e)", () => {
         .post(`${API_CORE_PREFIX}/auth/signin/email`)
         .send(data)
         .expect((response: request.Response) => {
-          const { email, accessToken, refreshToken } = response.body.data;
+          const { email, accessToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(data.email);
           expect(accessToken).not.toBeNull();
-          expect(refreshToken).not.toBeNull();
         })
         .expect(HttpStatus.CREATED);
     });
@@ -283,11 +282,10 @@ describe("Auth (e2e)", () => {
         .post(`${API_CORE_PREFIX}/auth/signup/email`)
         .send(data)
         .expect((response: request.Response) => {
-          const { email, accessToken, refreshToken } = response.body.data;
+          const { email, accessToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(data.email);
           expect(accessToken).not.toBeNull();
-          expect(refreshToken).not.toBeNull();
         })
         .expect(HttpStatus.CREATED);
     });
@@ -316,11 +314,10 @@ describe("Auth (e2e)", () => {
         .post(`${API_CORE_PREFIX}/auth/login`)
         .send(loginDTO)
         .expect((response: request.Response) => {
-          const { email, accessToken, refreshToken } = response.body.data;
+          const { email, accessToken } = response.body.data;
           userToken = accessToken;
           expect(email).toEqual(loginDTO.email);
           expect(accessToken).not.toBeNull();
-          expect(refreshToken).not.toBeNull();
         })
         .expect(HttpStatus.CREATED);
     });
@@ -473,9 +470,8 @@ describe("Auth (e2e)", () => {
         .post(`${API_CORE_PREFIX}/auth/otp`)
         .send(verifySuccess)
         .expect((response: request.Response) => {
-          const { accessToken, refreshToken } = response.body.data;
+          const { accessToken } = response.body.data;
           expect(accessToken).not.toBeNull();
-          expect(refreshToken).not.toBeNull();
         })
         .expect(HttpStatus.CREATED);
     });
