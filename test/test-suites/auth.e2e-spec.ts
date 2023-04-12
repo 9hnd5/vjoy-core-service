@@ -8,7 +8,7 @@ import {
   createUser,
   expectError,
   generateNumber,
-  signin
+  signin,
 } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -118,6 +118,80 @@ describe("Auth (e2e)", () => {
     });
 
     await app.close();
+  });
+
+  describe.only("Sign-up/Sign-in by phone", () => {
+    const data = { phone: `+849${generateNumber(8)}`, password: "abc@1234567" };
+
+    afterAll(async () => {
+      await userModel.destroy({ where: { phone: data.phone }, force: true });
+    });
+
+    describe("Sign-up (POST) auth/signup/phone", () => {
+      it("Should sign up succeed and return userToken", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signup/phone`)
+          .send(data)
+          .expect((res) => {
+            const result = res.body.data;
+            expect(result).toHaveProperty("accessToken");
+            expect(result.phone).toBe(data.phone);
+          });
+      });
+
+      it("Should sign up failed due to phone already exists", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signup/phone`)
+          .send(data)
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign up failed due to phone is not valid format VN", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signup/phone`)
+          .send({ ...data, phone: "12345" })
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign up failed due to password is not strong enough", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signup/phone`)
+          .send({ ...data, password: "12345" })
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+    });
+
+    describe("Sign-in (POST) auth/signin/phone", () => {
+      it("Should sign-in failed due to wrong password", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+          .send({ ...data, password: "1234" })
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign-in failed due to wrong phone", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+          .send({ ...data, phone: `+849${generateNumber(8)}` })
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign-in succeed and return userToken", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+          .send(data)
+          .expect((res) => {
+            const result = res.body.data;
+            expect(result).toHaveProperty("accessToken");
+            expect(result.phone).toBe(data.phone);
+          });
+      });
+    });
   });
 
   describe("Sign-in by email (POST) auth/signin/email", () => {

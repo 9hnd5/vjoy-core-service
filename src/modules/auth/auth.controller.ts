@@ -4,7 +4,7 @@ import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
-import { SigninDto, SignupDto } from "./dto/credential";
+import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
 
 @Controller("auth")
 export class AuthController {
@@ -47,13 +47,25 @@ export class AuthController {
 
   @Public()
   @Post("signin/email")
-  signinUpByEmail(@Body() data: SigninDto) {
-    return this.authService.signinByEmail(data);
+  signinByEmail(@Body() data: SigninByEmailDto) {
+    return this.authService.signin(data);
   }
 
   @Public()
   @Post("signup/email")
-  signupByEmail(@Body() data: SignupDto) {
-    return this.authService.signupByEmail(data);
+  signupByEmail(@Body() data: SignupByEmailDto) {
+    return this.authService.signup(data);
+  }
+
+  @Public()
+  @Post("signin/phone")
+  signinByPhone(@Body() data: SigninByPhoneDto) {
+    return this.authService.signin(data);
+  }
+
+  @Public()
+  @Post("signup/phone")
+  signupByPhone(@Body() data: SignupByPhoneDto) {
+    return this.authService.signup(data);
   }
 }
