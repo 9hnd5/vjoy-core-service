@@ -6,7 +6,7 @@ import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import { OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { SigninDto, SignupDto } from "./dto/credential";
+import { SigninByPhoneDto, SigninByEmailDto, SignupByPhoneDto, SignupByEmailDto } from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
@@ -92,12 +92,13 @@ export class AuthService extends BaseService {
       firstname,
       lastname,
       email,
+      phone,
       roleCode,
       role: { permissions },
     } = user;
     const payload = { userId: id, roleCode };
     const accessToken = await this.jwtService.signAsync(payload, { secret: this.secret, expiresIn: this.expiresIn });
-    return { id, firstname, lastname, email, roleCode, permissions, accessToken };
+    return { id, firstname, lastname, email, phone, roleCode, permissions, accessToken };
   };
 
   private async loginByEmail(userEmail: string, userPassword: string) {
@@ -140,14 +141,27 @@ export class AuthService extends BaseService {
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
   }
 
-  signupByEmail = async (data: SignupDto) => {
-    const { email, password } = data;
+  signup = async (data: SignupByEmailDto | SignupByPhoneDto) => {
+    const { password } = data;
 
-    const existUser = await this.userModel.findOne({ where: { email }, paranoid: false, include: [Role] });
+    let email: string | undefined;
+
+    let phone: string | undefined;
+
+    if (data instanceof SignupByEmailDto) email = data.email;
+    else phone = data.phone;
+
+    const existUser = await this.userModel.findOne({
+      where: {
+        ...(email ? { email } : { phone }),
+      },
+      paranoid: false,
+      include: [Role],
+    });
     if (existUser) throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
 
     const newUser = await this.userModel.create({
-      email,
+      ...(email ? { email } : { phone }),
       password: await this.createPassword(password),
       roleCode: ROLE_CODE.PARENT,
     });
@@ -155,10 +169,23 @@ export class AuthService extends BaseService {
     return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
   };
 
-  signinByEmail = async (data: SigninDto) => {
-    const { email, password } = data;
+  signin = async (data: SigninByEmailDto | SigninByPhoneDto) => {
+    const { password } = data;
 
-    const existUser = await this.userModel.findOne({ where: { email }, paranoid: false, include: [Role] });
+    let email: string | undefined;
+
+    let phone: string | undefined;
+
+    if (data instanceof SigninByEmailDto) email = data.email;
+    else phone = data.phone;
+
+    const existUser = await this.userModel.findOne({
+      where: {
+        ...(email ? { email } : { phone }),
+      },
+      paranoid: false,
+      include: [Role],
+    });
     if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
     const isPasswordMatch = await this.comparePassword(password, existUser.password!);
