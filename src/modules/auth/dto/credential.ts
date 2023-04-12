@@ -1,10 +1,11 @@
 import { IsEmail, IsNotEmpty, Matches, IsMobilePhone } from "class-validator";
+import { PASSWORD_REGEX } from "../auth.constants";
 
 export class SignupByEmailDto {
   @IsEmail()
   email: string;
 
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#$%^&+=*!(){}[\]:;<>,.?\\\/\-_|]{8,}$/, {
+  @Matches(PASSWORD_REGEX, {
     message: "password at least 8 character and include both word, number",
   })
   password: string;
@@ -22,7 +23,7 @@ export class SignupByPhoneDto {
   @IsMobilePhone("vi-VN")
   phone: string;
 
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@#$%^&+=*!(){}[\]:;<>,.?\\\/\-_|]{8,}$/, {
+  @Matches(PASSWORD_REGEX, {
     message: "password at least 8 character and include both word, number",
   })
   password: string;
