@@ -37,11 +37,11 @@ describe("KidDetail E2E Test", () => {
   });
 
   afterAll(async () => {
-    await userModel.destroy({ where: { [Op.or]: [{ id: parent.id }, { id: kid.id }] }, force: true });
+    userModel && (await userModel.destroy({ where: { [Op.or]: [{ id: parent.id }, { id: kid.id }] }, force: true }));
 
-    await kidDetailModel.destroy({ where: { id: kid.id }, force: true });
+    kidDetailModel && (await kidDetailModel.destroy({ where: { id: kid.id }, force: true }));
 
-    await app.close();
+    app && (await app.close());
   });
 
   describe("Create kid detail (POST) api/:kidId/kidDetails", () => {
@@ -60,7 +60,7 @@ describe("KidDetail E2E Test", () => {
     it("should failed due to passed invalid data", () => {
       return agent
         .post(`${API_CORE_PREFIX}/kids/${kid.id}/kid-details`)
-        .send({ dob: "2015-111-01", gender: "female", profilePicture: "", buddyCode: "", buddyName: "" })
+        .send({ dob: "2015-15-01", gender: "female", profilePicture: "", buddyCode: "", buddyName: "" })
         .expect((res) => {
           const { error } = res.body;
           expect(error).toEqual([
@@ -116,7 +116,7 @@ describe("KidDetail E2E Test", () => {
       return agent
         .patch(`${API_CORE_PREFIX}/kids/${kid.id}/kid-details`)
         .send({
-          dob: "2015-11-011",
+          dob: "2015-15-01",
           gender: "female",
           profilePicture: "",
           buddyCode: "",

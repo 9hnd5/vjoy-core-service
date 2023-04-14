@@ -74,7 +74,7 @@ export class UserService extends BaseService {
       offset,
       order,
       attributes: { exclude: EXCLUDE_FIELDS },
-      include: [Role, User],
+      include: [Role, "kids"],
       paranoid: !includeDeleted,
     });
     return rs;
