@@ -5,17 +5,17 @@ import { SequelizeModule } from "@nestjs/sequelize";
 import { camelCase } from "lodash";
 import { AuthModule } from "modules/auth/auth.module";
 import { ConfigModule } from "modules/config/config.module";
-import { KidsModule } from "modules/kids/kids.module";
-import { UsersModule } from "modules/users/users.module";
+import { KidDetailModule } from "modules/kid-detail/kid-detail.module";
+import { UserModule } from "modules/user/user.module";
 import * as path from "path";
 
 const coreEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*.entity*");
 @Module({
   imports: [
     InitialModule.forRoot({ i18nPath: path.join(__dirname, "i18n") }),
-    KidsModule,
+    KidDetailModule,
     AuthModule,
-    UsersModule,
+    UserModule,
     ConfigModule,
     SequelizeModule.forRootAsync({
       useFactory: (configService: ConfigService) => {

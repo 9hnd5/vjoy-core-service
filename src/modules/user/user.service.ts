@@ -3,7 +3,7 @@ import {
   generateNumber,
   MailService,
   Role,
-  ROLE_CODE,
+  ROLE_ID,
   SmsService,
   User,
   UserAttributes,
@@ -18,10 +18,10 @@ import { col, fn, Op, where, WhereOptions } from "sequelize";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { FindUsersQueryDto } from "./dto/find-users-query.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { EXCLUDE_FIELDS } from "./users.constants";
+import { EXCLUDE_FIELDS } from "./user.constants";
 
 @Injectable()
-export class UsersService extends BaseService {
+export class UserService extends BaseService {
   constructor(
     @InjectModel(User) private userModel: typeof User,
     private readonly authService: AuthService,
@@ -74,7 +74,7 @@ export class UsersService extends BaseService {
       offset,
       order,
       attributes: { exclude: EXCLUDE_FIELDS },
-      include: Role,
+      include: [Role, User],
       paranoid: !includeDeleted,
     });
     return rs;
@@ -83,6 +83,7 @@ export class UsersService extends BaseService {
   async findOne(id: number, includeDeleted = false) {
     const rs = await this.userModel.findByPk(id, {
       attributes: { exclude: EXCLUDE_FIELDS },
+      include: ["parent"],
       paranoid: !includeDeleted,
     });
     return rs;
@@ -105,10 +106,10 @@ export class UsersService extends BaseService {
     }
 
     // do update by admin
-    const { roleCode: role, apiToken } = this.request.user!;
-    if (role === ROLE_CODE.ADMIN) return (await user.update({ ...updateUserDto })).dataValues;
+    const { roleId: role, apiToken } = this.request.user!;
+    if (role === ROLE_ID.ADMIN) return (await user.update({ ...updateUserDto })).dataValues;
 
-    delete others.roleCode;
+    delete others.roleId;
     user.update({ ...others });
 
     let otpToken: string | undefined;

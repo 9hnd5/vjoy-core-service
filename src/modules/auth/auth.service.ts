@@ -1,4 +1,4 @@
-import { ApiKey, BaseService, Role, ROLE_CODE, SmsService, User, USER_STATUS } from "@common";
+import { ApiKey, BaseService, Role, ROLE_ID, SmsService, User, USER_STATUS } from "@common";
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -42,7 +42,7 @@ export class AuthService extends BaseService {
       const verifyResult = await this.verifyOTPToken(otpCode, otpToken);
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.userId },
-        attributes: ["id", "firstname", "lastname", "email", "password", "roleCode"],
+        attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
         include: Role,
       })) as User;
       existUser.status = USER_STATUS.ACTIVATED;
@@ -93,12 +93,12 @@ export class AuthService extends BaseService {
       lastname,
       email,
       phone,
-      roleCode,
+      roleId,
       role: { permissions },
     } = user;
-    const payload = { userId: id, roleCode };
+    const payload = { userId: id, roleId };
     const accessToken = await this.jwtService.signAsync(payload, { secret: this.secret, expiresIn: this.expiresIn });
-    return { id, firstname, lastname, email, phone, roleCode, permissions, accessToken };
+    return { id, firstname, lastname, email, phone, roleId, permissions, accessToken };
   };
 
   private async loginByEmail(userEmail: string, userPassword: string) {
@@ -107,7 +107,7 @@ export class AuthService extends BaseService {
         email: userEmail,
         status: USER_STATUS.ACTIVATED,
       },
-      attributes: ["id", "firstname", "lastname", "email", "password", "roleCode"],
+      attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
       include: Role,
     });
     if (!existUser) throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
@@ -126,10 +126,10 @@ export class AuthService extends BaseService {
       if (existUser.deletedAt) throw new UnauthorizedException(this.i18n.t("message.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
         throw new UnauthorizedException(this.i18n.t("message.USER_DEACTIVATED"));
-      payload = { userId: existUser.id, roleCode: existUser.roleCode };
+      payload = { userId: existUser.id, roleId: existUser.roleId };
     } else {
-      const newUser = await this.userModel.create({ phone: userPhone, roleCode: ROLE_CODE.PARENT });
-      payload = { userId: newUser.id, roleCode: newUser.roleCode };
+      const newUser = await this.userModel.create({ phone: userPhone, roleId: ROLE_ID.PARENT });
+      payload = { userId: newUser.id, roleId: newUser.roleId };
     }
 
     const otpCode = this.generateOTPCode();
@@ -163,7 +163,7 @@ export class AuthService extends BaseService {
     const newUser = await this.userModel.create({
       ...(email ? { email } : { phone }),
       password: await this.createPassword(password),
-      roleCode: ROLE_CODE.PARENT,
+      roleId: ROLE_ID.PARENT,
     });
 
     return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);

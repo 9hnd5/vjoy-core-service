@@ -8,5 +8,6 @@
   "USER_DEACTIVATED": "Người dùng không hoạt động",
   "USER_NOT_EXISTS": "Người dùng không tồn tại",
   "USER_PASSWORD_INCORRECT": "Mật khẩu không chính xác",
-  "USER_EXISTED": "Người dùng đã tồn tại"
+  "USER_EXISTED": "Người dùng đã tồn tại",
+  "KID_DETAIL_EXISTED:": "Chi tiết kid đã tồn tại"
 }

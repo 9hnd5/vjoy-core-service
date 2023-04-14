@@ -2,7 +2,7 @@ import {
   API_CORE_PREFIX,
   API_TOKEN,
   ApiKey,
-  ROLE_CODE,
+  ROLE_ID,
   USER_STATUS,
   User,
   createUser,
@@ -53,7 +53,7 @@ describe("Auth (e2e)", () => {
       lastname: "login-test",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
-      roleCode: ROLE_CODE.PARENT,
+      roleId: ROLE_ID.PARENT,
       password,
     };
 
@@ -62,7 +62,7 @@ describe("Auth (e2e)", () => {
       lastname: "login-test-deactived",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
-      roleCode: ROLE_CODE.PARENT,
+      roleId: ROLE_ID.PARENT,
       password,
     };
 
@@ -71,7 +71,7 @@ describe("Auth (e2e)", () => {
       lastname: "login-test-deleted",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
       phone: `${generateNumber(10)}`,
-      roleCode: ROLE_CODE.PARENT,
+      roleId: ROLE_ID.PARENT,
       password,
     };
     const createdUser1: User["dataValues"] = await createUser({ newUser: user1, accessToken: adminToken });
@@ -92,7 +92,7 @@ describe("Auth (e2e)", () => {
     const otpCode = authService.generateOTPCode();
     const otpToken = await authService.generateOTPToken(otpCode, {
       userId: adminUser.id,
-      roleCode: adminUser.roleCode,
+      roleId: adminUser.roleId,
     });
     verifySuccess = { otpCode, otpToken };
   });

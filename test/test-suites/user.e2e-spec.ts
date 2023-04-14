@@ -4,7 +4,7 @@ import {
   expectError,
   expectErrors,
   generateNumber,
-  ROLE_CODE,
+  ROLE_ID,
   signin,
   User,
   USER_STATUS,
@@ -15,7 +15,7 @@ import { AppModule } from "app.module";
 import { AuthService } from "modules/auth/auth.service";
 import * as request from "supertest";
 
-describe("UsersController E2E Test", () => {
+describe("UserController E2E Test", () => {
   let app: INestApplication;
   let userModel: typeof User;
   let auService: AuthService;
@@ -28,7 +28,7 @@ describe("UsersController E2E Test", () => {
     lastname: "testUser",
     email: `user-test-${generateNumber(6)}@gmail.com`,
     phone: `${generateNumber(10)}`,
-    roleCode: ROLE_CODE.PARENT,
+    roleId: ROLE_ID.PARENT,
     password: "fdf324fddsfa@321",
   };
 
@@ -59,7 +59,7 @@ describe("UsersController E2E Test", () => {
           testUser = { ...testUser, id: user.id };
 
           expect(user.email).toEqual(testUser.email);
-          expect(user.roleCode).toEqual(testUser.roleCode);
+          expect(user.roleId).toEqual(testUser.roleId);
           expect(user.firstname).toEqual(testUser.firstname.trim());
           expect(user.lastname).toEqual(testUser.lastname.trim());
           expect(user.status).toEqual(USER_STATUS.ACTIVATED);
@@ -157,7 +157,7 @@ describe("UsersController E2E Test", () => {
       const updateData = {
         firstname: "fistname update",
         lastname: "last name update",
-        roleCode: ROLE_CODE.ADMIN,
+        roleId: ROLE_ID.ADMIN,
       };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
@@ -167,7 +167,7 @@ describe("UsersController E2E Test", () => {
           const user = response.body.data;
           expect(user.firstname).toEqual(updateData.firstname.trim());
           expect(user.lastname).toEqual(updateData.lastname.trim());
-          expect(user.roleCode).not.toEqual(updateData.roleCode);
+          expect(user.roleId).not.toEqual(updateData.roleId);
           expect(user).not.toHaveProperty("password");
         })
         .expect(HttpStatus.OK);

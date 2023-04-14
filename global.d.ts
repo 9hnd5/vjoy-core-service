@@ -2,7 +2,7 @@ declare namespace Express {
   export interface Request {
     user?: {
       userId: number;
-      roleCode: string;
+      roleId: string;
       apiToken: {
         name: string;
         type: string;
