@@ -1,4 +1,4 @@
-import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, generateNumber, ROLE_CODE, signin, User } from "@common";
+import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, generateNumber, ROLE_ID, signin, User } from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
@@ -39,7 +39,7 @@ describe("Configs E2E Test", () => {
         lastname: name,
         email: `${name}@gmail.com`,
         password: "123456",
-        roleCode: ROLE_CODE.CONTENT_EDITOR,
+        roleId: ROLE_ID.CONTENT_EDITOR,
       },
       accessToken: adminToken,
     });

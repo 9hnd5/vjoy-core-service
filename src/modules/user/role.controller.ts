@@ -1,10 +1,10 @@
 import { Authorize, Controller } from "@common";
 import { Get, Param } from "@nestjs/common";
-import { RolesService } from "./roles.service";
+import { RoleService } from "./role.service";
 
 @Controller("roles")
-export class RolesController {
-  constructor(private readonly rolesService: RolesService) {}
+export class RoleController {
+  constructor(private readonly rolesService: RoleService) {}
 
   @Authorize({ action: "list", resource: "roles" })
   @Get()

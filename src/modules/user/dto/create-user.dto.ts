@@ -1,5 +1,5 @@
 import { IsEmail, IsIn, IsNotEmpty, IsOptional } from "class-validator";
-import { ROLE_CODE } from "@common";
+import { ROLE_ID } from "@common";
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -19,8 +19,8 @@ export class CreateUserDto {
   @IsNotEmpty()
   phone?: string;
 
-  @IsIn(Object.values(ROLE_CODE))
-  roleCode: string;
+  @IsIn(Object.values(ROLE_ID))
+  roleId: string;
 
   @IsOptional()
   provider?: string;

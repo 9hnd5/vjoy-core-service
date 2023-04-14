@@ -1,16 +1,16 @@
 import { Get, Post, Body, Patch, Param, Delete, Query, Inject } from "@nestjs/common";
-import { UsersService } from "./users.service";
+import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
-import { Public, ROLE_CODE, UserId } from "@common";
+import { Public, ROLE_ID, UserId } from "@common";
 import { FindUsersQueryDto } from "./dto/find-users-query.dto";
 import { AdminOrSameUser, Authorize, Controller } from "@common";
 import { ChangePasswordDto } from "./dto/change-password.dto";
 
 @Controller("users")
-export class UsersController {
-  constructor(private readonly usersService: UsersService, @Inject("REQUEST") private request: any) {}
+export class UserController {
+  constructor(private readonly usersService: UserService, @Inject("REQUEST") private request: any) {}
 
   @Authorize({ action: "create", resource: "users" })
   @Post()
@@ -50,8 +50,8 @@ export class UsersController {
   @AdminOrSameUser()
   @Delete(":userId")
   remove(@Param("userId") userId: number, @Query("hardDelete") hardDelete: boolean) {
-    const role = this.request.user?.roleCode;
-    const isHardDelete = role === ROLE_CODE.ADMIN && hardDelete;
+    const role = this.request.user?.roleId;
+    const isHardDelete = role === ROLE_ID.ADMIN && hardDelete;
     return this.usersService.remove(userId, isHardDelete);
   }
 
