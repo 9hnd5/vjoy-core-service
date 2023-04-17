@@ -1,7 +1,7 @@
 import { BaseService } from "@common";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
-import { Config } from "entities/config.entity";
+import { Config } from "@common";
 import { Op } from "sequelize";
 import { CreateConfigDto } from "./dto/create-config.dto";
 import { FindConfigsQueryDto } from "./dto/find-configs-query.dto";

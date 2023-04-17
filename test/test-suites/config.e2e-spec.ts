@@ -2,7 +2,7 @@ import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, genera
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
-import { Config } from "entities/config.entity";
+import { Config } from "@common";
 import { CreateConfigDto } from "modules/config/dto/create-config.dto";
 import { UpdateConfigDto } from "modules/config/dto/update-config.dto";
 import * as request from "supertest";

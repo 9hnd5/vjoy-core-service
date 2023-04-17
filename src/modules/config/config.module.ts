@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { SequelizeModule } from "@nestjs/sequelize";
-import { Config } from "entities/config.entity";
+import { Config } from "@common";
 import { ConfigController } from "./config.controller";
 import { ConfigService } from "./config.service";
 
