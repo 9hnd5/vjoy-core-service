@@ -1,4 +1,4 @@
-import { ApiKey, BaseService, Role, ROLE_ID, SmsService, User, USER_STATUS } from "@common";
+import { ApiKey, BaseService, Role, ROLE_ID, SmsService, User, USER_PROVIDER, USER_STATUS } from "@common";
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -148,9 +148,16 @@ export class AuthService extends BaseService {
 
     let phone: string | undefined;
 
-    if (data instanceof SignupByEmailDto) email = data.email;
-    else phone = data.phone;
+    let provider: string;
 
+    if (data instanceof SignupByEmailDto) {
+      email = data.email;
+      provider = USER_PROVIDER.EMAIL;
+    } else {
+      phone = data.phone;
+      provider = USER_PROVIDER.PHONE;
+    }
+    
     const existUser = await this.userModel.findOne({
       where: {
         ...(email ? { email } : { phone }),
@@ -164,6 +171,7 @@ export class AuthService extends BaseService {
       ...(email ? { email } : { phone }),
       password: await this.createPassword(password),
       roleId: ROLE_ID.PARENT,
+      provider,
     });
 
     return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
