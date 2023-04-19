@@ -14,7 +14,7 @@
     "start:staging": "ENV=staging SERVICE=core node dist/src/main",
     "start:prod": "ENV=prod SERVICE=core node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "ENV=dev SERVICE=core jest",
+    "test": "jest --config ./test/jest.json --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
