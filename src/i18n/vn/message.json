@@ -1,13 +1,15 @@
 {
   "EMAIL_EXISTS": "Email đã tồn tại",
   "INVALID_CREDENTIAL": "Thông tin xác thực không hợp lệ",
+  "KID_DETAIL_EXISTED:": "Chi tiết kid đã tồn tại",
   "NOT_PERMISSION": "Không đủ quyền",
   "NOT_FOUND": "Không tìm thấy #{data}",
   "PHONE_EXISTS": "Số điện thoại đã tồn tại",
+  "REQUEST_TOO_FAST": "Yêu cầu bị từ chối vì gửi liên tục. Vui lòng đợi 60 giây trước khi thử lại.",
+  "TOKEN_EXPIRED": "Token đã hết hạn",
   "USER_DELETED": "Người dùng đã bị xoá",
   "USER_DEACTIVATED": "Người dùng không hoạt động",
   "USER_NOT_EXISTS": "Người dùng không tồn tại",
   "USER_PASSWORD_INCORRECT": "Mật khẩu không chính xác",
-  "USER_EXISTED": "Người dùng đã tồn tại",
-  "KID_DETAIL_EXISTED:": "Chi tiết kid đã tồn tại"
+  "USER_EXISTED": "Người dùng đã tồn tại"
 }

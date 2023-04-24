@@ -1,16 +1,10 @@
 import { ApiKey, BaseService, Role, ROLE_ID, SmsService, User, USER_PROVIDER, USER_STATUS } from "@common";
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
-import * as moment from "moment";
+import * as dayjs from "dayjs";
 import { OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
@@ -47,6 +41,7 @@ export class AuthService extends BaseService {
   verifyOTP = async (otpToken: string, otpCode: string) => {
     try {
       const verifyResult = await this.verifyOTPToken(otpCode, otpToken);
+
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.userId },
         attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
@@ -55,8 +50,14 @@ export class AuthService extends BaseService {
       existUser.status = USER_STATUS.ACTIVATED;
       await existUser.save();
       return this.generateUserToken(existUser);
-    } catch {
-      throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        // Token has expired
+        throw new UnauthorizedException(this.i18n.t("message.TOKEN_EXPIRED"));
+      } else {
+        // Token is invalid
+        throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
+      }
     }
   };
 
@@ -67,30 +68,8 @@ export class AuthService extends BaseService {
     });
   };
 
-  verifyOTPToken = async (otpCode: string, otpToken: string) => {
-    try {
-      const payload = await this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
-      return payload;
-    } catch (err) {
-      if (err.name === "TokenExpiredError") {
-        // Token has expired
-        throw new UnauthorizedException("Token has expired");
-      } else {
-        // Token is invalid
-        throw new UnauthorizedException("Invalid token");
-      }
-    }
-    // try {
-    //   const decodedToken = await this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
-    //   const now = Math.floor(Date.now() / 1000);
-    //   if (decodedToken.exp && decodedToken.exp < now) {
-    //     throw new ForbiddenException('Token has expired');
-    //   }
-    //   return decodedToken;
-    // } catch (err) {
-    //   throw new ForbiddenException('Invalid token');
-    // }
-  };
+  verifyOTPToken = (otpCode: string, otpToken: string) =>
+    this.jwtService.verifyAsync(otpToken, { secret: this.secret + otpCode });
 
   generateOTPCode = () => `${Math.floor(Math.random() * 9000) + 1000}`; // 4 digits;
 
@@ -182,7 +161,7 @@ export class AuthService extends BaseService {
         phone,
         roleId: ROLE_ID.PARENT,
         provider: USER_PROVIDER.PHONE,
-        lastSendOtp: moment().toDate(),
+        lastSendOtp: dayjs().toDate(),
       });
       payload = { userId: newUser.id, roleId: newUser.roleId };
     }
@@ -208,7 +187,36 @@ export class AuthService extends BaseService {
 
       payload = { userId: existUser.id, roleId: existUser.roleId };
 
-      existUser.lastSendOtp = moment().toDate();
+      existUser.lastSendOtp = dayjs().toDate();
+      existUser.save();
+    } else {
+      throw new UnauthorizedException(this.i18n.t("message.USER_NOT_EXISTS"));
+    }
+
+    const otpCode = this.generateOTPCode();
+    if (this.request.user?.apiToken.type != "vjoy-test") {
+      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+      this.smsService.send(phone, smsContent as string);
+    }
+
+    return { otpToken: await this.generateOTPToken(otpCode, payload) };
+  }
+
+  async resendOtp(data: SigninByPhoneDto) {
+    let payload = {};
+    const { phone } = data;
+
+    const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
+    if (existUser) {
+      if (existUser.deletedAt) throw new UnauthorizedException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.status === USER_STATUS.DEACTIVED)
+        throw new UnauthorizedException(this.i18n.t("message.USER_DEACTIVATED"));
+        
+      if (dayjs().diff(existUser.lastSendOtp, "minutes") < 1)
+        throw new BadRequestException(this.i18n.t("message.REQUEST_TOO_FAST"));
+
+      payload = { userId: existUser.id, roleId: existUser.roleId };
+      existUser.lastSendOtp = dayjs().toDate();
       existUser.save();
     } else {
       throw new UnauthorizedException(this.i18n.t("message.USER_NOT_EXISTS"));

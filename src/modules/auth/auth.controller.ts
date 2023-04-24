@@ -68,4 +68,10 @@ export class AuthController {
   signupByPhone(@Body() data: SignupByPhoneDto) {
     return this.authService.signupByPhone(data);
   }
+
+  @Public()
+  @Post("resend-otp")
+  resendOtp(@Body() data: SigninByPhoneDto) {
+    return this.authService.resendOtp(data);
+  }
 }
