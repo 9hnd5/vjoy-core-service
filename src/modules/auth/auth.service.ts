@@ -4,9 +4,10 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
-import { OTP_TOKEN_EXPIRES } from "./auth.constants";
+import * as dayjs from "dayjs";
+import { MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { SigninByPhoneDto, SigninByEmailDto, SignupByPhoneDto, SignupByEmailDto } from "./dto/credential";
+import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
@@ -40,6 +41,7 @@ export class AuthService extends BaseService {
   verifyOTP = async (otpToken: string, otpCode: string) => {
     try {
       const verifyResult = await this.verifyOTPToken(otpCode, otpToken);
+
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.userId },
         attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
@@ -48,8 +50,14 @@ export class AuthService extends BaseService {
       existUser.status = USER_STATUS.ACTIVATED;
       await existUser.save();
       return this.generateUserToken(existUser);
-    } catch {
-      throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        // Token has expired
+        throw new UnauthorizedException(this.i18n.t("message.TOKEN_EXPIRED"));
+      } else {
+        // Token is invalid
+        throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
+      }
     }
   };
 
@@ -141,23 +149,78 @@ export class AuthService extends BaseService {
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
   }
 
-  signup = async (data: SignupByEmailDto | SignupByPhoneDto) => {
+  async signupByPhone(data: SignupByPhoneDto) {
+    let payload = {};
+    const { phone } = data;
+
+    const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
+    if (existUser) {
+      throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
+    } else {
+      const newUser = await this.userModel.create({
+        phone,
+        roleId: ROLE_ID.PARENT,
+        provider: USER_PROVIDER.PHONE,
+        lastSentOtp: dayjs().toDate(),
+      });
+      payload = { userId: newUser.id, roleId: newUser.roleId };
+    }
+
+    const otpCode = this.generateOTPCode();
+    if (this.request.user?.apiToken.type != "vjoy-test") {
+      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+      this.smsService.send(phone, smsContent as string);
+    }
+
+    return { otpToken: await this.generateOTPToken(otpCode, payload) };
+  }
+
+  async signinByPhone(data: SigninByPhoneDto) {
+    let payload = {};
+    const { phone } = data;
+
+    const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
+    if (existUser) {
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.status === USER_STATUS.DEACTIVED)
+        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+      if (dayjs().diff(existUser.lastSentOtp, "minutes") < MAX_RESEND_OTP_MINS)
+        throw new BadRequestException(this.i18n.t("message.REQUEST_TOO_FAST"));
+
+      payload = { userId: existUser.id, roleId: existUser.roleId };
+
+      existUser.lastSentOtp = dayjs().toDate();
+      existUser.save();
+    } else {
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_EXISTS"));
+    }
+
+    const otpCode = this.generateOTPCode();
+    if (this.request.user?.apiToken.type != "vjoy-test") {
+      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+      this.smsService.send(phone, smsContent as string);
+    }
+
+    return { otpToken: await this.generateOTPToken(otpCode, payload) };
+  }
+
+  signup = async (data: SignupByEmailDto) => {
     const { password } = data;
 
-    let email: string | undefined;
+    // let email: string | undefined;
 
     let phone: string | undefined;
 
-    let provider: string;
+    // let provider: string;
 
-    if (data instanceof SignupByEmailDto) {
-      email = data.email;
-      provider = USER_PROVIDER.EMAIL;
-    } else {
-      phone = data.phone;
-      provider = USER_PROVIDER.PHONE;
-    }
-    
+    // if (data instanceof SignupByEmailDto) {
+    const email = data.email;
+    const provider = USER_PROVIDER.EMAIL;
+    // } else {
+    //   phone = data.phone;
+    //   provider = USER_PROVIDER.PHONE;
+    // }
+
     const existUser = await this.userModel.findOne({
       where: {
         ...(email ? { email } : { phone }),
@@ -177,15 +240,16 @@ export class AuthService extends BaseService {
     return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
   };
 
-  signin = async (data: SigninByEmailDto | SigninByPhoneDto) => {
+  signin = async (data: SigninByEmailDto) => {
     const { password } = data;
 
-    let email: string | undefined;
+    // let email: string | undefined;
 
     let phone: string | undefined;
 
-    if (data instanceof SigninByEmailDto) email = data.email;
-    else phone = data.phone;
+    // if (data instanceof SigninByEmailDto) email = data.email;
+    // else phone = data.phone;
+    const email = data.email;
 
     const existUser = await this.userModel.findOne({
       where: {

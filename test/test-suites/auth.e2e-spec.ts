@@ -13,6 +13,7 @@ import {
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
+import { MAX_RESEND_OTP_MINS } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
 import { Op } from "sequelize";
 import * as request from "supertest";
@@ -52,7 +53,7 @@ describe("Auth (e2e)", () => {
       firstname: "login-test",
       lastname: "login-test",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
-      phone: `${generateNumber(10)}`,
+      phone: `+849${generateNumber(8)}`,
       roleId: ROLE_ID.PARENT,
       password,
     };
@@ -61,7 +62,7 @@ describe("Auth (e2e)", () => {
       firstname: "login-test-deactived",
       lastname: "login-test-deactived",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
-      phone: `${generateNumber(10)}`,
+      phone: `+849${generateNumber(8)}`,
       roleId: ROLE_ID.PARENT,
       password,
     };
@@ -70,7 +71,7 @@ describe("Auth (e2e)", () => {
       firstname: "login-test-deleted",
       lastname: "login-test-deleted",
       email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
-      phone: `${generateNumber(10)}`,
+      phone: `+849${generateNumber(8)}`,
       roleId: ROLE_ID.PARENT,
       password,
     };
@@ -121,21 +122,20 @@ describe("Auth (e2e)", () => {
   });
 
   describe("Sign-up/Sign-in by phone", () => {
-    const data = { phone: `+849${generateNumber(8)}`, password: "abc@1234567" };
+    const data = { phone: `+849${generateNumber(8)}` };
 
     afterAll(async () => {
       await userModel.destroy({ where: { phone: data.phone }, force: true });
     });
 
     describe("Sign-up (POST) auth/signup/phone", () => {
-      it("Should sign up succeed and return userToken", () => {
+      it("Should sign up succeed and return otpToken", () => {
         return agent
           .post(`${API_CORE_PREFIX}/auth/signup/phone`)
           .send(data)
           .expect((res) => {
             const result = res.body.data;
-            expect(result).toHaveProperty("accessToken");
-            expect(result.phone).toBe(data.phone);
+            expect(result).toHaveProperty("otpToken");
           });
       });
 
@@ -154,43 +154,69 @@ describe("Auth (e2e)", () => {
           .expect((res) => expectError(res.body))
           .expect(HttpStatus.BAD_REQUEST);
       });
+    });
 
-      it("Should sign up failed due to password is not strong enough", () => {
+    describe("Resend Otp (POST) auth/resend-otp", () => {
+      it("Should failed resend otp after sign-up succeed", async () => {
         return agent
-          .post(`${API_CORE_PREFIX}/auth/signup/phone`)
-          .send({ ...data, password: "12345" })
-          .expect((res) => expectError(res.body))
+          .post(`${API_CORE_PREFIX}/auth/resend-otp`)
+          .send(data)
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
           .expect(HttpStatus.BAD_REQUEST);
       });
     });
 
     describe("Sign-in (POST) auth/signin/phone", () => {
-      it("Should sign-in failed due to wrong password", () => {
+      it("Should sign-in failed due to phone not exist", () => {
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/phone`)
-          .send({ ...data, password: "1234" })
+          .send({ phone: `+849${generateNumber(8)}` })
           .expect((res) => expectError(res.body))
           .expect(HttpStatus.BAD_REQUEST);
       });
 
-      it("Should sign-in failed due to wrong phone", () => {
+      it("Should sign in failed due to phone is not valid format VN", () => {
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/phone`)
-          .send({ ...data, phone: `+849${generateNumber(8)}` })
+          .send({ ...data, phone: "12345" })
           .expect((res) => expectError(res.body))
           .expect(HttpStatus.BAD_REQUEST);
       });
 
-      it("Should sign-in succeed and return userToken", () => {
+      it("Should sign in failed due to user deactived", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+          .send({ phone: userDeactived.phone })
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+  
+      it("Should sign in failed due to user deleted", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+          .send({ phone: userDeleted.phone })
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign-in succeed and return otpToken", async () => {
+        // Wait for 1 minute from the last sign-up succeed (otp has sent when sign-up)
+        await new Promise(resolve => setTimeout(resolve, MAX_RESEND_OTP_MINS * 60000));
+
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/phone`)
           .send(data)
           .expect((res) => {
             const result = res.body.data;
-            expect(result).toHaveProperty("accessToken");
-            expect(result.phone).toBe(data.phone);
+            expect(result).toHaveProperty("otpToken");
           });
-      });
+      }, MAX_RESEND_OTP_MINS * 65000);
     });
   });
 

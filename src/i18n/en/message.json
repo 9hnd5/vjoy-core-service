@@ -1,13 +1,15 @@
 {
   "EMAIL_EXISTS": "Email already exists",
   "INVALID_CREDENTIAL": "Invalid credendial",
+  "KID_DETAIL_EXISTED:": "Kid detail already exists",
   "NOT_PERMISSION": "Not Enough Permission",
   "NOT_FOUND": "#{data} not found",
   "PHONE_EXISTS": "Phone already exists",
+  "REQUEST_TOO_FAST": "Request was denied due to continuous sending. Please wait 60s before trying again.",
+  "TOKEN_EXPIRED": "Token has expired",
   "USER_DELETED": "User was deleted",
   "USER_DEACTIVATED": "User was deactivated",
   "USER_NOT_EXISTS": "User is not exists",
   "USER_PASSWORD_INCORRECT": "The password is incorrect",
-  "USER_EXISTED": "User already exists",
-  "KID_DETAIL_EXISTED:": "Kid detail already exists"
+  "USER_EXISTED": "User already exists"
 }

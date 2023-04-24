@@ -22,17 +22,9 @@ export class SigninByEmailDto {
 export class SignupByPhoneDto {
   @IsMobilePhone("vi-VN")
   phone: string;
-
-  @Matches(PASSWORD_REGEX, {
-    message: "password at least 8 character and include both word, number",
-  })
-  password: string;
 }
 
 export class SigninByPhoneDto {
   @IsMobilePhone("vi-VN")
   phone: string;
-
-  @IsNotEmpty()
-  password: string;
 }
