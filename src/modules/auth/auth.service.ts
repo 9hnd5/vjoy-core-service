@@ -5,7 +5,7 @@ import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
-import { OTP_TOKEN_EXPIRES } from "./auth.constants";
+import { MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
@@ -155,13 +155,13 @@ export class AuthService extends BaseService {
 
     const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
     if (existUser) {
-      throw new UnauthorizedException(this.i18n.t("message.USER_EXISTED"));
+      throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
     } else {
       const newUser = await this.userModel.create({
         phone,
         roleId: ROLE_ID.PARENT,
         provider: USER_PROVIDER.PHONE,
-        lastSendOtp: dayjs().toDate(),
+        lastSentOtp: dayjs().toDate(),
       });
       payload = { userId: newUser.id, roleId: newUser.roleId };
     }
@@ -181,45 +181,18 @@ export class AuthService extends BaseService {
 
     const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
     if (existUser) {
-      if (existUser.deletedAt) throw new UnauthorizedException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new UnauthorizedException(this.i18n.t("message.USER_DEACTIVATED"));
-
-      payload = { userId: existUser.id, roleId: existUser.roleId };
-
-      existUser.lastSendOtp = dayjs().toDate();
-      existUser.save();
-    } else {
-      throw new UnauthorizedException(this.i18n.t("message.USER_NOT_EXISTS"));
-    }
-
-    const otpCode = this.generateOTPCode();
-    if (this.request.user?.apiToken.type != "vjoy-test") {
-      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
-      this.smsService.send(phone, smsContent as string);
-    }
-
-    return { otpToken: await this.generateOTPToken(otpCode, payload) };
-  }
-
-  async resendOtp(data: SigninByPhoneDto) {
-    let payload = {};
-    const { phone } = data;
-
-    const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
-    if (existUser) {
-      if (existUser.deletedAt) throw new UnauthorizedException(this.i18n.t("message.USER_DELETED"));
-      if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new UnauthorizedException(this.i18n.t("message.USER_DEACTIVATED"));
-        
-      if (dayjs().diff(existUser.lastSendOtp, "minutes") < 1)
+        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+      if (dayjs().diff(existUser.lastSentOtp, "minutes") < MAX_RESEND_OTP_MINS)
         throw new BadRequestException(this.i18n.t("message.REQUEST_TOO_FAST"));
 
       payload = { userId: existUser.id, roleId: existUser.roleId };
-      existUser.lastSendOtp = dayjs().toDate();
+
+      existUser.lastSentOtp = dayjs().toDate();
       existUser.save();
     } else {
-      throw new UnauthorizedException(this.i18n.t("message.USER_NOT_EXISTS"));
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_EXISTS"));
     }
 
     const otpCode = this.generateOTPCode();

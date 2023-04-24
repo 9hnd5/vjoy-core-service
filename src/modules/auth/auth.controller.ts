@@ -72,6 +72,6 @@ export class AuthController {
   @Public()
   @Post("resend-otp")
   resendOtp(@Body() data: SigninByPhoneDto) {
-    return this.authService.resendOtp(data);
+    return this.authService.signinByPhone(data);
   }
 }
