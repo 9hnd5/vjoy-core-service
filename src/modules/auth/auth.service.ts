@@ -1,13 +1,22 @@
 import { ApiKey, BaseService, Role, ROLE_ID, SmsService, User, USER_PROVIDER, USER_STATUS } from "@common";
+import { HttpService } from "@nestjs/axios";
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
+import { catchError, firstValueFrom } from "rxjs";
+import { Op } from "sequelize";
 import { MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
+import {
+  SigninByEmailDto,
+  SigninByGoogleDto,
+  SigninByPhoneDto,
+  SignupByEmailDto,
+  SignupByPhoneDto,
+} from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
@@ -19,6 +28,7 @@ export class AuthService extends BaseService {
     configService: ConfigService,
     private jwtService: JwtService,
     private smsService: SmsService,
+    private readonly httpService: HttpService,
     @InjectModel(User) private userModel: typeof User,
     @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey
   ) {
@@ -202,6 +212,65 @@ export class AuthService extends BaseService {
     }
 
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
+  }
+
+  async signinByGoogle(signin: SigninByGoogleDto) {
+    const { accessToken } = signin;
+
+    // goi google api lay thong tin user
+    const { data } = await firstValueFrom(
+      this.httpService
+        .get("https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,phoneNumbers", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        .pipe(
+          catchError((e) => {
+            throw new UnauthorizedException(e.response.data.error.message);
+          })
+        )
+    );
+
+    const { resourceName, names, emailAddresses, phoneNumbers } = data;
+
+    let email: string | undefined;
+    let phone: string | undefined;
+    const socialId = resourceName.split("/")[1];
+    if (emailAddresses) email = emailAddresses[0].value;
+    if (phoneNumbers) phone = phoneNumbers[0].value;
+
+    const existUser = await this.userModel.findOne({
+      where: {
+        [Op.or]: {
+          ...(email && { email }),
+          ...(phone && { phone }),
+          ...(socialId && { socialId }),
+        },
+        provider: USER_PROVIDER.GOOGLE,
+      },
+      include: [Role],
+      paranoid: false,
+    });
+
+    if (existUser) {
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.status === USER_STATUS.DEACTIVED)
+        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+      return this.generateUserToken(existUser);
+    } else {
+      const newUser = await this.userModel.create({
+        firstname: names[0].givenName,
+        lastname: names[0].familyName,
+        ...(email && { email }),
+        ...(phone && { phone }),
+        ...(socialId && { socialId }),
+        roleId: ROLE_ID.PARENT,
+        provider: USER_PROVIDER.GOOGLE,
+        status: USER_STATUS.ACTIVATED,
+      });
+
+      return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+    }
   }
 
   signup = async (data: SignupByEmailDto) => {

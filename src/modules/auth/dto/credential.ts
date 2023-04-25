@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Matches, IsMobilePhone } from "class-validator";
+import { IsEmail, IsNotEmpty, Matches, IsMobilePhone, IsString } from "class-validator";
 import { PASSWORD_REGEX } from "../auth.constants";
 
 export class SignupByEmailDto {
@@ -28,3 +28,10 @@ export class SigninByPhoneDto {
   @IsMobilePhone("vi-VN")
   phone: string;
 }
+
+export class SigninByGoogleDto {
+  @IsNotEmpty()
+  @IsString()
+  accessToken: string;
+}
+
