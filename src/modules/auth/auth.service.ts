@@ -5,9 +5,17 @@ import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
-import { MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
+import { LoginTicket, OAuth2Client } from "google-auth-library";
+import { Op } from "sequelize";
+import { GOOGLE_CLIENT_ID, MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
+import {
+  SigninByEmailDto,
+  SigninByGoogleDto,
+  SigninByPhoneDto,
+  SignupByEmailDto,
+  SignupByPhoneDto,
+} from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
 
 @Injectable()
@@ -202,6 +210,57 @@ export class AuthService extends BaseService {
     }
 
     return { otpToken: await this.generateOTPToken(otpCode, payload) };
+  }
+
+  async signinByGoogle(signin: SigninByGoogleDto) {
+    const { idToken } = signin;
+
+    let ticket: LoginTicket;
+    try {
+      const client = new OAuth2Client(GOOGLE_CLIENT_ID.CORE_SERVICE);
+      ticket = await client.verifyIdToken({
+        idToken,
+        audience: Object.values(GOOGLE_CLIENT_ID),
+      });
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+    const payload = ticket.getPayload();
+
+    if (!payload) throw new UnauthorizedException(this.i18n.t("message.GOOGLE_NOT_FOUND"));
+
+    const { sub: socialId, email, given_name, family_name } = payload;
+    const existUser = await this.userModel.findOne({
+      where: {
+        [Op.or]: {
+          ...(email && { email }),
+          ...(socialId && { socialId }),
+        },
+        provider: USER_PROVIDER.GOOGLE,
+      },
+      include: [Role],
+      paranoid: false,
+    });
+
+    if (existUser) {
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.status === USER_STATUS.DEACTIVED)
+        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+      return this.generateUserToken(existUser);
+    } else {
+      const newUser = await this.userModel.create({
+        firstname: given_name,
+        lastname: family_name,
+        ...(email && { email }),
+        ...(socialId && { socialId }),
+        roleId: ROLE_ID.PARENT,
+        provider: USER_PROVIDER.GOOGLE,
+        status: USER_STATUS.ACTIVATED,
+      });
+
+      return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+    }
   }
 
   signup = async (data: SignupByEmailDto) => {

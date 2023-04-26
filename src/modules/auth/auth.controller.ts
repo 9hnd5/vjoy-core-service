@@ -2,7 +2,7 @@ import { AdminOrSameUser, Authorize, Controller, Public } from "@common";
 import { Body, Delete, Get, Param, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { SigninByEmailDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
+import { SigninByEmailDto, SigninByGoogleDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
 import { LoginDto } from "./dto/login.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
@@ -73,5 +73,11 @@ export class AuthController {
   @Post("resend-otp")
   resendOtp(@Body() data: SigninByPhoneDto) {
     return this.authService.signinByPhone(data);
+  }
+
+  @Public()
+  @Post("signin/google")
+  signinByGoogle(@Body() data: SigninByGoogleDto) {
+    return this.authService.signinByGoogle(data);
   }
 }
