@@ -1,5 +1,6 @@
 {
   "EMAIL_EXISTS": "Email already exists",
+  "GOOGLE_NOT_FOUND": "Google not found your account",
   "INVALID_CREDENTIAL": "Invalid credendial",
   "KID_DETAIL_EXISTED:": "Kid detail already exists",
   "NOT_PERMISSION": "Not Enough Permission",

@@ -1,5 +1,6 @@
 {
   "EMAIL_EXISTS": "Email đã tồn tại",
+  "GOOGLE_NOT_FOUND": "Google không tìm thấy tài khoản của bạn",
   "INVALID_CREDENTIAL": "Thông tin xác thực không hợp lệ",
   "KID_DETAIL_EXISTED:": "Chi tiết kid đã tồn tại",
   "NOT_PERMISSION": "Không đủ quyền",

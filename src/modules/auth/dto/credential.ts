@@ -32,6 +32,5 @@ export class SigninByPhoneDto {
 export class SigninByGoogleDto {
   @IsNotEmpty()
   @IsString()
-  accessToken: string;
+  idToken: string;
 }
-
