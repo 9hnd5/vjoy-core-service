@@ -7,15 +7,17 @@ import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
 import { LoginTicket, OAuth2Client } from "google-auth-library";
 import { Op } from "sequelize";
-import { GOOGLE_CLIENT_ID, MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
+import { EMAIL_VERIFY_EXPIRES, GOOGLE_CLIENT_ID, MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import {
+  ForgetPasswordDto,
   SigninByEmailDto,
   SigninByGoogleDto,
   SigninByPhoneDto,
   SignupByEmailDto,
   SignupByPhoneDto,
 } from "./dto/credential";
+import { EMAIL_RESET_PASSWORD_EXPIRES } from "./auth.constants";
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -224,7 +226,6 @@ export class AuthService extends BaseService {
     const existUser = await this.userModel.findOne({
       where: { email },
       paranoid: false,
-      include: [Role],
     });
     if (existUser) throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
 
@@ -240,6 +241,7 @@ export class AuthService extends BaseService {
       { id: newUser.id, email: newUser.email },
       {
         secret: this.secret,
+        expiresIn: EMAIL_VERIFY_EXPIRES
       }
     );
     const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/auth/verify-email?token=${verifyToken}`;
@@ -274,5 +276,40 @@ export class AuthService extends BaseService {
     if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
     return this.generateUserToken(existUser);
+  };
+
+  forgetPassword = async (data: ForgetPasswordDto) => {
+    const { email } = data;
+
+    const existUser = await this.userModel.findOne({
+      where: { email },
+      paranoid: false,
+    });
+
+    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW)
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED)
+      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+    // Gửi email reset password
+    const resetToken = await this.jwtService.signAsync(
+      { id: existUser.id, email: existUser.email },
+      {
+        secret: this.secret,
+        expiresIn: EMAIL_RESET_PASSWORD_EXPIRES,
+      }
+    );
+    const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/auth/reset-password?token=${resetToken}`;
+    const mail = {
+      to: email,
+      subject: this.i18n.t("email.RESET_PASSWORD_SUBJECT"),
+      html: this.i18n.t("email.RESET_PASSWORD_BODY", { args: { email, resetLink } }),
+    };
+    this.mailService.sendHtml(mail);
+
+    return this.i18n.t("message.REQUEST_RESET_PASSWORD_SUCCESSFUL");
   };
 }

@@ -6,3 +6,4 @@ export const GOOGLE_CLIENT_ID = {
   WEB_LCMS: "101647183745-a9nnfn1vk4blpn7hhpqrc6aqjm7ebpu2.apps.googleusercontent.com",
 };
 export const EMAIL_RESET_PASSWORD_EXPIRES = "24h";
+export const EMAIL_VERIFY_EXPIRES = "24h";

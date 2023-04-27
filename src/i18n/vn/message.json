@@ -6,6 +6,7 @@
   "NOT_PERMISSION": "Không đủ quyền",
   "NOT_FOUND": "Không tìm thấy #{data}",
   "PHONE_EXISTS": "Số điện thoại đã tồn tại",
+  "REQUEST_RESET_PASSWORD_SUCCESSFUL": "Đường dẫn đổi mật khẩu đã được gửi vào email của bạn.",
   "REQUEST_TOO_FAST": "Yêu cầu bị từ chối vì gửi liên tục. Vui lòng đợi 60 giây trước khi thử lại.",
   "TOKEN_EXPIRED": "Token đã hết hạn",
   "USER_DELETED": "Người dùng đã bị xoá",

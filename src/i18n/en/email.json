@@ -4,5 +4,7 @@
   "NEW_ACCOUNT_SUBJECT": "VJOY - New Account Activation",
   "NEW_ACCOUNT_BODY": "<h4>Dear {fullname},</h4><p>Your account has been created with the temporary password: {pass}</p>",
   "SIGNUP_ACCOUNT_SUBJECT": "VJOY - New Account Activation",
-  "SIGNUP_ACCOUNT_BODY": "<h4>Dear {email},</h4><p>Thanks for registration.</p><p>Click <a href={verifyLink}>this link</a> to verify your email.</p>"
+  "SIGNUP_ACCOUNT_BODY": "<h4>Dear {email},</h4><p>Thanks for registration.</p><p>Click <a href={verifyLink}>this link</a> to verify your email.</p>",
+  "RESET_PASSWORD_SUBJECT": "VJOY - Reset Account Password",
+  "RESET_PASSWORD_BODY": "<h4>Dear {email},</h4><p>Click <a href={resetLink}>this link</a> to reset your account.</p>"
 }
