@@ -2,5 +2,7 @@
   "OTP_SUBJECT": "VJOY - OTP Verification",
   "OTP_BODY": "{otpCode} is your OTP code. It will expire after {min} minutes.",
   "NEW_ACCOUNT_SUBJECT": "VJOY - New Account Activation",
-  "NEW_ACCOUNT_BODY": "<h4>Dear {fullname},</h4><p>Your account has been created with the temporary password: {pass}</p>"
+  "NEW_ACCOUNT_BODY": "<h4>Dear {fullname},</h4><p>Your account has been created with the temporary password: {pass}</p>",
+  "SIGNUP_ACCOUNT_SUBJECT": "VJOY - New Account Activation",
+  "SIGNUP_ACCOUNT_BODY": "<h4>Dear {email},</h4><p>Thanks for registration.</p><p>Click <a href={verifyLink}>this link</a> to verify your email.</p>"
 }

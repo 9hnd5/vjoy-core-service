@@ -10,7 +10,9 @@
   "TOKEN_EXPIRED": "Token has expired",
   "USER_DELETED": "User was deleted",
   "USER_DEACTIVATED": "User was deactivated",
+  "USER_NOT_ACTIVATED_YET": "User has not activated account yet",
   "USER_NOT_EXISTS": "User is not exists",
   "USER_PASSWORD_INCORRECT": "The password is incorrect",
-  "USER_EXISTED": "User already exists"
+  "USER_EXISTED": "User already exists",
+  "USER_REGISTRATION_SUCCESSFUL": "Registration successful, please check your email to verify your account."
 }
