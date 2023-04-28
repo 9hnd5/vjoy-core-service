@@ -34,3 +34,8 @@ export class SigninByGoogleDto {
   @IsString()
   idToken: string;
 }
+
+export class ForgetPasswordDto {
+  @IsEmail()
+  email: string;
+}

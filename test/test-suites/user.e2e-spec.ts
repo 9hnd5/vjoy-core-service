@@ -27,9 +27,9 @@ describe("UserController E2E Test", () => {
     firstname: "testUser",
     lastname: "testUser",
     email: `user-test-${generateNumber(6)}@gmail.com`,
-    phone: `${generateNumber(10)}`,
+    phone: `+849${generateNumber(8)}`,
     roleId: ROLE_ID.PARENT,
-    password: "fdf324fddsfa@321",
+    password: "abc@123456",
   };
 
   beforeAll(async () => {
@@ -70,8 +70,8 @@ describe("UserController E2E Test", () => {
 
     it("Should signin successfully and return userToken", () => {
       return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send({ type: "email", email: testUser.email, password: testUser.password })
+        .post(`${API_CORE_PREFIX}/auth/signin/email`)
+        .send({ email: testUser.email, password: testUser.password })
         .expect((response) => {
           const { accessToken, refreshToken } = response.body.data;
           userToken = accessToken;
@@ -87,7 +87,7 @@ describe("UserController E2E Test", () => {
         .post(`${API_CORE_PREFIX}/users`)
         .send(testUser)
         .expect((response: request.Response) => {
-          // expectError(response.body);
+          expectError(response.body);
         })
         .expect(HttpStatus.UNAUTHORIZED);
     });
@@ -109,7 +109,7 @@ describe("UserController E2E Test", () => {
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .expect((response: request.Response) => {
-          // expectError(response.body);
+          expectError(response.body);
         })
         .expect(HttpStatus.UNAUTHORIZED);
     });
@@ -250,7 +250,7 @@ describe("UserController E2E Test", () => {
       return agent
         .get(`${API_CORE_PREFIX}/users?page=1&pageSize=10&sort=[["id","ASC"]]`)
         .expect((response: request.Response) => {
-          // expectError(response.body);
+          expectError(response.body);
         })
         .expect(HttpStatus.UNAUTHORIZED);
     });

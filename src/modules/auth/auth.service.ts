@@ -1,4 +1,4 @@
-import { ApiKey, BaseService, Role, ROLE_ID, SmsService, User, USER_PROVIDER, USER_STATUS } from "@common";
+import { ApiKey, BaseService, MailService, Role, ROLE_ID, SmsService, User, USER_PROVIDER, USER_STATUS } from "@common";
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -7,16 +7,17 @@ import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
 import { LoginTicket, OAuth2Client } from "google-auth-library";
 import { Op } from "sequelize";
-import { GOOGLE_CLIENT_ID, MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
+import { EMAIL_VERIFY_EXPIRES, GOOGLE_CLIENT_ID, MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import {
+  ForgetPasswordDto,
   SigninByEmailDto,
   SigninByGoogleDto,
   SigninByPhoneDto,
   SignupByEmailDto,
   SignupByPhoneDto,
 } from "./dto/credential";
-import { LoginDto } from "./dto/login.dto";
+import { EMAIL_RESET_PASSWORD_EXPIRES } from "./auth.constants";
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -26,6 +27,7 @@ export class AuthService extends BaseService {
   constructor(
     configService: ConfigService,
     private jwtService: JwtService,
+    private mailService: MailService,
     private smsService: SmsService,
     @InjectModel(User) private userModel: typeof User,
     @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey
@@ -34,12 +36,6 @@ export class AuthService extends BaseService {
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
     this.secret = configService.get("JWT_SECRET") || "";
     this.atSecret = configService.get("JWT_API_TOKEN_SECRET") || "";
-  }
-
-  login(data: LoginDto) {
-    const { type, email, password, phone } = data;
-    if (type === "email") return this.loginByEmail(email, password);
-    return this.loginByPhone(phone);
   }
 
   createPassword = (password: string) => bcrypt.hash(password, 10);
@@ -116,46 +112,6 @@ export class AuthService extends BaseService {
     const accessToken = await this.jwtService.signAsync(payload, { secret: this.secret, expiresIn: this.expiresIn });
     return { id, firstname, lastname, email, phone, roleId, permissions, accessToken };
   };
-
-  private async loginByEmail(userEmail: string, userPassword: string) {
-    const existUser = await this.userModel.findOne({
-      where: {
-        email: userEmail,
-        status: USER_STATUS.ACTIVATED,
-      },
-      attributes: ["id", "firstname", "lastname", "email", "password", "roleId"],
-      include: Role,
-    });
-    if (!existUser) throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
-
-    const isPasswordMatch = existUser.password && (await this.comparePassword(userPassword, existUser.password));
-    if (!isPasswordMatch) throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
-
-    return this.generateUserToken(existUser);
-  }
-
-  private async loginByPhone(userPhone: string) {
-    let payload = {};
-
-    const existUser = await this.userModel.findOne({ where: { phone: userPhone }, paranoid: false });
-    if (existUser) {
-      if (existUser.deletedAt) throw new UnauthorizedException(this.i18n.t("message.USER_DELETED"));
-      if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new UnauthorizedException(this.i18n.t("message.USER_DEACTIVATED"));
-      payload = { userId: existUser.id, roleId: existUser.roleId };
-    } else {
-      const newUser = await this.userModel.create({ phone: userPhone, roleId: ROLE_ID.PARENT });
-      payload = { userId: newUser.id, roleId: newUser.roleId };
-    }
-
-    const otpCode = this.generateOTPCode();
-    if (this.request.user?.apiToken.type != "vjoy-test") {
-      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
-      this.smsService.send(userPhone, smsContent as string);
-    }
-
-    return { otpToken: await this.generateOTPToken(otpCode, payload) };
-  }
 
   async signupByPhone(data: SignupByPhoneDto) {
     let payload = {};
@@ -263,65 +219,97 @@ export class AuthService extends BaseService {
     }
   }
 
-  signup = async (data: SignupByEmailDto) => {
-    const { password } = data;
-
-    // let email: string | undefined;
-
-    let phone: string | undefined;
-
-    // let provider: string;
-
-    // if (data instanceof SignupByEmailDto) {
-    const email = data.email;
+  signupByEmail = async (data: SignupByEmailDto) => {
+    const { email, password } = data;
     const provider = USER_PROVIDER.EMAIL;
-    // } else {
-    //   phone = data.phone;
-    //   provider = USER_PROVIDER.PHONE;
-    // }
 
     const existUser = await this.userModel.findOne({
-      where: {
-        ...(email ? { email } : { phone }),
-      },
+      where: { email },
       paranoid: false,
-      include: [Role],
     });
     if (existUser) throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
 
     const newUser = await this.userModel.create({
-      ...(email ? { email } : { phone }),
+      email,
       password: await this.createPassword(password),
       roleId: ROLE_ID.PARENT,
       provider,
     });
 
-    return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+    // Gửi email xác nhận tài khoản
+    const verifyToken = await this.jwtService.signAsync(
+      { id: newUser.id, email: newUser.email },
+      {
+        secret: this.secret,
+        expiresIn: EMAIL_VERIFY_EXPIRES
+      }
+    );
+    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/auth/verify-email?token=${verifyToken}`;
+    const mail = {
+      to: email,
+      subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
+      html: this.i18n.t("email.SIGNUP_ACCOUNT_BODY", { args: { email, verifyLink } }),
+    };
+    this.mailService.sendHtml(mail);
+
+    return this.i18n.t("message.USER_REGISTRATION_SUCCESSFUL");
   };
 
-  signin = async (data: SigninByEmailDto) => {
-    const { password } = data;
-
-    // let email: string | undefined;
-
-    let phone: string | undefined;
-
-    // if (data instanceof SigninByEmailDto) email = data.email;
-    // else phone = data.phone;
-    const email = data.email;
+  signinByEmail = async (data: SigninByEmailDto) => {
+    const { email, password } = data;
 
     const existUser = await this.userModel.findOne({
-      where: {
-        ...(email ? { email } : { phone }),
-      },
+      where: { email },
       paranoid: false,
       include: [Role],
     });
+
     if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW)
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED)
+      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
 
     const isPasswordMatch = await this.comparePassword(password, existUser.password!);
     if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
     return this.generateUserToken(existUser);
+  };
+
+  forgetPassword = async (data: ForgetPasswordDto) => {
+    const { email } = data;
+
+    const existUser = await this.userModel.findOne({
+      where: { email },
+      paranoid: false,
+    });
+
+    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW)
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED)
+      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+    // Gửi email reset password
+    const resetToken = await this.jwtService.signAsync(
+      { id: existUser.id, email: existUser.email },
+      {
+        secret: this.secret,
+        expiresIn: EMAIL_RESET_PASSWORD_EXPIRES,
+      }
+    );
+    const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/auth/reset-password?token=${resetToken}`;
+    const mail = {
+      to: email,
+      subject: this.i18n.t("email.RESET_PASSWORD_SUBJECT"),
+      html: this.i18n.t("email.RESET_PASSWORD_BODY", { args: { email, resetLink } }),
+    };
+    this.mailService.sendHtml(mail);
+
+    return this.i18n.t("message.REQUEST_RESET_PASSWORD_SUCCESSFUL");
   };
 }

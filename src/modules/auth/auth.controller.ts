@@ -2,19 +2,13 @@ import { AdminOrSameUser, Authorize, Controller, Public } from "@common";
 import { Body, Delete, Get, Param, Post } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { SigninByEmailDto, SigninByGoogleDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
-import { LoginDto } from "./dto/login.dto";
+import { ForgetPasswordDto, SigninByEmailDto, SigninByGoogleDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
-  @Post("login")
-  login(@Body() data: LoginDto) {
-    return this.authService.login(data);
-  }
   @Authorize({ action: "read", resource: "live_sessions" })
   @Get("check-authorize")
   checkAuthorize() {
@@ -48,13 +42,13 @@ export class AuthController {
   @Public()
   @Post("signin/email")
   signinByEmail(@Body() data: SigninByEmailDto) {
-    return this.authService.signin(data);
+    return this.authService.signinByEmail(data);
   }
 
   @Public()
   @Post("signup/email")
   signupByEmail(@Body() data: SignupByEmailDto) {
-    return this.authService.signup(data);
+    return this.authService.signupByEmail(data);
   }
 
   @Public()
@@ -79,5 +73,11 @@ export class AuthController {
   @Post("signin/google")
   signinByGoogle(@Body() data: SigninByGoogleDto) {
     return this.authService.signinByGoogle(data);
+  }
+
+  @Public()
+  @Post("forget-password")
+  forgetPassword(@Body() data: ForgetPasswordDto) {
+    return this.authService.forgetPassword(data);
   }
 }

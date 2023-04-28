@@ -30,7 +30,6 @@ describe("Auth (e2e)", () => {
   let user: { [k: string]: any };
   let userDeactived: { [k: string]: any };
   let userDeleted: { [k: string]: any };
-  let userCreatedByPhone;
   const password = "abc@123456";
 
   beforeAll(async () => {
@@ -87,7 +86,7 @@ describe("Auth (e2e)", () => {
     await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
     // soft delete user
     await userModel.destroy({ where: { id: userDeleted.id } });
-
+    
     // gen success token
     const authService = await moduleRef.resolve(AuthService);
     const otpCode = authService.generateOTPCode();
@@ -194,7 +193,7 @@ describe("Auth (e2e)", () => {
           })
           .expect(HttpStatus.BAD_REQUEST);
       });
-  
+
       it("Should sign in failed due to user deleted", () => {
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/phone`)
@@ -205,191 +204,143 @@ describe("Auth (e2e)", () => {
           .expect(HttpStatus.BAD_REQUEST);
       });
 
-      it("Should sign-in succeed and return otpToken", async () => {
-        // Wait for 1 minute from the last sign-up succeed (otp has sent when sign-up)
-        await new Promise(resolve => setTimeout(resolve, MAX_RESEND_OTP_MINS * 60000));
+      it(
+        "Should sign-in succeed and return otpToken",
+        async () => {
+          // Wait for 1 minute from the last sign-up succeed (otp has sent when sign-up)
+          await new Promise((resolve) => setTimeout(resolve, MAX_RESEND_OTP_MINS * 60000));
 
+          return agent
+            .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+            .send(data)
+            .expect((res) => {
+              const result = res.body.data;
+              expect(result).toHaveProperty("otpToken");
+            });
+        },
+        MAX_RESEND_OTP_MINS * 65000
+      );
+    });
+  });
+
+  describe("Sign-up/Sign-in by email", () => {
+    const signupNewUser = { email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`, password };
+
+    describe("Sign-up (POST) auth/signup/email", () => {
+      it("Should sign up failed due to password is not valid format", () => {
         return agent
-          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
-          .send(data)
+          .post(`${API_CORE_PREFIX}/auth/signup/email`)
+          .send({ ...signupNewUser, password: "12345" })
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign up failed due to email already exists", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signup/email`)
+          .send({ ...signupNewUser, email: user.email })
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign up succeed and return message registration successful", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signup/email`)
+          .send(signupNewUser)
           .expect((res) => {
             const result = res.body.data;
-            expect(result).toHaveProperty("otpToken");
-          });
-      }, MAX_RESEND_OTP_MINS * 65000);
-    });
-  });
-
-  describe("Sign-in by email (POST) auth/signin/email", () => {
-    it("Should sign in successfully and return userToken", () => {
-      const data = {
-        email: user.email,
-        password,
-      };
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/signin/email`)
-        .send(data)
-        .expect((response: request.Response) => {
-          const { email, accessToken } = response.body.data;
-          userToken = accessToken;
-          expect(email).toEqual(data.email);
-          expect(accessToken).not.toBeNull();
-        })
-        .expect(HttpStatus.CREATED);
+            expect(result).not.toBeNull();
+          })
+          .expect(HttpStatus.CREATED);
+      });
     });
 
-    it("Should sign in failed due to user not exist", () => {
-      const data = {
-        type: "email",
-        email: `email-${generateNumber(10)}@vus-etsc.edu.vn`,
-        password,
-      };
+    describe("Sign-in (POST) auth/signin/email", () => {
+      it("Should sign in successfully and return userToken", () => {
+        const data = {
+          email: user.email,
+          password,
+        };
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send(data)
+          .expect((response: request.Response) => {
+            const { email, accessToken } = response.body.data;
+            userToken = accessToken;
+            expect(email).toEqual(data.email);
+            expect(accessToken).not.toBeNull();
+          })
+          .expect(HttpStatus.CREATED);
+      });
 
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/signin/email`)
-        .send(data)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.BAD_REQUEST);
-    });
+      it("Should sign in failed due to user not exist", () => {
+        const data = {
+          email: user.email,
+          password,
+        };
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send({ ...data, email: `email-${generateNumber(10)}@vus-etsc.edu.vn` })
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
 
-    it("Should sign in failed due to wrong password", () => {
-      const data = {
-        type: "email",
-        email: user.email,
-        password: `${generateNumber(6)}`,
-      };
+      it("Should sign in failed due to wrong password", () => {
+        const data = {
+          email: user.email,
+          password,
+        };
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send({ ...data, password: `${generateNumber(6)}` })
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
 
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/signin/email`)
-        .send(data)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.BAD_REQUEST);
-    });
+      it("Should sign in failed due to not providing api-key", () => {
+        const data = {
+          email: user.email,
+          password,
+        };
+        return request(app.getHttpServer())
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send(data)
+          .expect(HttpStatus.UNAUTHORIZED);
+      });
 
-    it("Should sign in failed due to not providing api-key", () => {
-      const data = {
-        type: "email",
-        email: user.email,
-        password,
-      };
-      return request(app.getHttpServer())
-        .post(`${API_CORE_PREFIX}/auth/signin/email`)
-        .send(data)
-        .expect(HttpStatus.UNAUTHORIZED);
-    });
-  });
+      it("Should sign in failed due to user has not activated account yet", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send(signupNewUser)
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
 
-  describe("Sign-up by email (POST) auth/signup/email", () => {
-    it("Should sign up failed due to user already exists", () => {
-      const data = {
-        email: user.email,
-        password,
-      };
+      it("Should sign in failed due to user deactived", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send({ email: userDeactived.email, password })
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
 
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
-        .send(data)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.BAD_REQUEST);
-    });
-
-    it("Should sign up successfully and return userToken", () => {
-      const data = {
-        email: `login-test-${generateNumber(6)}@vus-etsc.edu.vn`,
-        password,
-      };
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
-        .send(data)
-        .expect((response: request.Response) => {
-          const { email, accessToken } = response.body.data;
-          userToken = accessToken;
-          expect(email).toEqual(data.email);
-          expect(accessToken).not.toBeNull();
-        })
-        .expect(HttpStatus.CREATED);
-    });
-
-    it("Should sign up failed due to not providing api-key", () => {
-      const data = {
-        type: "email",
-        email: user.email,
-        password,
-      };
-      return request(app.getHttpServer())
-        .post(`${API_CORE_PREFIX}/auth/signup/email`)
-        .send(data)
-        .expect(HttpStatus.UNAUTHORIZED);
-    });
-  });
-
-  describe("Sign in by email (POST) auth/login", () => {
-    it("Should sign in successfully and return userToken", () => {
-      const loginDTO = {
-        type: "email",
-        email: user.email,
-        password,
-      };
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect((response: request.Response) => {
-          const { email, accessToken } = response.body.data;
-          userToken = accessToken;
-          expect(email).toEqual(loginDTO.email);
-          expect(accessToken).not.toBeNull();
-        })
-        .expect(HttpStatus.CREATED);
-    });
-
-    it("Should sign in failed due to user not exist", () => {
-      const loginDTO = {
-        type: "email",
-        email: `email-${generateNumber(10)}@vus-etsc.edu.vn`,
-        password,
-      };
-
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.UNAUTHORIZED);
-    });
-
-    it("Should sign in failed due to wrong password", () => {
-      const loginDTO = {
-        type: "email",
-        email: user.email,
-        password: `${generateNumber(6)}`,
-      };
-
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.UNAUTHORIZED);
-    });
-
-    it("Should sign in failed due to not providing api-key", () => {
-      const loginDTO = {
-        type: "email",
-        email: user.email,
-        password,
-      };
-      return request(app.getHttpServer())
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect(HttpStatus.UNAUTHORIZED);
+      it("Should sign in failed due to user deleted", () => {
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send({ email: userDeleted.email, password })
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
     });
   });
 
@@ -417,76 +368,6 @@ describe("Auth (e2e)", () => {
         .set("Authorization", `Bearer ${userToken}`)
         .send({ name: "APITEST-name", type: "vjoy-web", description: "APITEST-description" })
         .expect(HttpStatus.FORBIDDEN);
-    });
-  });
-
-  describe("Sign in by phone (POST) auth/login", () => {
-    it("Should sign in successfully and return otpToken", () => {
-      const loginDTO = {
-        type: "phone",
-        phone: user.phone,
-      };
-
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect((response: request.Response) => {
-          const { data } = response.body;
-          expect(data).toHaveProperty("otpToken");
-          expect(data).not.toHaveProperty("otpCode");
-        })
-        .expect(HttpStatus.CREATED);
-    });
-
-    it("Should create new user and return otpToken due to user not exist", () => {
-      const loginDTO = {
-        type: "phone",
-        phone: `${generateNumber(10)}`,
-      };
-
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect(async (response: request.Response) => {
-          const { data } = response.body;
-
-          userCreatedByPhone = await userModel.findOne({ where: { phone: loginDTO.phone } });
-          expect(userCreatedByPhone?.phone).toEqual(loginDTO.phone);
-          expect(userCreatedByPhone?.status).toEqual(USER_STATUS.NEW);
-          expect(data).toHaveProperty("otpToken");
-          expect(data).not.toHaveProperty("otpCode");
-        })
-        .expect(HttpStatus.CREATED);
-    });
-
-    it("Should sign in failed due to user deactived", () => {
-      const loginDTO = {
-        type: "phone",
-        phone: userDeactived.phone,
-      };
-
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.UNAUTHORIZED);
-    });
-
-    it("Should sign in failed due to user deleted", () => {
-      const loginDTO = {
-        type: "phone",
-        phone: userDeleted.phone,
-      };
-
-      return agent
-        .post(`${API_CORE_PREFIX}/auth/login`)
-        .send(loginDTO)
-        .expect((response: request.Response) => {
-          expectError(response.body);
-        })
-        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 
