@@ -7,7 +7,14 @@ import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
 import { LoginTicket, OAuth2Client } from "google-auth-library";
 import { Op } from "sequelize";
-import { EMAIL_VERIFY_EXPIRES, GOOGLE_CLIENT_ID, MAX_RESEND_OTP_MINS, OTP_TOKEN_EXPIRES } from "./auth.constants";
+import {
+  EMAIL_RESET_PASSWORD_EXPIRES,
+  EMAIL_VERIFY_EXPIRES,
+  GOOGLE_CLIENT_ID,
+  MAX_RESEND_EMAIL_HOURS,
+  MAX_RESEND_OTP_MINS,
+  OTP_TOKEN_EXPIRES,
+} from "./auth.constants";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import {
   ForgetPasswordDto,
@@ -17,7 +24,7 @@ import {
   SignupByEmailDto,
   SignupByPhoneDto,
 } from "./dto/credential";
-import { EMAIL_RESET_PASSWORD_EXPIRES } from "./auth.constants";
+import { Response } from "express";
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -234,6 +241,8 @@ export class AuthService extends BaseService {
       password: await this.createPassword(password),
       roleId: ROLE_ID.PARENT,
       provider,
+      countVerifyEmailRequest: 1,
+      lastSentVerifyEmail: new Date(),
     });
 
     // Gửi email xác nhận tài khoản
@@ -241,10 +250,10 @@ export class AuthService extends BaseService {
       { id: newUser.id, email: newUser.email },
       {
         secret: this.secret,
-        expiresIn: EMAIL_VERIFY_EXPIRES
+        expiresIn: EMAIL_VERIFY_EXPIRES,
       }
     );
-    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/auth/verify-email?token=${verifyToken}`;
+    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?email=${email}&token=${verifyToken}`;
     const mail = {
       to: email,
       subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
@@ -276,6 +285,63 @@ export class AuthService extends BaseService {
     if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
     return this.generateUserToken(existUser);
+  };
+
+  verifyEmail = async (email: string, token: string, res: Response) => {
+    try {
+      const verifyResult = await this.jwtService.verifyAsync(token, { secret: this.secret });
+
+      const existUser = (await this.userModel.findOne({
+        where: { id: verifyResult.id, email: verifyResult.email },
+      })) as User;
+
+      existUser.status = USER_STATUS.ACTIVATED;
+      await existUser.save();
+
+      return res.render("verify-succeeded");
+    } catch (err) {
+      return res.render("verify-failed", { link: `verify-email/${email}/resend` });
+    }
+  };
+
+  resendVerifyEmail = async (email: string) => {
+    const existUser = await this.userModel.findOne({
+      where: { email },
+      paranoid: false,
+    });
+    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+    if (existUser.status === USER_STATUS.DEACTIVED)
+      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+    const daydiff = dayjs(new Date()).diff(existUser.lastSentVerifyEmail, "minutes");
+    if (daydiff > MAX_RESEND_EMAIL_HOURS * 60) existUser.countVerifyEmailRequest = 0;
+
+    if (existUser.countVerifyEmailRequest === 3 && daydiff <= MAX_RESEND_EMAIL_HOURS * 60)
+      throw new BadRequestException(this.i18n.t("message.REQUEST_LIMITED"));
+
+    existUser.countVerifyEmailRequest += 1;
+    existUser.lastSentVerifyEmail = new Date();
+    await existUser.save();
+
+    // Gửi email xác nhận tài khoản
+    const verifyToken = await this.jwtService.signAsync(
+      { id: existUser.id, email: existUser.email },
+      {
+        secret: this.secret,
+        expiresIn: EMAIL_VERIFY_EXPIRES,
+      }
+    );
+    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?email=${email}&token=${verifyToken}`;
+    const mail = {
+      to: email,
+      subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
+      html: this.i18n.t("email.SIGNUP_ACCOUNT_BODY", { args: { email, verifyLink } }),
+    };
+    this.mailService.sendHtml(mail);
+
+    return this.i18n.t("message.USER_RESEND_REGISTRATION_SUCCESSFUL");
   };
 
   forgetPassword = async (data: ForgetPasswordDto) => {

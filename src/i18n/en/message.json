@@ -6,6 +6,7 @@
   "NOT_PERMISSION": "Not Enough Permission",
   "NOT_FOUND": "#{data} not found",
   "PHONE_EXISTS": "Phone already exists",
+  "REQUEST_LIMITED": "Request has reached its limit. Please wait for another 24 hours and retry after that.",
   "REQUEST_RESET_PASSWORD_SUCCESSFUL": "Password reset link has already been sent to your email.",
   "REQUEST_TOO_FAST": "Request was denied due to continuous sending. Please wait 60s before trying again.",
   "TOKEN_EXPIRED": "Token has expired",
@@ -15,5 +16,6 @@
   "USER_NOT_EXISTS": "User is not exists",
   "USER_PASSWORD_INCORRECT": "The password is incorrect",
   "USER_EXISTED": "User already exists",
-  "USER_REGISTRATION_SUCCESSFUL": "Registration successful, please check your email to verify your account."
+  "USER_REGISTRATION_SUCCESSFUL": "Registration successful, please check your email to verify your account.",
+  "USER_RESEND_REGISTRATION_SUCCESSFUL": "Resend successful, please check your email to verify your account."
 }
