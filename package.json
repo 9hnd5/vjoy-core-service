@@ -23,12 +23,14 @@
     "test-e2e:prod": "ENV=prod SERVICE=core jest --config ./test/jest-e2e.json --detectOpenHandles"
   },
   "dependencies": {
+    "@google-cloud/pubsub": "^3.5.2",
     "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.2.1",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.2.1",
     "@nestjs/jwt": "^10.0.1",
     "@nestjs/mapped-types": "^1.2.0",
+    "@nestjs/microservices": "^9.4.0",
     "@nestjs/passport": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/sequelize": "^9.0.0",
