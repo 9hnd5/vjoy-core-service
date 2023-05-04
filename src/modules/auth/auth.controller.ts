@@ -91,8 +91,11 @@ export class AuthController {
 
   @Public({ requireApiKey: false })
   @Get("verify-email")
-  verifyEmail(@Query("email") email: string, @Query("token") token: string, @Res() res: Response) {
-    return this.authService.verifyEmail(email, token, res);
+  async verifyEmail(@Query("email") email: string, @Query("token") token: string, @Res() res: Response) {
+    const verified = await this.authService.verifyEmail(token);
+
+    if (verified) return res.render("verify-succeeded");
+    return res.render("verify-failed", { link: `verify-email/${email}/resend` });
   }
 
   @Public({ requireApiKey: false })

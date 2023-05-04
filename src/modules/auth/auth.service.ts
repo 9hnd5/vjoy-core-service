@@ -24,7 +24,6 @@ import {
   SignupByEmailDto,
   SignupByPhoneDto,
 } from "./dto/credential";
-import { Response } from "express";
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -287,10 +286,10 @@ export class AuthService extends BaseService {
     return this.generateUserToken(existUser);
   };
 
-  verifyEmail = async (email: string, token: string, res: Response) => {
+  verifyEmail = async (token: string) => {
     try {
       const verifyResult = await this.jwtService.verifyAsync(token, { secret: this.secret });
-
+      console.log(verifyResult);
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.id, email: verifyResult.email },
       })) as User;
@@ -298,9 +297,9 @@ export class AuthService extends BaseService {
       existUser.status = USER_STATUS.ACTIVATED;
       await existUser.save();
 
-      return res.render("verify-succeeded");
+      return true;
     } catch (err) {
-      return res.render("verify-failed", { link: `verify-email/${email}/resend` });
+      return false;
     }
   };
 
