@@ -6,6 +6,7 @@
   "NOT_PERMISSION": "Không đủ quyền",
   "NOT_FOUND": "Không tìm thấy #{data}",
   "PHONE_EXISTS": "Số điện thoại đã tồn tại",
+  "REQUEST_LIMITED": "Số lượng yêu cầu đã đạt giới hạn. Vui lòng thử lại sau 24 giờ.",
   "REQUEST_RESET_PASSWORD_SUCCESSFUL": "Đường dẫn đổi mật khẩu đã được gửi vào email của bạn.",
   "REQUEST_TOO_FAST": "Yêu cầu bị từ chối vì gửi liên tục. Vui lòng đợi 60 giây trước khi thử lại.",
   "TOKEN_EXPIRED": "Token đã hết hạn",
@@ -15,5 +16,6 @@
   "USER_NOT_EXISTS": "Người dùng không tồn tại",
   "USER_PASSWORD_INCORRECT": "Mật khẩu không chính xác",
   "USER_EXISTED": "Người dùng đã tồn tại",
-  "USER_REGISTRATION_SUCCESSFUL": "Đăng ký thành công, vui lòng kiểm tra email của bạn để xác thực tài khoản."
+  "USER_REGISTRATION_SUCCESSFUL": "Đăng ký thành công, vui lòng kiểm tra email của bạn để xác thực tài khoản.",
+  "USER_RESEND_REGISTRATION_SUCCESSFUL": "Gửi lại thành công, vui lòng kiểm tra email của bạn để xác thực tài khoản."
 }

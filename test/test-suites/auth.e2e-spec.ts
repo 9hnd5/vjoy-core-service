@@ -13,7 +13,7 @@ import {
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
-import { MAX_RESEND_OTP_MINS } from "modules/auth/auth.constants";
+import * as dayjs from "dayjs";
 import { AuthService } from "modules/auth/auth.service";
 import { Op } from "sequelize";
 import * as request from "supertest";
@@ -86,7 +86,7 @@ describe("Auth (e2e)", () => {
     await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
     // soft delete user
     await userModel.destroy({ where: { id: userDeleted.id } });
-    
+
     // gen success token
     const authService = await moduleRef.resolve(AuthService);
     const otpCode = authService.generateOTPCode();
@@ -165,6 +165,18 @@ describe("Auth (e2e)", () => {
           })
           .expect(HttpStatus.BAD_REQUEST);
       });
+
+      it("Should resend otp succeed and return otpToken", async () => {
+        await userModel.update({ lastSentOtp: dayjs().add(-10, "minute").toDate() }, { where: { phone: data.phone } });
+
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/resend-otp`)
+          .send(data)
+          .expect((response: request.Response) => {
+            const result = response.body.data;
+            expect(result).toHaveProperty("otpToken");
+          });
+      });
     });
 
     describe("Sign-in (POST) auth/signin/phone", () => {
@@ -204,22 +216,17 @@ describe("Auth (e2e)", () => {
           .expect(HttpStatus.BAD_REQUEST);
       });
 
-      it(
-        "Should sign-in succeed and return otpToken",
-        async () => {
-          // Wait for 1 minute from the last sign-up succeed (otp has sent when sign-up)
-          await new Promise((resolve) => setTimeout(resolve, MAX_RESEND_OTP_MINS * 60000));
+      it("Should sign-in succeed and return otpToken", async () => {
+        await userModel.update({ lastSentOtp: dayjs().add(-10, "minute").toDate() }, { where: { phone: data.phone } });
 
-          return agent
-            .post(`${API_CORE_PREFIX}/auth/signin/phone`)
-            .send(data)
-            .expect((res) => {
-              const result = res.body.data;
-              expect(result).toHaveProperty("otpToken");
-            });
-        },
-        MAX_RESEND_OTP_MINS * 65000
-      );
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/phone`)
+          .send(data)
+          .expect((res) => {
+            const result = res.body.data;
+            expect(result).toHaveProperty("otpToken");
+          });
+      });
     });
   });
 
@@ -255,32 +262,57 @@ describe("Auth (e2e)", () => {
       });
     });
 
+    describe("Re-send verify email (POST) verify-email/:email/resend", () => {
+      it("Should succeed and return message resend successful", () => {
+        return agent
+          .get(`${API_CORE_PREFIX}/auth/verify-email/${signupNewUser.email}/resend`)
+          .expect((res) => {
+            const result = res.body.data;
+            expect(result).not.toBeNull();
+          })
+          .expect(HttpStatus.OK);
+      });
+
+      it("Should failed due to request reached limits", async () => {
+        await userModel.update({ countVerifyEmailRequest: 3 }, { where: { email: signupNewUser.email } });
+
+        return agent
+          .get(`${API_CORE_PREFIX}/auth/verify-email/${signupNewUser.email}/resend`)
+          .expect((res) => expectError(res.body))
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+    });
+
     describe("Sign-in (POST) auth/signin/email", () => {
-      it("Should sign in successfully and return userToken", () => {
-        const data = {
-          email: user.email,
-          password,
-        };
+      it("Should sign in failed due to user has not activated account yet", () => {
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/email`)
-          .send(data)
+          .send(signupNewUser)
+          .expect((response: request.Response) => {
+            expectError(response.body);
+          })
+          .expect(HttpStatus.BAD_REQUEST);
+      });
+
+      it("Should sign in succeed after activated and return userToken", async () => {
+        await userModel.update({ status: USER_STATUS.ACTIVATED }, { where: { email: signupNewUser.email } });
+
+        return agent
+          .post(`${API_CORE_PREFIX}/auth/signin/email`)
+          .send(signupNewUser)
           .expect((response: request.Response) => {
             const { email, accessToken } = response.body.data;
             userToken = accessToken;
-            expect(email).toEqual(data.email);
+            expect(email).toEqual(signupNewUser.email);
             expect(accessToken).not.toBeNull();
           })
           .expect(HttpStatus.CREATED);
       });
 
       it("Should sign in failed due to user not exist", () => {
-        const data = {
-          email: user.email,
-          password,
-        };
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/email`)
-          .send({ ...data, email: `email-${generateNumber(10)}@vus-etsc.edu.vn` })
+          .send({ email: `email-${generateNumber(10)}@vus-etsc.edu.vn`, password })
           .expect((response: request.Response) => {
             expectError(response.body);
           })
@@ -288,13 +320,9 @@ describe("Auth (e2e)", () => {
       });
 
       it("Should sign in failed due to wrong password", () => {
-        const data = {
-          email: user.email,
-          password,
-        };
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/email`)
-          .send({ ...data, password: `${generateNumber(6)}` })
+          .send({ email: user.email, password: `${generateNumber(6)}` })
           .expect((response: request.Response) => {
             expectError(response.body);
           })
@@ -310,16 +338,6 @@ describe("Auth (e2e)", () => {
           .post(`${API_CORE_PREFIX}/auth/signin/email`)
           .send(data)
           .expect(HttpStatus.UNAUTHORIZED);
-      });
-
-      it("Should sign in failed due to user has not activated account yet", () => {
-        return agent
-          .post(`${API_CORE_PREFIX}/auth/signin/email`)
-          .send(signupNewUser)
-          .expect((response: request.Response) => {
-            expectError(response.body);
-          })
-          .expect(HttpStatus.BAD_REQUEST);
       });
 
       it("Should sign in failed due to user deactived", () => {

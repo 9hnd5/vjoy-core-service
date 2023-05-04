@@ -1,8 +1,16 @@
 import { AdminOrSameUser, Authorize, Controller, Public } from "@common";
-import { Body, Delete, Get, Param, Post } from "@nestjs/common";
+import { Body, Delete, Get, Param, Post, Query, Res } from "@nestjs/common";
+import { Response } from "express";
 import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
-import { ForgetPasswordDto, SigninByEmailDto, SigninByGoogleDto, SigninByPhoneDto, SignupByEmailDto, SignupByPhoneDto } from "./dto/credential";
+import {
+  ForgetPasswordDto,
+  SigninByEmailDto,
+  SigninByGoogleDto,
+  SigninByPhoneDto,
+  SignupByEmailDto,
+  SignupByPhoneDto,
+} from "./dto/credential";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("auth")
@@ -79,5 +87,20 @@ export class AuthController {
   @Post("forget-password")
   forgetPassword(@Body() data: ForgetPasswordDto) {
     return this.authService.forgetPassword(data);
+  }
+
+  @Public({ requireApiKey: false })
+  @Get("verify-email")
+  async verifyEmail(@Query("email") email: string, @Query("token") token: string, @Res() res: Response) {
+    const verified = await this.authService.verifyEmail(token);
+
+    if (verified) return res.render("verify-succeeded");
+    return res.render("verify-failed", { link: `verify-email/${email}/resend` });
+  }
+
+  @Public({ requireApiKey: false })
+  @Get("verify-email/:email/resend")
+  resendVerifyEmail(@Param("email") email: string) {
+    return this.authService.resendVerifyEmail(email);
   }
 }

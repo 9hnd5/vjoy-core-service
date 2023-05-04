@@ -7,3 +7,4 @@ export const GOOGLE_CLIENT_ID = {
 };
 export const EMAIL_RESET_PASSWORD_EXPIRES = "24h";
 export const EMAIL_VERIFY_EXPIRES = "24h";
+export const MAX_RESEND_EMAIL_HOURS = 24;
