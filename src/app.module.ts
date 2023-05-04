@@ -29,7 +29,7 @@ const coreEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*
           retryDelay: 5000,
           retryAttempts: 0,
           logging: false,
-          autoLoadModels: true,
+          autoLoadModels: false,
           models: [coreEntityPath],
           modelMatch: (filename, exportMember) => {
             const modelName = camelCase(filename.substring(0, filename.indexOf(".entity"))).toLowerCase();
