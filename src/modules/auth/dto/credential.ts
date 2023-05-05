@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, Matches, IsMobilePhone, IsString } from "class-validator";
+import { IsEmail, IsMobilePhone, IsNotEmpty, IsString, Matches } from "class-validator";
 import { PASSWORD_REGEX } from "../auth.constants";
 
 export class SignupByEmailDto {
@@ -38,4 +38,17 @@ export class SigninByGoogleDto {
 export class ForgetPasswordDto {
   @IsEmail()
   email: string;
+}
+
+export class UpdatePasswordDto {
+  @IsString()
+  token: string;
+
+  @Matches(PASSWORD_REGEX, {
+    message: "password at least 8 character and include both word, number",
+  })
+  password: string;
+
+  @IsString()
+  confirmPassword: string
 }

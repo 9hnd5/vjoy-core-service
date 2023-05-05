@@ -23,7 +23,9 @@ import {
   SigninByPhoneDto,
   SignupByEmailDto,
   SignupByPhoneDto,
+  UpdatePasswordDto,
 } from "./dto/credential";
+import { OtpToken } from "entities/otp-token.entity";
 
 @Injectable()
 export class AuthService extends BaseService {
@@ -36,7 +38,8 @@ export class AuthService extends BaseService {
     private mailService: MailService,
     private smsService: SmsService,
     @InjectModel(User) private userModel: typeof User,
-    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey
+    @InjectModel(ApiKey) private apiKeyModel: typeof ApiKey,
+    @InjectModel(OtpToken) private otpTokenModel: typeof OtpToken
   ) {
     super();
     this.expiresIn = configService.get("JWT_EXPIRES") || "";
@@ -131,9 +134,10 @@ export class AuthService extends BaseService {
         phone,
         roleId: ROLE_ID.PARENT,
         provider: USER_PROVIDER.PHONE,
-        lastSentOtp: dayjs().toDate(),
       });
       payload = { userId: newUser.id, roleId: newUser.roleId };
+
+      this.otpTokenModel.create({ id: newUser.id, lastSentOtp: dayjs().toDate() });
     }
 
     const otpCode = this.generateOTPCode();
@@ -154,13 +158,17 @@ export class AuthService extends BaseService {
       if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
         throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
-      if (dayjs().diff(existUser.lastSentOtp, "minutes") < MAX_RESEND_OTP_MINS)
-        throw new BadRequestException(this.i18n.t("message.REQUEST_TOO_FAST"));
 
       payload = { userId: existUser.id, roleId: existUser.roleId };
 
-      existUser.lastSentOtp = dayjs().toDate();
-      existUser.save();
+      const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
+      if (otp_token) {
+        if (dayjs().diff(otp_token.lastSentOtp, "minutes") < MAX_RESEND_OTP_MINS)
+          throw new BadRequestException(this.i18n.t("message.REQUEST_TOO_FAST"));
+
+        otp_token.lastSentOtp = dayjs().toDate();
+        otp_token.save();
+      } else this.otpTokenModel.create({ id: existUser.id, lastSentOtp: dayjs().toDate() });
     } else {
       throw new BadRequestException(this.i18n.t("message.USER_NOT_EXISTS"));
     }
@@ -240,9 +248,9 @@ export class AuthService extends BaseService {
       password: await this.createPassword(password),
       roleId: ROLE_ID.PARENT,
       provider,
-      countVerifyEmailRequest: 1,
-      lastSentVerifyEmail: new Date(),
     });
+
+    this.otpTokenModel.create({ id: newUser.id, lastSentVerifyEmail: dayjs().toDate() });
 
     // Gửi email xác nhận tài khoản
     const verifyToken = await this.jwtService.signAsync(
@@ -252,7 +260,7 @@ export class AuthService extends BaseService {
         expiresIn: EMAIL_VERIFY_EXPIRES,
       }
     );
-    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?email=${email}&token=${verifyToken}`;
+    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?token=${verifyToken}`;
     const mail = {
       to: email,
       subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
@@ -289,7 +297,7 @@ export class AuthService extends BaseService {
   verifyEmail = async (token: string) => {
     try {
       const verifyResult = await this.jwtService.verifyAsync(token, { secret: this.secret });
-      console.log(verifyResult);
+
       const existUser = (await this.userModel.findOne({
         where: { id: verifyResult.id, email: verifyResult.email },
       })) as User;
@@ -297,15 +305,27 @@ export class AuthService extends BaseService {
       existUser.status = USER_STATUS.ACTIVATED;
       await existUser.save();
 
-      return true;
+      return { verified: true };
     } catch (err) {
-      return false;
+      const result = await this.jwtService.verifyAsync(token, { secret: this.secret, ignoreExpiration: true });
+      const resendToken = await this.jwtService.signAsync(
+        { id: result.id, email: result.email },
+        { secret: this.secret }
+      );
+      return { verified: false, resendToken };
     }
   };
 
-  resendVerifyEmail = async (email: string) => {
+  resendVerifyEmail = async (token: string) => {
+    let result: any;
+    try {
+      result = await this.jwtService.verifyAsync(token, { secret: this.secret });
+    } catch {
+      throw new BadRequestException("Invalid resend token");
+    }
+
     const existUser = await this.userModel.findOne({
-      where: { email },
+      where: { email: result.email },
       paranoid: false,
     });
     if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
@@ -314,15 +334,18 @@ export class AuthService extends BaseService {
     if (existUser.status === USER_STATUS.DEACTIVED)
       throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
 
-    const daydiff = dayjs(new Date()).diff(existUser.lastSentVerifyEmail, "minutes");
-    if (daydiff > MAX_RESEND_EMAIL_HOURS * 60) existUser.countVerifyEmailRequest = 0;
+    const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
 
-    if (existUser.countVerifyEmailRequest === 3 && daydiff <= MAX_RESEND_EMAIL_HOURS * 60)
-      throw new BadRequestException(this.i18n.t("message.REQUEST_LIMITED"));
+    if (otp_token) {
+      const daydiff = dayjs(new Date()).diff(otp_token.lastSentVerifyEmail, "minutes");
+      if (otp_token.countVerifyEmailRequest === 3 && daydiff <= MAX_RESEND_EMAIL_HOURS * 60)
+        throw new BadRequestException(this.i18n.t("message.REQUEST_LIMITED"));
 
-    existUser.countVerifyEmailRequest += 1;
-    existUser.lastSentVerifyEmail = new Date();
-    await existUser.save();
+      otp_token.countVerifyEmailRequest += 1;
+      if (daydiff > MAX_RESEND_EMAIL_HOURS * 60) otp_token.countVerifyEmailRequest = 0;
+      otp_token.lastSentVerifyEmail = dayjs().toDate();
+      otp_token.save();
+    } else this.otpTokenModel.create({ id: existUser.id, lastSentVerifyEmail: dayjs().toDate() });
 
     // Gửi email xác nhận tài khoản
     const verifyToken = await this.jwtService.signAsync(
@@ -332,11 +355,11 @@ export class AuthService extends BaseService {
         expiresIn: EMAIL_VERIFY_EXPIRES,
       }
     );
-    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?email=${email}&token=${verifyToken}`;
+    const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?token=${verifyToken}`;
     const mail = {
-      to: email,
+      to: result.email,
       subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
-      html: this.i18n.t("email.SIGNUP_ACCOUNT_BODY", { args: { email, verifyLink } }),
+      html: this.i18n.t("email.SIGNUP_ACCOUNT_BODY", { args: { email: result.email, verifyLink } }),
     };
     this.mailService.sendHtml(mail);
 
@@ -367,7 +390,7 @@ export class AuthService extends BaseService {
         expiresIn: EMAIL_RESET_PASSWORD_EXPIRES,
       }
     );
-    const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/auth/reset-password?token=${resetToken}`;
+    const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/update-password?token=${resetToken}`;
     const mail = {
       to: email,
       subject: this.i18n.t("email.RESET_PASSWORD_SUBJECT"),
@@ -376,5 +399,98 @@ export class AuthService extends BaseService {
     this.mailService.sendHtml(mail);
 
     return this.i18n.t("message.REQUEST_RESET_PASSWORD_SUCCESSFUL");
+  };
+
+  updatePassword = async (token: string) => {
+    try {
+      await this.jwtService.verifyAsync(token, { secret: this.secret });
+
+      return { verified: true, token };
+    } catch (err) {
+      const result = await this.jwtService.verifyAsync(token, { secret: this.secret, ignoreExpiration: true });
+      const resendToken = await this.jwtService.signAsync(
+        { id: result.id, email: result.email },
+        { secret: this.secret }
+      );
+      return { verified: false, resendToken };
+    }
+  };
+
+  resendForgetPassword = async (token: string) => {
+    let result: any;
+    try {
+      result = await this.jwtService.verifyAsync(token, { secret: this.secret });
+    } catch {
+      throw new BadRequestException("Invalid resend token");
+    }
+
+    const existUser = await this.userModel.findOne({
+      where: { email: result.email },
+      paranoid: false,
+    });
+
+    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW)
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED)
+      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+    const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
+    if (otp_token) {
+      const daydiff = dayjs(new Date()).diff(otp_token.lastSentUpdatePassword, "minutes");
+      if (otp_token.countUpdatePasswordRequest === 3 && daydiff <= MAX_RESEND_EMAIL_HOURS * 60)
+        throw new BadRequestException(this.i18n.t("message.REQUEST_LIMITED"));
+
+      otp_token.countUpdatePasswordRequest += 1;
+      if (daydiff > MAX_RESEND_EMAIL_HOURS * 60) otp_token.countUpdatePasswordRequest = 0;
+      otp_token.lastSentUpdatePassword = dayjs().toDate();
+      otp_token.save();
+    } else this.otpTokenModel.create({ id: existUser.id, lastSentUpdatePassword: dayjs().toDate() });
+
+    // Gửi email reset password
+    const resetToken = await this.jwtService.signAsync(
+      { id: existUser.id, email: existUser.email },
+      {
+        secret: this.secret,
+        expiresIn: EMAIL_RESET_PASSWORD_EXPIRES,
+      }
+    );
+    const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/update-password?token=${resetToken}`;
+    const mail = {
+      to: existUser.email!,
+      subject: this.i18n.t("email.RESET_PASSWORD_SUBJECT"),
+      html: this.i18n.t("email.RESET_PASSWORD_BODY", { args: { email: existUser.email, resetLink } }),
+    };
+    this.mailService.sendHtml(mail);
+
+    return this.i18n.t("message.REQUEST_RESET_PASSWORD_SUCCESSFUL");
+  };
+
+  submitUpdatePassword = async (data: UpdatePasswordDto) => {
+    if (data.password != data.confirmPassword) throw new BadRequestException("Passwords do not match");
+    let result: any;
+    try {
+      result = await this.jwtService.verifyAsync(data.token, { secret: this.secret });
+    } catch {
+      throw new BadRequestException("Invalid token");
+    }
+    const existUser = await this.userModel.findOne({
+      where: { email: result.email },
+      paranoid: false,
+    });
+
+    if (!existUser) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: "User" } }));
+
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW)
+      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED)
+      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+    existUser.password = await this.createPassword(data.password);
+    existUser.save();
+    return "Password has been updated successfully";
   };
 }

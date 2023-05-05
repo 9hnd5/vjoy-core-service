@@ -14,6 +14,7 @@ import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
 import * as dayjs from "dayjs";
+import { OtpToken } from "entities/otp-token.entity";
 import { AuthService } from "modules/auth/auth.service";
 import { Op } from "sequelize";
 import * as request from "supertest";
@@ -21,6 +22,7 @@ import * as request from "supertest";
 describe("Auth (e2e)", () => {
   let app: INestApplication;
   let userModel: typeof User;
+  let otpTokenModel: typeof OtpToken;
   let verifySuccess;
   let adminToken: string;
   let userToken: string;
@@ -82,6 +84,7 @@ describe("Auth (e2e)", () => {
     userDeleted = { id: createdUser3.id, ...user3 };
 
     userModel = moduleRef.get("UserRepository");
+    otpTokenModel = moduleRef.get("OtpTokenRepository");
     // deactive user
     await userModel.update({ status: USER_STATUS.DEACTIVED }, { where: { id: userDeactived.id } });
     // soft delete user
@@ -98,6 +101,9 @@ describe("Auth (e2e)", () => {
   });
 
   afterAll(async () => {
+    const usersToDelete = await User.findAll({ where: { email: { [Op.startsWith]: "login-test" } } });
+    // Delete all test otp tokens
+    await otpTokenModel.destroy({ where: { id: usersToDelete.map((user) => user.id) } });
     //Delete new user was created before
     await userModel.destroy({
       where: {
@@ -124,6 +130,8 @@ describe("Auth (e2e)", () => {
     const data = { phone: `+849${generateNumber(8)}` };
 
     afterAll(async () => {
+      const newUser = await userModel.findOne({ where: { phone: data.phone } });
+      await otpTokenModel.destroy({ where: { id: newUser!.id } });
       await userModel.destroy({ where: { phone: data.phone }, force: true });
     });
 
@@ -167,7 +175,11 @@ describe("Auth (e2e)", () => {
       });
 
       it("Should resend otp succeed and return otpToken", async () => {
-        await userModel.update({ lastSentOtp: dayjs().add(-10, "minute").toDate() }, { where: { phone: data.phone } });
+        const newUser = await userModel.findOne({ where: { phone: data.phone } });
+        await otpTokenModel.update(
+          { lastSentOtp: dayjs().add(-10, "minute").toDate() },
+          { where: { id: newUser!.id } }
+        );
 
         return agent
           .post(`${API_CORE_PREFIX}/auth/resend-otp`)
@@ -217,7 +229,11 @@ describe("Auth (e2e)", () => {
       });
 
       it("Should sign-in succeed and return otpToken", async () => {
-        await userModel.update({ lastSentOtp: dayjs().add(-10, "minute").toDate() }, { where: { phone: data.phone } });
+        const newUser = await userModel.findOne({ where: { phone: data.phone } });
+        await otpTokenModel.update(
+          { lastSentOtp: dayjs().add(-10, "minute").toDate() },
+          { where: { id: newUser!.id } }
+        );
 
         return agent
           .post(`${API_CORE_PREFIX}/auth/signin/phone`)
@@ -259,27 +275,6 @@ describe("Auth (e2e)", () => {
             expect(result).not.toBeNull();
           })
           .expect(HttpStatus.CREATED);
-      });
-    });
-
-    describe("Re-send verify email (POST) verify-email/:email/resend", () => {
-      it("Should succeed and return message resend successful", () => {
-        return agent
-          .get(`${API_CORE_PREFIX}/auth/verify-email/${signupNewUser.email}/resend`)
-          .expect((res) => {
-            const result = res.body.data;
-            expect(result).not.toBeNull();
-          })
-          .expect(HttpStatus.OK);
-      });
-
-      it("Should failed due to request reached limits", async () => {
-        await userModel.update({ countVerifyEmailRequest: 3 }, { where: { email: signupNewUser.email } });
-
-        return agent
-          .get(`${API_CORE_PREFIX}/auth/verify-email/${signupNewUser.email}/resend`)
-          .expect((res) => expectError(res.body))
-          .expect(HttpStatus.BAD_REQUEST);
       });
     });
 

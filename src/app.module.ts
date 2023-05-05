@@ -9,7 +9,8 @@ import { KidDetailModule } from "modules/kid-detail/kid-detail.module";
 import { UserModule } from "modules/user/user.module";
 import * as path from "path";
 
-const coreEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*.entity*");
+const commonEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*.entity*");
+const coreEntityPath = path.join(__dirname, "entities/*.entity*");
 @Module({
   imports: [
     InitialModule.forRoot({ i18nPath: path.join(__dirname, "i18n") }),
@@ -30,7 +31,7 @@ const coreEntityPath = path.join(__dirname, "..", "nest-common-module/entities/*
           retryAttempts: 0,
           logging: false,
           autoLoadModels: false,
-          models: [coreEntityPath],
+          models: [commonEntityPath, coreEntityPath],
           modelMatch: (filename, exportMember) => {
             const modelName = camelCase(filename.substring(0, filename.indexOf(".entity"))).toLowerCase();
             return modelName === exportMember.toLowerCase();
