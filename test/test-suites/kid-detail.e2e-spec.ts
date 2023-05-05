@@ -52,23 +52,19 @@ describe("KidDetail E2E Test", () => {
         dob: "2015-01-01",
         gender: "M",
         profilePicture: "https://example.com/profile.jpg",
-        buddyCode: "ABCD1234",
-        buddyName: "John Doe",
       };
     });
 
     it("should failed due to passed invalid data", () => {
       return agent
         .post(`${API_CORE_PREFIX}/kids/${kid.id}/kid-details`)
-        .send({ dob: "2015-15-01", gender: "female", profilePicture: "", buddyCode: "", buddyName: "" })
+        .send({ dob: "2015-15-01", gender: "female", profilePicture: "" })
         .expect((res) => {
           const { error } = res.body;
           expect(error).toEqual([
             { code: "dob", message: expect.any(String) },
             { code: "gender", message: expect.any(String) },
             { code: "profilePicture", message: expect.any(String) },
-            { code: "buddyCode", message: expect.any(String) },
-            { code: "buddyName", message: expect.any(String) },
           ]);
         })
         .expect(HttpStatus.BAD_REQUEST);
@@ -84,8 +80,6 @@ describe("KidDetail E2E Test", () => {
           expect(result.dob).toEqual(data.dob);
           expect(result.gender).toEqual(data.gender);
           expect(result.profilePicture).toEqual(data.profilePicture);
-          expect(result.buddyCode).toEqual(data.buddyCode);
-          expect(result.buddyName).toEqual(data.buddyName);
         });
     });
   });
@@ -98,9 +92,6 @@ describe("KidDetail E2E Test", () => {
         dob: "2015-01-01",
         gender: "M",
         profilePicture: "https://example.com/profile.jpg",
-        buddyCode: "ABCD1234",
-        buddyName: "John Doe",
-        levelId: 1,
       };
     });
 
@@ -119,9 +110,6 @@ describe("KidDetail E2E Test", () => {
           dob: "2015-15-01",
           gender: "female",
           profilePicture: "",
-          buddyCode: "",
-          buddyName: "",
-          levelId: "test",
         })
         .expect((res) => {
           const { error } = res.body;
@@ -129,9 +117,6 @@ describe("KidDetail E2E Test", () => {
             { code: "dob", message: expect.any(String) },
             { code: "gender", message: expect.any(String) },
             { code: "profilePicture", message: expect.any(String) },
-            { code: "buddyCode", message: expect.any(String) },
-            { code: "buddyName", message: expect.any(String) },
-            { code: "levelId", message: expect.any(String) },
           ]);
         })
         .expect(HttpStatus.BAD_REQUEST);
@@ -147,9 +132,6 @@ describe("KidDetail E2E Test", () => {
           expect(result.dob).toEqual(data.dob);
           expect(result.gender).toEqual(data.gender);
           expect(result.profilePicture).toEqual(data.profilePicture);
-          expect(result.buddyCode).toEqual(data.buddyCode);
-          expect(result.buddyName).toEqual(data.buddyName);
-          expect(result.levelId).toEqual(data.levelId);
         });
     });
   });
