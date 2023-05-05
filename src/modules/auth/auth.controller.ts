@@ -10,6 +10,7 @@ import {
   SigninByPhoneDto,
   SignupByEmailDto,
   SignupByPhoneDto,
+  UpdatePasswordDto,
 } from "./dto/credential";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
@@ -90,17 +91,38 @@ export class AuthController {
   }
 
   @Public({ requireApiKey: false })
-  @Get("verify-email")
-  async verifyEmail(@Query("email") email: string, @Query("token") token: string, @Res() res: Response) {
-    const verified = await this.authService.verifyEmail(token);
+  @Get("update-password")
+  async updatePassword(@Query("token") token: string, @Res() res: Response) {
+    const result = await this.authService.updatePassword(token);
 
-    if (verified) return res.render("verify-succeeded");
-    return res.render("verify-failed", { link: `verify-email/${email}/resend` });
+    if (result.verified) return res.render("update-password", { token: result.token });
+    return res.render("verify-failed", { link: `forget-password/${result.resendToken}/resend` });
   }
 
   @Public({ requireApiKey: false })
-  @Get("verify-email/:email/resend")
-  resendVerifyEmail(@Param("email") email: string) {
-    return this.authService.resendVerifyEmail(email);
+  @Get("forget-password/:token/resend")
+  async resendForgetPassword(@Param("token") token: string) {
+    return this.authService.resendForgetPassword(token);
+  }
+
+  @Public({ requireApiKey: false })
+  @Post("update-password")
+  async submitUpdatePassword(@Body() data: UpdatePasswordDto) {
+    return this.authService.submitUpdatePassword(data);
+  }
+
+  @Public({ requireApiKey: false })
+  @Get("verify-email")
+  async verifyEmail(@Query("token") token: string, @Res() res: Response) {
+    const result = await this.authService.verifyEmail(token);
+
+    if (result.verified) return res.render("verify-succeeded");
+    return res.render("verify-failed", { link: `verify-email/${result.resendToken}/resend` });
+  }
+
+  @Public({ requireApiKey: false })
+  @Get("verify-email/:token/resend")
+  resendVerifyEmail(@Param("token") token: string) {
+    return this.authService.resendVerifyEmail(token);
   }
 }
