@@ -18,6 +18,7 @@ import {
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import {
   ForgetPasswordDto,
+  SigninByAppleDto,
   SigninByEmailDto,
   SigninByGoogleDto,
   SigninByPhoneDto,
@@ -493,4 +494,22 @@ export class AuthService extends BaseService {
     existUser.save();
     return "Password has been updated successfully";
   };
+
+  async signinByApple(signin: SigninByAppleDto) {
+    const { idToken, user } = signin;
+
+    const newUser = await this.userModel.create({
+      firstname: user.name.firstName,
+      lastname: user.name.lastName,
+      // ...(email && { email }),
+      // ...(socialId && { socialId }),
+      email: user.email,
+      socialId: idToken,
+      roleId: ROLE_ID.PARENT,
+      provider: USER_PROVIDER.GOOGLE,
+      status: USER_STATUS.ACTIVATED,
+    });
+
+    return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+  }
 }
