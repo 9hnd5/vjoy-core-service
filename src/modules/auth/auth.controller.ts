@@ -127,7 +127,7 @@ export class AuthController {
     return this.authService.resendVerifyEmail(token);
   }
 
-  @Public({ requireApiKey: false })
+  @Public()
   @Post("signin/apple")
   signinByApple(@Body() data: SigninByAppleDto) {
     return this.authService.signinByApple(data);
