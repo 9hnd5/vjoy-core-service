@@ -5,6 +5,7 @@ import { AuthService } from "./auth.service";
 import { CreateApiKeyDto } from "./dto/create-api-key.dto";
 import {
   ForgetPasswordDto,
+  SigninByAppleDto,
   SigninByEmailDto,
   SigninByGoogleDto,
   SigninByPhoneDto,
@@ -124,5 +125,11 @@ export class AuthController {
   @Get("verify-email/:token/resend")
   resendVerifyEmail(@Param("token") token: string) {
     return this.authService.resendVerifyEmail(token);
+  }
+
+  @Public()
+  @Post("signin/apple")
+  signinByApple(@Body() data: SigninByAppleDto) {
+    return this.authService.signinByApple(data);
   }
 }
