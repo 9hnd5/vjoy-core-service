@@ -6,6 +6,7 @@ import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
 import { LoginTicket, OAuth2Client } from "google-auth-library";
+import * as jwksClient from "jwks-rsa";
 import { Op } from "sequelize";
 import {
   EMAIL_RESET_PASSWORD_EXPIRES,
@@ -207,7 +208,6 @@ export class AuthService extends BaseService {
           ...(email && { email }),
           ...(socialId && { socialId }),
         },
-        provider: USER_PROVIDER.GOOGLE,
       },
       include: [Role],
       paranoid: false,
@@ -496,20 +496,75 @@ export class AuthService extends BaseService {
   };
 
   async signinByApple(signin: SigninByAppleDto) {
-    const { idToken, user } = signin;
+    const { firstname, lastname, email, idToken } = signin;
 
-    const newUser = await this.userModel.create({
-      firstname: user.name.firstName,
-      lastname: user.name.lastName,
-      // ...(email && { email }),
-      // ...(socialId && { socialId }),
-      email: user.email,
-      socialId: idToken,
-      roleId: ROLE_ID.PARENT,
-      provider: USER_PROVIDER.APPLE,
-      status: USER_STATUS.ACTIVATED,
+    let applePublicKey: string;
+    try {
+      // Step 1: Fetch Apple's public keys for verifying ID tokens
+      const jwksClientInstance = jwksClient({
+        jwksUri: "https://appleid.apple.com/auth/keys",
+      });
+
+      const decodedIdToken: any = this.jwtService.decode(idToken, { complete: true });
+      const kid = decodedIdToken.header.kid;
+
+      applePublicKey = await new Promise((resolve, reject) => {
+        jwksClientInstance.getSigningKey(kid, (err, key) => {
+          if (err) {
+            reject(new UnauthorizedException("Failed to retrieve public key"));
+          } else {
+            resolve(key?.getPublicKey() as string);
+          }
+        });
+      });
+    } catch (e) {
+      throw new BadRequestException(e.message);
+    }
+
+    let socialId: string;
+    try {
+      // Step 2: Verify ID token signature and decode its payload
+      const decodedIdTokenPayload = await this.jwtService.verifyAsync(idToken, {
+        publicKey: applePublicKey, // Replace with the actual public key
+        algorithms: ["RS256"],
+        audience: "vn.edu.vus.vjoy.service",
+        issuer: "https://appleid.apple.com",
+      });
+
+      socialId = decodedIdTokenPayload.sub;
+    } catch (e) {
+      throw new UnauthorizedException("Invalid ID token signature");
+    }
+
+    const existUser = await this.userModel.findOne({
+      where: {
+        [Op.or]: {
+          ...(email && { email }),
+          ...(socialId && { socialId }),
+        },
+      },
+      include: [Role],
+      paranoid: false,
     });
 
-    return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+    if (existUser) {
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.status === USER_STATUS.DEACTIVED)
+        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+
+      return this.generateUserToken(existUser);
+    } else {
+      const newUser = await this.userModel.create({
+        firstname,
+        lastname,
+        ...(email && { email }),
+        socialId,
+        roleId: ROLE_ID.PARENT,
+        provider: USER_PROVIDER.APPLE,
+        status: USER_STATUS.ACTIVATED,
+      });
+
+      return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+    }
   }
 }

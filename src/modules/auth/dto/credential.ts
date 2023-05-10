@@ -1,4 +1,4 @@
-import { IsEmail, IsJSON, IsMobilePhone, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator";
+import { IsEmail, IsMobilePhone, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from "class-validator";
 import { PASSWORD_REGEX } from "../auth.constants";
 
 export class SignupByEmailDto {
@@ -55,18 +55,20 @@ export class UpdatePasswordDto {
 
 export class SigninByAppleDto {
   @IsOptional()
-  @IsString()
-  code?: string;
+  @MaxLength(255)
+  @IsNotEmpty()
+  firstname?: string;
+
+  @IsOptional()
+  @MaxLength(255)
+  @IsNotEmpty()
+  lastname?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email: string;
 
   @IsNotEmpty()
   @IsString()
   idToken: string;
-
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @IsOptional()
-  @IsJSON()
-  user?: any;
 }

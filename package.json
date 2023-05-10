@@ -43,6 +43,7 @@
     "dayjs": "^1.11.7",
     "google-auth-library": "^8.7.0",
     "hbs": "^4.2.0",
+    "jwks-rsa": "^3.0.1",
     "nestjs-cls": "^3.2.1",
     "nestjs-i18n": "^10.2.6",
     "passport": "^0.6.0",
