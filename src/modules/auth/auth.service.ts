@@ -506,7 +506,7 @@ export class AuthService extends BaseService {
       email: user.email,
       socialId: idToken,
       roleId: ROLE_ID.PARENT,
-      provider: USER_PROVIDER.GOOGLE,
+      provider: USER_PROVIDER.APPLE,
       status: USER_STATUS.ACTIVATED,
     });
 
