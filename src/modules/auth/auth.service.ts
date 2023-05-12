@@ -28,9 +28,10 @@ import {
   UpdatePasswordDto,
 } from "./dto/credential";
 import { OtpToken } from "entities/otp-token.entity";
+import { I18nTranslations } from "i18n/i18n.generated";
 
 @Injectable()
-export class AuthService extends BaseService {
+export class AuthService extends BaseService<I18nTranslations> {
   private expiresIn: string;
   private secret: string;
   private atSecret: string;
