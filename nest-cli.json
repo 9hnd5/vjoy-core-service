@@ -1,11 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": ".",
+  "entryFile": "src/main",
   "compilerOptions": {
     "assets": [
-      { "include": "i18n/**/*", "watchAssets": true, "outDir": "dist/src" },
-      { "include": "views/**/*", "watchAssets": true, "outDir": "dist/src" }
+      { "include": "src/i18n/**/*", "watchAssets": true },
+      { "include": "src/views/**/*", "watchAssets": true },
+      { "include": "nest-common-module/i18n/**/*", "watchAssets": true }
     ],
     "deleteOutDir": true,
     "plugins": [

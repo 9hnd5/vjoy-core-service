@@ -13,7 +13,10 @@ const commonEntityPath = path.join(__dirname, "..", "nest-common-module/entities
 const coreEntityPath = path.join(__dirname, "entities/*.entity*");
 @Module({
   imports: [
-    InitialModule.forRoot({ i18nPath: path.join(__dirname, "i18n") }),
+    InitialModule.forRoot({
+      i18nPath: path.join(__dirname, "i18n"),
+      i18nTypesOutputPath: path.resolve(__dirname, "../../src/i18n/i18n.generated.ts"),
+    }),
     KidDetailModule,
     AuthModule,
     UserModule,
