@@ -17,53 +17,37 @@ const requests = [
     body: JSON.stringify({ email: "phuctran@vus-etsc.edu.vn", password: "123456abcd" }),
   },
   {
-    path: "/api/v1/dev/core/users",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-token": API_TOKEN,
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-    },
-    setupRequest: (req) => {
-      const randomUsername = generateRandomString(10);
-      const randomEmail = `load-test-${randomUsername}@vus-etsc.edu.vn`;
-      const requestBody = JSON.stringify({
-        firstname: `fn-${randomUsername}`,
-        lastname: `ln-${randomUsername}`,
-        email: randomEmail,
-        roleId: "parent",
-      });
-      req.body = requestBody;
-      return req;
-    },
-  },
-  {
     path: "/api/v1/dev/core/users/1",
     method: "GET",
     headers: {
-      "Content-Type": "application/json",
       "api-token": API_TOKEN,
       Authorization: `Bearer ${ACCESS_TOKEN}`,
     },
   },
+  // {
+  //   path: "/api/v1/dev/content/level-suggestion?filter[dob]=02-09-2000",
+  //   method: "GET",
+  //   headers: {
+  //     "api-token": API_TOKEN,
+  //     Authorization: `Bearer ${ACCESS_TOKEN}`,
+  //   },
+  // },
+  // {
+  //   path: "/api/v1/dev/content/levels",
+  //   method: "GET",
+  //   headers: {
+  //     "api-token": API_TOKEN,
+  //     Authorization: `Bearer ${ACCESS_TOKEN}`,
+  //   },
+  // },
 ];
-
-// Function to generate a random string
-function generateRandomString(length) {
-  let result = "";
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-}
 
 // Function to execute the user flow
 function executeUserFlow() {
   const instance = autocannon({
     url: "https://vus-vjoy-1ap23wxt.an.gateway.dev", // Replace with your API URL
-    connections: 100,
-    duration: 20, // Test duration in seconds
+    connections: 500,
+    duration: 10, // Test duration in seconds
     requests,
   });
 
