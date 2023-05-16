@@ -7,6 +7,10 @@ const ACCESS_TOKEN =
 
 // Define the user flow
 const requests = [
+  // {
+  //   path: "/api/v1/dev/file-uploader",
+  //   method: "GET",
+  // },
   {
     path: "/api/v1/dev/core/auth/signin/email",
     method: "POST",
@@ -16,14 +20,14 @@ const requests = [
     },
     body: JSON.stringify({ email: "phuctran@vus-etsc.edu.vn", password: "123456abcd" }),
   },
-  {
-    path: "/api/v1/dev/core/users/1",
-    method: "GET",
-    headers: {
-      "api-token": API_TOKEN,
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-    },
-  },
+  // {
+  //   path: "/api/v1/dev/core/users/1",
+  //   method: "GET",
+  //   headers: {
+  //     "api-token": API_TOKEN,
+  //     Authorization: `Bearer ${ACCESS_TOKEN}`,
+  //   },
+  // },
   // {
   //   path: "/api/v1/dev/content/level-suggestion?filter[dob]=02-09-2000",
   //   method: "GET",
@@ -46,6 +50,7 @@ const requests = [
 function executeUserFlow() {
   const instance = autocannon({
     url: "https://vus-vjoy-1ap23wxt.an.gateway.dev", // Replace with your API URL
+    // url: "https://vjoy-file-uploader-dev-qconrzsxya-de.a.run.app",
     connections: 500,
     duration: 10, // Test duration in seconds
     requests,
@@ -53,7 +58,7 @@ function executeUserFlow() {
 
   autocannon.track(instance, { renderProgressBar: true });
   instance.on("done", (result) => {
-    console.log("Load test completed!");
+    console.log("Load test completed!", new Date());
     console.log(result);
   });
 }
