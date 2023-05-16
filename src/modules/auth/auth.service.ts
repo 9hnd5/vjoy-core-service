@@ -274,26 +274,13 @@ export class AuthService extends BaseService<I18nTranslations> {
   };
 
   signinByEmail = async (data: SigninByEmailDto) => {
-    const { password } = data;
+    const { email, password } = data;
 
-    // const existUser = await this.userModel.findOne({
-    //   where: { email },
-    //   paranoid: false,
-    //   include: [Role],
-    // });
-    const existUser = {
-      status: USER_STATUS.ACTIVATED,
-      password: "$2b$10$wRImQzXFUF3Au1NrfkPRU.F2G2tuf.3G8Hy23y8YLfzeeLSabN72q",
-      roleId: ROLE_ID.PARENT,
-      role: {
-        permissions: [
-          {
-            action: "*",
-            resource: "*",
-          },
-        ],
-      } as Role,
-    } as User;
+    const existUser = await this.userModel.findOne({
+      where: { email },
+      paranoid: false,
+      include: [Role],
+    });
 
     if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
 
