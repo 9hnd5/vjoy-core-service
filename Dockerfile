@@ -3,7 +3,7 @@ ARG env
 WORKDIR /app
 COPY . .
 RUN yarn install --frozen-lockfile
-# RUN yarn test-e2e:${env} && yarn test
+RUN yarn test-e2e:${env} && yarn test
 RUN yarn build
 
 FROM node:18-alpine as runner
