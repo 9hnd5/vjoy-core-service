@@ -132,4 +132,10 @@ export class AuthController {
   signinByApple(@Body() data: SigninByAppleDto) {
     return this.authService.signinByApple(data);
   }
+
+  @Public()
+  @Get("signup/guest")
+  signupByGuest() {
+    return this.authService.signupByGuest();
+  }
 }
