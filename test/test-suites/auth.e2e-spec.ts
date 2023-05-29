@@ -357,6 +357,19 @@ describe("Auth (e2e)", () => {
     });
   });
 
+  describe("Sign-up by guest", () => {
+    it("Should sign up succeed and return userToken", () => {
+      return agent
+        .get(`${API_CORE_PREFIX}/auth/signup/guest`)
+        .expect((response: request.Response) => {
+          const { roleId, accessToken } = response.body.data;
+          expect(roleId).toEqual(ROLE_ID.PARENT);
+          expect(accessToken).not.toBeNull();
+        })
+        .expect(HttpStatus.OK);
+    });
+  });
+
   describe("Create new api-key (POST)api/api-key", () => {
     it("should create api-key success due to user is admin", () => {
       const keyData = { name: "APITEST-name", type: "vjoy-web", description: "APITEST-name-description" };

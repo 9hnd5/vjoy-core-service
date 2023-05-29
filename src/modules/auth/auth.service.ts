@@ -568,4 +568,13 @@ export class AuthService extends BaseService<I18nTranslations> {
       return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
     }
   }
+
+  async signupByGuest() {
+    const newUser = await this.userModel.create({
+      roleId: ROLE_ID.PARENT,
+      status: USER_STATUS.ACTIVATED,
+    });
+
+    return this.generateUserToken((await this.userModel.findByPk(newUser.id, { include: [Role] }))!);
+  }
 }
