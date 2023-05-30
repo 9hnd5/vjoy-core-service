@@ -25,7 +25,7 @@ describe("Auth (e2e)", () => {
   let otpTokenModel: typeof OtpToken;
   let verifySuccess;
   let adminToken: string;
-  // let adminRefreshToken: string;
+  let adminRefreshToken: string;
   let userToken: string;
   let apiKey: ApiKey["dataValues"];
   let agent: request.SuperAgentTest;
@@ -49,7 +49,7 @@ describe("Auth (e2e)", () => {
     //signin as admin
     const adminUser = await signin();
     adminToken = adminUser.accessToken;
-    // adminRefreshToken = adminUser.refreshToken;
+    adminRefreshToken = adminUser.refreshToken;
 
     //create new user
     const user1 = {
@@ -128,17 +128,30 @@ describe("Auth (e2e)", () => {
     await app.close();
   });
 
-  // describe.only("Refresh token", () => {
-  //   it("Shoud return accessToken", () => {
-  //     return agent
-  //       .post(`${API_CORE_PREFIX}/auth/refresh-token`)
-  //       .set("refresh-token", adminRefreshToken)
-  //       .expect((res) => {
-  //         const result = res.body.data;
-  //         expect(result).toHaveProperty("accessToken");
-  //       });
-  //   });
-  // });
+  describe("Refresh token", () => {
+    it("shoud success return access-token & refresh-token", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/refresh-token`)
+        .set("refresh-token", adminRefreshToken)
+        .expect((res) => {
+          const result = res.body.data;
+          expect(result).toHaveProperty("accessToken");
+          expect(result).toHaveProperty("refreshToken");
+          expect(result.refreshToken).toBe(adminRefreshToken);
+        });
+    });
+
+    it("shoud failed due to invalid refresh-token", () => {
+      return agent
+        .post(`${API_CORE_PREFIX}/auth/refresh-token`)
+        .set("refresh-token", `${adminRefreshToken}test`)
+        .expect((res) => expectError(res.body));
+    });
+
+    it("shoud failed due to not pass refresh-token", () => {
+      return agent.post(`${API_CORE_PREFIX}/auth/refresh-token`).expect((res) => expectError(res.body));
+    });
+  });
 
   describe("Sign-up/Sign-in by phone", () => {
     const data = { phone: `+849${generateNumber(8)}` };
@@ -310,10 +323,11 @@ describe("Auth (e2e)", () => {
           .post(`${API_CORE_PREFIX}/auth/signin/email`)
           .send(signupNewUser)
           .expect((response: request.Response) => {
-            const { email, accessToken } = response.body.data;
+            const { email, accessToken, refreshToken } = response.body.data;
             userToken = accessToken;
             expect(email).toEqual(signupNewUser.email);
             expect(accessToken).not.toBeNull();
+            expect(refreshToken).not.toBeNull();
           })
           .expect(HttpStatus.CREATED);
       });
@@ -376,9 +390,10 @@ describe("Auth (e2e)", () => {
       return agent
         .get(`${API_CORE_PREFIX}/auth/signup/guest`)
         .expect((response: request.Response) => {
-          const { roleId, accessToken } = response.body.data;
+          const { roleId, accessToken, refreshToken } = response.body.data;
           expect(roleId).toEqual(ROLE_ID.PARENT);
           expect(accessToken).not.toBeNull();
+          expect(refreshToken).not.toBeNull();
         })
         .expect(HttpStatus.OK);
     });
