@@ -25,6 +25,7 @@ describe("Auth (e2e)", () => {
   let otpTokenModel: typeof OtpToken;
   let verifySuccess;
   let adminToken: string;
+  // let adminRefreshToken: string;
   let userToken: string;
   let apiKey: ApiKey["dataValues"];
   let agent: request.SuperAgentTest;
@@ -48,6 +49,7 @@ describe("Auth (e2e)", () => {
     //signin as admin
     const adminUser = await signin();
     adminToken = adminUser.accessToken;
+    // adminRefreshToken = adminUser.refreshToken;
 
     //create new user
     const user1 = {
@@ -92,8 +94,8 @@ describe("Auth (e2e)", () => {
 
     // gen success token
     const authService = await moduleRef.resolve(AuthService);
-    const otpCode = authService.generateOTPCode();
-    const otpToken = await authService.generateOTPToken(otpCode, {
+    const otpCode = authService.generateOtpCode();
+    const otpToken = await authService.generateOtpToken(otpCode, {
       userId: adminUser.id,
       roleId: adminUser.roleId,
     });
@@ -125,6 +127,18 @@ describe("Auth (e2e)", () => {
 
     await app.close();
   });
+
+  // describe.only("Refresh token", () => {
+  //   it("Shoud return accessToken", () => {
+  //     return agent
+  //       .post(`${API_CORE_PREFIX}/auth/refresh-token`)
+  //       .set("refresh-token", adminRefreshToken)
+  //       .expect((res) => {
+  //         const result = res.body.data;
+  //         expect(result).toHaveProperty("accessToken");
+  //       });
+  //   });
+  // });
 
   describe("Sign-up/Sign-in by phone", () => {
     const data = { phone: `+849${generateNumber(8)}` };

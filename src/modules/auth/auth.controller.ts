@@ -25,6 +25,12 @@ export class AuthController {
     return "Authorized";
   }
 
+  @Public()
+  @Post("refresh-token")
+  refreshToken() {
+    return this.authService.refreshToken();
+  }
+
   @Get("check-same-user/:userId")
   @AdminOrSameUser()
   checkSameUser(@Param("userId") userId: unknown) {
@@ -34,7 +40,7 @@ export class AuthController {
   @Public()
   @Post("otp")
   verifyOTP(@Body() data: VerifyOtpDto) {
-    return this.authService.verifyOTP(data.otpToken, data.otpCode);
+    return this.authService.verifyOtp(data.otpToken, data.otpCode);
   }
 
   @Post("api-key")

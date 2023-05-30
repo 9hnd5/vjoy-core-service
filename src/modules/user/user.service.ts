@@ -114,7 +114,7 @@ export class UserService extends BaseService {
 
     let otpToken: string | undefined;
     if (email && user.email) {
-      const otpCode = this.authService.generateOTPCode();
+      const otpCode = this.authService.generateOtpCode();
       if (apiToken.type != "vjoy-test") {
         const mail = {
           to: user.email,
@@ -124,18 +124,18 @@ export class UserService extends BaseService {
         this.mailService.send(mail);
       }
       const payload = { userId: user.id, email };
-      otpToken = await this.authService.generateOTPToken(otpCode, payload);
+      otpToken = await this.authService.generateOtpToken(otpCode, payload);
     }
 
     if (phone && user.phone) {
-      const otpCode = this.authService.generateOTPCode();
+      const otpCode = this.authService.generateOtpCode();
 
       if (apiToken.type != "vjoy-test") {
         const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
         this.smsService.send(user.phone, smsContent);
       }
       const payload = { userId: user.id, phone };
-      otpToken = await this.authService.generateOTPToken(otpCode, payload);
+      otpToken = await this.authService.generateOtpToken(otpCode, payload);
     }
 
     return { ...user.dataValues, otpToken };
@@ -143,7 +143,7 @@ export class UserService extends BaseService {
 
   async verifyOtp(otpCode: string, otpToken: string) {
     try {
-      const verifyResult = await this.authService.verifyOTPToken(otpCode, otpToken);
+      const verifyResult = await this.authService.verifyOtpToken(otpCode, otpToken);
       const rs = await this.userModel.update(
         { email: verifyResult.email, phone: verifyResult.phone },
         { where: { id: verifyResult.userId }, returning: true }

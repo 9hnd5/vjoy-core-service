@@ -16,6 +16,7 @@ export type I18nTranslations = {
         "EMAIL_EXISTS": string;
         "GOOGLE_NOT_FOUND": string;
         "INVALID_CREDENTIAL": string;
+        "INVALID_TOKEN": string;
         "KID_DETAIL_EXISTED:": string;
         "NOT_PERMISSION": string;
         "NOT_FOUND": string;
