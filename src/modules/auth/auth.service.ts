@@ -336,7 +336,6 @@ export class AuthService extends BaseService<I18nTranslations> {
   }
 
   async signinByEmail(data: SigninByEmailDto) {
-    console.log(this.envService.get("ACCESS_TOKEN_SECRET"));
     const { email, password } = data;
 
     const existUser = await this.userModel.findOne({
