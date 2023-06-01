@@ -9,9 +9,9 @@ import {
   User,
   USER_PROVIDER,
   USER_STATUS,
+  EnvironmentService,
 } from "@common";
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
@@ -50,9 +50,9 @@ export class AuthService extends BaseService<I18nTranslations> {
 
   private refreshTokenSecret: string;
   private refreshTokenExpiresIn: string;
-  
+
   constructor(
-    configService: ConfigService,
+    private envService: EnvironmentService,
     private jwtService: JwtService,
     private mailService: MailService,
     private smsService: SmsService,
@@ -61,11 +61,11 @@ export class AuthService extends BaseService<I18nTranslations> {
     @InjectModel(OtpToken) private otpTokenModel: typeof OtpToken
   ) {
     super();
-    this.accessTokenExpiresIn = configService.get("ACCESS_TOKEN_EXPIRES") || "";
-    this.accessTokenSecret = configService.get("ACCESS_TOKEN_SECRET") || "";
-    this.apiTokenSecret = configService.get("API_TOKEN_SECRET") || "";
-    this.refreshTokenSecret = configService.get("REFRESH_TOKEN_SECRET") || "";
-    this.refreshTokenExpiresIn = configService.get("REFRESH_TOKEN_EXPIRES") || "";
+    this.accessTokenExpiresIn = envService.get("ACCESS_TOKEN_EXPIRES") || "";
+    this.accessTokenSecret = envService.get("ACCESS_TOKEN_SECRET") || "";
+    this.apiTokenSecret = envService.get("API_TOKEN_SECRET") || "";
+    this.refreshTokenSecret = envService.get("REFRESH_TOKEN_SECRET") || "";
+    this.refreshTokenExpiresIn = envService.get("REFRESH_TOKEN_EXPIRES") || "";
   }
 
   createPassword = (password: string) => bcrypt.hash(password, 10);
@@ -336,6 +336,7 @@ export class AuthService extends BaseService<I18nTranslations> {
   }
 
   async signinByEmail(data: SigninByEmailDto) {
+    console.log(this.envService.get("ACCESS_TOKEN_SECRET"));
     const { email, password } = data;
 
     const existUser = await this.userModel.findOne({

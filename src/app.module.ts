@@ -1,6 +1,5 @@
-import { InitialModule } from "@common";
+import { InitialModule, EnvironmentService } from "@common";
 import { Module } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { SequelizeModule } from "@nestjs/sequelize";
 import { camelCase } from "lodash";
 import { AuthModule } from "modules/auth/auth.module";
@@ -22,14 +21,14 @@ const coreEntityPath = path.join(__dirname, "entities/*.entity*");
     UserModule,
     ConfigModule,
     SequelizeModule.forRootAsync({
-      useFactory: (configService: ConfigService) => {
+      useFactory: (envService: EnvironmentService) => {
         return {
           dialect: "postgres",
-          host: configService.get("DB_HOST"),
-          port: configService.get("DB_PORT"),
-          username: configService.get("DB_USER"),
-          password: configService.get("DB_PASSWORD"),
-          database: configService.get("DB_NAME"),
+          host: envService.get("DB_HOST"),
+          port: envService.get("DB_PORT") as unknown as number,
+          username: envService.get("DB_USER"),
+          password: envService.get("DB_PASSWORD"),
+          database: envService.get("DB_NAME"),
           retryDelay: 5000,
           retryAttempts: 0,
           logging: false,
@@ -41,7 +40,7 @@ const coreEntityPath = path.join(__dirname, "entities/*.entity*");
           },
         };
       },
-      inject: [ConfigService],
+      inject: [EnvironmentService],
     }),
   ],
   controllers: [],
