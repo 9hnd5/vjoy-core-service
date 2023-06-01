@@ -427,6 +427,13 @@
     lodash.snakecase "^4.1.1"
     p-defer "^3.0.0"
 
+"@google-cloud/secret-manager@^4.2.2":
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/@google-cloud/secret-manager/-/secret-manager-4.2.2.tgz#4c0e7a169e91d3f6f27d31252e9065c85d8fe802"
+  integrity sha512-76yXN21ahrZMJKjs+gNoVWrSmioxqF2A2jKyDxRRq0DjSfoLHXb8POipjsTMErc1R1S7J7LToK2iLsi8lJyZqw==
+  dependencies:
+    google-gax "^3.5.8"
+
 "@grpc/grpc-js@~1.8.0":
   version "1.8.14"
   resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.8.14.tgz#4fe0f9917d6f094cf59245763c275442b182e9ad"
@@ -3186,7 +3193,7 @@ google-auth-library@^8.7.0:
     jws "^4.0.0"
     lru-cache "^6.0.0"
 
-google-gax@^3.5.6:
+google-gax@^3.5.6, google-gax@^3.5.8:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/google-gax/-/google-gax-3.6.0.tgz#0f4ae350159737fe0aa289815c0d92838b19f6af"
   integrity sha512-2fyb61vWxUonHiArRNJQmE4tx5oY1ni8VPo08fzII409vDSCWG7apDX4qNOQ2GXXT82gLBn3d3P1Dydh7pWjyw==
