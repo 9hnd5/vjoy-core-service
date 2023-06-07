@@ -155,6 +155,39 @@ export class UserService extends BaseService {
     }
   }
 
+  async updateWithoutOtp(id: number, updateUserDto: UpdateUserDto) {
+    // check user exists
+    const user = await this.userModel.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: id } }));
+
+    const { email, phone, kidName, ...others } = updateUserDto;
+
+    if (email) {
+      const existUser = await this.checkExistUser({ email }, id);
+      if (existUser) throw new BadRequestException(this.i18n.t("message.EMAIL_EXISTS"));
+    }
+    if (phone) {
+      const existUser = await this.checkExistUser({ phone }, id);
+      if (existUser) throw new BadRequestException(this.i18n.t("message.PHONE_EXISTS"));
+    }
+
+    if (kidName) {
+      const kid = await this.userModel.findOne({ where: { parentId: id } });
+      if (!kid) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: id } }));
+
+      kid.update({ firstname: kidName });
+    }
+
+    // do update by admin
+    const { roleId: role } = this.request.user!;
+    if (role === ROLE_ID.ADMIN) return (await user.update({ ...updateUserDto })).dataValues;
+
+    delete others.roleId;
+    user.update({ email, phone, ...others });
+
+    return { ...user.dataValues };
+  }
+
   async remove(id: number, hardDelete = false) {
     await this.userModel.destroy({ where: { id: id }, force: hardDelete }).catch(() => {
       return false;
