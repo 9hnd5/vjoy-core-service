@@ -2,14 +2,14 @@
   "swagger": "2.0",
   "info": {
     "title": "api-id",
-    "description": "API gateway vus-vjoy",
+    "description": "Dev api-gateway vus-vjoy",
     "version": "1.0.0"
   },
   "schemes": ["https"],
   "produces": ["application/json"],
   "basePath": "/api",
   "paths": {
-    "/v1/dev/core/{resource=**}": {
+    "/v1/core/{resource=**}": {
       "get": {
         "operationId": "dev-core-get",
         "responses": {
@@ -97,95 +97,7 @@
         }
       ]
     },
-    "/v1/prod/core/{resource=**}": {
-      "get": {
-        "operationId": "prod-core-get",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "post": {
-        "operationId": "prod-core-post",
-        "responses": {
-          "201": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "put": {
-        "operationId": "prod-core-put",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "patch": {
-        "operationId": "prod-core-patch",
-        "responses": {
-          "201": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "delete": {
-        "operationId": "prod-core-delete",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "options": {
-        "operationId": "prod-core-options",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "parameters": [
-        {
-          "name": "resource",
-          "in": "path",
-          "required": true,
-          "type": "string"
-        }
-      ]
-    },
-    "/v1/dev/content/{resource=**}": {
+    "/v1/content/{resource=**}": {
       "get": {
         "operationId": "dev-content-get",
         "responses": {
@@ -260,94 +172,6 @@
         },
         "x-google-backend": {
           "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "parameters": [
-        {
-          "name": "resource",
-          "in": "path",
-          "required": true,
-          "type": "string"
-        }
-      ]
-    },
-    "/v1/prod/content/{resource=**}": {
-      "get": {
-        "operationId": "prod-content-get",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "post": {
-        "operationId": "prod-content-post",
-        "responses": {
-          "201": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "put": {
-        "operationId": "prod-content-put",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "patch": {
-        "operationId": "prod-content-patch",
-        "responses": {
-          "201": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "delete": {
-        "operationId": "prod-content-delete",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
-          "path_translation": "APPEND_PATH_TO_ADDRESS",
-          "disable_auth": true
-        }
-      },
-      "options": {
-        "operationId": "prod-content-options",
-        "responses": {
-          "200": {
-            "description": "Successfully"
-          }
-        },
-        "x-google-backend": {
-          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
