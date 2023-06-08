@@ -164,43 +164,7 @@ describe("UserController E2E Test", () => {
         .expect(HttpStatus.NOT_FOUND);
     });
 
-    it("Same user updates optional fields should succeed", async () => {
-      const createdKid: User["dataValues"] = await userModel.create({
-        roleId: ROLE_ID.KID_FREE,
-        parentId: testUser.id,
-        status: USER_STATUS.ACTIVATED,
-      });
-
-      const updateData = {
-        firstname: "fistname update",
-        lastname: "last name update",
-        roleId: ROLE_ID.ADMIN,
-        email: `user-test-${generateNumber(6)}@gmail.com`,
-        phone: `${generateNumber(10)}`,
-        kidName: "kid name update",
-      };
-      return agent
-        .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .send(updateData)
-        .set("Authorization", `Bearer ${userToken}`)
-        .expect(async (response) => {
-          const user = response.body.data;
-          expect(user.firstname).toEqual(updateData.firstname.trim());
-          expect(user.lastname).toEqual(updateData.lastname.trim());
-          expect(user.roleId).not.toEqual(updateData.roleId);
-          expect(user.email).toEqual(updateData.email);
-          expect(user.phone).toEqual(updateData.phone);
-          expect(user).not.toHaveProperty("password");
-
-          const kid = await userModel.findByPk(createdKid.id);
-          expect(kid?.firstname).toEqual(updateData.kidName.trim());
-
-          await userModel.destroy({ where: { id: createdKid.id }, force: true });
-        })
-        .expect(HttpStatus.OK);
-    });
-
-    it.skip("Same user updates email should succeed & response otpToken", () => {
+    it("Same user updates email should succeed & response otpToken", () => {
       const updateData = { email: `user-test-${generateNumber(6)}@gmail.com` };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
@@ -216,7 +180,7 @@ describe("UserController E2E Test", () => {
         .expect(HttpStatus.OK);
     });
 
-    it.skip("Same user updates phone should succeed & response otpToken", () => {
+    it("Same user updates phone should succeed & response otpToken", () => {
       const updateData = { phone: `${generateNumber(10)}` };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
@@ -232,19 +196,31 @@ describe("UserController E2E Test", () => {
         .expect(HttpStatus.OK);
     });
 
-    it.skip("Update phone & firstname should response otpToken & user data", () => {
+    it("Update phone, firstname & kid's name should response otpToken & user data", async () => {
+      const createdKid: User["dataValues"] = await userModel.create({
+        roleId: ROLE_ID.KID_FREE,
+        parentId: testUser.id,
+        status: USER_STATUS.ACTIVATED,
+      });
+
       const updateData = {
         phone: `${generateNumber(10)}`,
         firstname: "update firstname",
+        kidName: "kid name update",
       };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
-        .expect((response) => {
+        .expect(async (response) => {
           const { otpToken, firstname } = response.body.data;
           expect(otpToken).not.toBeNull();
           expect(firstname).toEqual(updateData.firstname);
+
+          const kid = await userModel.findByPk(createdKid.id);
+          expect(kid?.firstname).toEqual(updateData.kidName.trim());
+
+          await userModel.destroy({ where: { id: createdKid.id }, force: true });
         })
         .expect(HttpStatus.OK);
     });
