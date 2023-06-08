@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "api-id",
-    "description": "Dev api-gateway vus-vjoy",
+    "description": "Prod api-gateway vus-vjoy",
     "version": "1.0.0"
   },
   "schemes": ["https"],
@@ -11,79 +11,79 @@
   "paths": {
     "/v1/core/{resource=**}": {
       "get": {
-        "operationId": "dev-core-get",
+        "operationId": "prod-core-get",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "post": {
-        "operationId": "dev-core-post",
+        "operationId": "prod-core-post",
         "responses": {
           "201": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "put": {
-        "operationId": "dev-core-put",
+        "operationId": "prod-core-put",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "patch": {
-        "operationId": "dev-core-patch",
+        "operationId": "prod-core-patch",
         "responses": {
           "201": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "delete": {
-        "operationId": "dev-core-delete",
+        "operationId": "prod-core-delete",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "options": {
-        "operationId": "dev-core-options",
+        "operationId": "prod-core-options",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-core-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-core-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
@@ -99,79 +99,79 @@
     },
     "/v1/content/{resource=**}": {
       "get": {
-        "operationId": "dev-content-get",
+        "operationId": "prod-content-get",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "post": {
-        "operationId": "dev-content-post",
+        "operationId": "prod-content-post",
         "responses": {
           "201": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "put": {
-        "operationId": "dev-content-put",
+        "operationId": "prod-content-put",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "patch": {
-        "operationId": "dev-content-patch",
+        "operationId": "prod-content-patch",
         "responses": {
           "201": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "delete": {
-        "operationId": "dev-content-delete",
+        "operationId": "prod-content-delete",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
       },
       "options": {
-        "operationId": "dev-content-options",
+        "operationId": "prod-content-options",
         "responses": {
           "200": {
             "description": "Successfully"
           }
         },
         "x-google-backend": {
-          "address": "https://vjoy-content-dev-qconrzsxya-de.a.run.app",
+          "address": "https://vjoy-content-prod-qconrzsxya-de.a.run.app",
           "path_translation": "APPEND_PATH_TO_ADDRESS",
           "disable_auth": true
         }
