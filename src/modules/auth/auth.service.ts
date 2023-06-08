@@ -156,10 +156,10 @@ export class AuthService extends BaseService<I18nTranslations> {
     } catch (err) {
       if (err.name === "TokenExpiredError") {
         // Token has expired
-        throw new UnauthorizedException(this.i18n.t("message.TOKEN_EXPIRED"));
+        throw new UnauthorizedException(this.i18n.t("auth.TOKEN_EXPIRED"));
       } else {
         // Token is invalid
-        throw new UnauthorizedException(this.i18n.t("message.INVALID_CREDENTIAL"));
+        throw new UnauthorizedException(this.i18n.t("auth.INVALID_CREDENTIAL"));
       }
     }
   }
@@ -167,7 +167,7 @@ export class AuthService extends BaseService<I18nTranslations> {
   async refreshToken() {
     const refreshToken = this.request.headers[HEADER_KEY.REFRESH_TOKEN] as string | undefined;
     if (!refreshToken)
-      throw new UnauthorizedException(this.i18n.t("message.INVALID_TOKEN", { args: { data: "Refresh Token" } }));
+      throw new UnauthorizedException(this.i18n.t("message.INVALID", { args: { data: "Refresh Token" } }));
 
     let result: any;
     try {
@@ -176,7 +176,7 @@ export class AuthService extends BaseService<I18nTranslations> {
         ignoreExpiration: true,
       });
     } catch (error) {
-      throw new UnauthorizedException(this.i18n.t("message.INVALID_TOKEN", { args: { data: "Refresh Token" } }));
+      throw new UnauthorizedException(this.i18n.t("message.INVALID", { args: { data: "Refresh Token" } }));
     }
 
     const user = await this.userModel.findByPk(result.userId, {
@@ -193,7 +193,7 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
     if (existUser) {
-      throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
+      throw new BadRequestException(this.i18n.t("auth.USER_EXISTED"));
     } else {
       const newUser = await this.userModel.create({
         phone,
@@ -207,7 +207,7 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const otpCode = this.generateOtpCode();
     if (this.request.user?.apiToken.type != "vjoy-test") {
-      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+      const smsContent = this.i18n.t("auth.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
       this.smsService.send(phone, smsContent as string);
     }
 
@@ -220,27 +220,27 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
     if (existUser) {
-      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+        throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
       payload = { userId: existUser.id, roleId: existUser.roleId };
 
       const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
       if (otp_token) {
         if (dayjs().diff(otp_token.lastSentOtp, "minutes") < MAX_RESEND_OTP_MINS)
-          throw new BadRequestException(this.i18n.t("message.REQUEST_TOO_FAST"));
+          throw new BadRequestException(this.i18n.t("auth.REQUEST_TOO_FAST"));
 
         otp_token.lastSentOtp = dayjs().toDate();
         otp_token.save();
       } else this.otpTokenModel.create({ id: existUser.id, lastSentOtp: dayjs().toDate() });
     } else {
-      throw new BadRequestException(this.i18n.t("message.USER_NOT_EXISTS"));
+      throw new BadRequestException(this.i18n.t("auth.USER_NOT_EXISTS"));
     }
 
     const otpCode = this.generateOtpCode();
     if (this.request.user?.apiToken.type != "vjoy-test") {
-      const smsContent = this.i18n.t("sms.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+      const smsContent = this.i18n.t("auth.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
       this.smsService.send(phone, smsContent as string);
     }
 
@@ -262,7 +262,8 @@ export class AuthService extends BaseService<I18nTranslations> {
     }
     const payload = ticket.getPayload();
 
-    if (!payload) throw new UnauthorizedException(this.i18n.t("message.GOOGLE_NOT_FOUND"));
+    if (!payload)
+      throw new UnauthorizedException(this.i18n.t("message.NOT_FOUND", { args: { data: "Google Account" } }));
 
     const { sub: socialId, email, given_name, family_name } = payload;
     const existUser = await this.userModel.findOne({
@@ -277,9 +278,9 @@ export class AuthService extends BaseService<I18nTranslations> {
     });
 
     if (existUser) {
-      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+        throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
       return this.generateUserToken(existUser);
     } else {
@@ -305,7 +306,7 @@ export class AuthService extends BaseService<I18nTranslations> {
       where: { email },
       paranoid: false,
     });
-    if (existUser) throw new BadRequestException(this.i18n.t("message.USER_EXISTED"));
+    if (existUser) throw new BadRequestException(this.i18n.t("auth.USER_EXISTED"));
 
     const newUser = await this.userModel.create({
       email,
@@ -327,12 +328,12 @@ export class AuthService extends BaseService<I18nTranslations> {
     const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?token=${verifyToken}`;
     const mail = {
       to: email,
-      subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
-      html: this.i18n.t("email.SIGNUP_ACCOUNT_BODY", { args: { email, verifyLink } }),
+      subject: this.i18n.t("auth.SIGNUP_ACCOUNT_SUBJECT"),
+      html: this.i18n.t("auth.SIGNUP_ACCOUNT_BODY", { args: { email, verifyLink } }),
     };
     this.mailService.sendHtml(mail);
 
-    return this.i18n.t("message.USER_REGISTRATION_SUCCESSFUL");
+    return this.i18n.t("auth.USER_REGISTRATION_SUCCESSFUL");
   }
 
   async signinByEmail(data: SigninByEmailDto) {
@@ -344,16 +345,14 @@ export class AuthService extends BaseService<I18nTranslations> {
       include: [Role],
     });
 
-    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    if (!existUser) throw new BadRequestException(this.i18n.t("auth.INVALID_CREDENTIAL"));
 
-    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
-    if (existUser.status === USER_STATUS.NEW)
-      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
-    if (existUser.status === USER_STATUS.DEACTIVED)
-      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW) throw new BadRequestException(this.i18n.t("auth.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
     const isPasswordMatch = await this.comparePassword(password, existUser.password!);
-    if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    if (!isPasswordMatch) throw new BadRequestException(this.i18n.t("auth.INVALID_CREDENTIAL"));
 
     return this.generateUserToken(existUser);
   }
@@ -411,9 +410,9 @@ export class AuthService extends BaseService<I18nTranslations> {
     });
 
     if (existUser) {
-      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
+      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
       if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+        throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
       return this.generateUserToken(existUser);
     } else {
@@ -477,18 +476,17 @@ export class AuthService extends BaseService<I18nTranslations> {
       where: { email: result.email },
       paranoid: false,
     });
-    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    if (!existUser) throw new BadRequestException(this.i18n.t("auth.INVALID_CREDENTIAL"));
 
-    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
-    if (existUser.status === USER_STATUS.DEACTIVED)
-      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
+    if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
     const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
 
     if (otp_token) {
       const daydiff = dayjs(new Date()).diff(otp_token.lastSentVerifyEmail, "minutes");
       if (otp_token.countVerifyEmailRequest === 3 && daydiff <= MAX_RESEND_EMAIL_HOURS * 60)
-        throw new BadRequestException(this.i18n.t("message.REQUEST_LIMITED"));
+        throw new BadRequestException(this.i18n.t("auth.REQUEST_LIMITED"));
 
       otp_token.countVerifyEmailRequest += 1;
       if (daydiff > MAX_RESEND_EMAIL_HOURS * 60) otp_token.countVerifyEmailRequest = 0;
@@ -507,12 +505,12 @@ export class AuthService extends BaseService<I18nTranslations> {
     const verifyLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/verify-email?token=${verifyToken}`;
     const mail = {
       to: result.email,
-      subject: this.i18n.t("email.SIGNUP_ACCOUNT_SUBJECT"),
-      html: this.i18n.t("email.SIGNUP_ACCOUNT_BODY", { args: { email: result.email, verifyLink } }),
+      subject: this.i18n.t("auth.SIGNUP_ACCOUNT_SUBJECT"),
+      html: this.i18n.t("auth.SIGNUP_ACCOUNT_BODY", { args: { email: result.email, verifyLink } }),
     };
     this.mailService.sendHtml(mail);
 
-    return this.i18n.t("message.USER_RESEND_REGISTRATION_SUCCESSFUL");
+    return this.i18n.t("auth.USER_RESEND_REGISTRATION_SUCCESSFUL");
   }
 
   async forgetPassword(data: ForgetPasswordDto) {
@@ -523,13 +521,11 @@ export class AuthService extends BaseService<I18nTranslations> {
       paranoid: false,
     });
 
-    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    if (!existUser) throw new BadRequestException(this.i18n.t("auth.INVALID_CREDENTIAL"));
 
-    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
-    if (existUser.status === USER_STATUS.NEW)
-      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
-    if (existUser.status === USER_STATUS.DEACTIVED)
-      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW) throw new BadRequestException(this.i18n.t("auth.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
     // Gửi email reset password
     const resetToken = await this.jwtService.signAsync(
@@ -542,12 +538,12 @@ export class AuthService extends BaseService<I18nTranslations> {
     const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/update-password?token=${resetToken}`;
     const mail = {
       to: email,
-      subject: this.i18n.t("email.RESET_PASSWORD_SUBJECT"),
-      html: this.i18n.t("email.RESET_PASSWORD_BODY", { args: { email, resetLink } }),
+      subject: this.i18n.t("auth.RESET_PASSWORD_SUBJECT"),
+      html: this.i18n.t("auth.RESET_PASSWORD_BODY", { args: { email, resetLink } }),
     };
     this.mailService.sendHtml(mail);
 
-    return this.i18n.t("message.REQUEST_RESET_PASSWORD_SUCCESSFUL");
+    return this.i18n.t("auth.REQUEST_RESET_PASSWORD_SUCCESSFUL");
   }
 
   async updatePassword(token: string) {
@@ -581,19 +577,17 @@ export class AuthService extends BaseService<I18nTranslations> {
       paranoid: false,
     });
 
-    if (!existUser) throw new BadRequestException(this.i18n.t("message.INVALID_CREDENTIAL"));
+    if (!existUser) throw new BadRequestException(this.i18n.t("auth.INVALID_CREDENTIAL"));
 
-    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
-    if (existUser.status === USER_STATUS.NEW)
-      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
-    if (existUser.status === USER_STATUS.DEACTIVED)
-      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW) throw new BadRequestException(this.i18n.t("auth.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
     const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
     if (otp_token) {
       const daydiff = dayjs(new Date()).diff(otp_token.lastSentUpdatePassword, "minutes");
       if (otp_token.countUpdatePasswordRequest === 3 && daydiff <= MAX_RESEND_EMAIL_HOURS * 60)
-        throw new BadRequestException(this.i18n.t("message.REQUEST_LIMITED"));
+        throw new BadRequestException(this.i18n.t("auth.REQUEST_LIMITED"));
 
       otp_token.countUpdatePasswordRequest += 1;
       if (daydiff > MAX_RESEND_EMAIL_HOURS * 60) otp_token.countUpdatePasswordRequest = 0;
@@ -612,12 +606,12 @@ export class AuthService extends BaseService<I18nTranslations> {
     const resetLink = `https://vjoy-core-dev-qconrzsxya-de.a.run.app/api/v1/${process.env.ENV}/core/auth/update-password?token=${resetToken}`;
     const mail = {
       to: existUser.email!,
-      subject: this.i18n.t("email.RESET_PASSWORD_SUBJECT"),
-      html: this.i18n.t("email.RESET_PASSWORD_BODY", { args: { email: existUser.email, resetLink } }),
+      subject: this.i18n.t("auth.RESET_PASSWORD_SUBJECT"),
+      html: this.i18n.t("auth.RESET_PASSWORD_BODY", { args: { email: existUser.email, resetLink } }),
     };
     this.mailService.sendHtml(mail);
 
-    return this.i18n.t("message.REQUEST_RESET_PASSWORD_SUCCESSFUL");
+    return this.i18n.t("auth.REQUEST_RESET_PASSWORD_SUCCESSFUL");
   }
 
   async submitUpdatePassword(data: UpdatePasswordDto) {
@@ -635,11 +629,9 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     if (!existUser) throw new NotFoundException(this.i18n.t("message.NOT_FOUND", { args: { data: "User" } }));
 
-    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("message.USER_DELETED"));
-    if (existUser.status === USER_STATUS.NEW)
-      throw new BadRequestException(this.i18n.t("message.USER_NOT_ACTIVATED_YET"));
-    if (existUser.status === USER_STATUS.DEACTIVED)
-      throw new BadRequestException(this.i18n.t("message.USER_DEACTIVATED"));
+    if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
+    if (existUser.status === USER_STATUS.NEW) throw new BadRequestException(this.i18n.t("auth.USER_NOT_ACTIVATED_YET"));
+    if (existUser.status === USER_STATUS.DEACTIVED) throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
 
     existUser.password = await this.createPassword(data.password);
     existUser.save();
