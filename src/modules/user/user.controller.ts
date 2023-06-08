@@ -42,7 +42,7 @@ export class UserController {
   @AdminOrSameUser()
   @Patch(":userId")
   async update(@Param("userId") userId: number, @Body() updateUserDto: UpdateUserDto) {
-    const updatedUser = await this.usersService.updateWithoutOtp(userId, updateUserDto);
+    const updatedUser = await this.usersService.update(userId, updateUserDto);
     delete updatedUser.password;
     return updatedUser;
   }
