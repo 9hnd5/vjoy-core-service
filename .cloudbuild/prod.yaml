@@ -26,6 +26,8 @@
    - 'gcr.io/$PROJECT_ID/vjoy-core-prod:$COMMIT_SHA'
    - '--region'
    - 'asia-east1'
+   - '--add-cloudsql-instances'
+   - 'vus-vjoy:asia-east1:vjoy-prod'
 
  images:
  - 'gcr.io/$PROJECT_ID/vjoy-core-prod:$COMMIT_SHA'
