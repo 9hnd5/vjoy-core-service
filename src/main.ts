@@ -19,7 +19,7 @@ async function bootstrap() {
     .addTag("vjoy-core")
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api/v1/dev/core/api-docs", app, document);
+  SwaggerModule.setup("api/v1/core/api-docs", app, document);
   await app.listen(parseInt(process.env.PORT as string));
 }
 bootstrap();
