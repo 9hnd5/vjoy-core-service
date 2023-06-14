@@ -18,9 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test-e2e:dev": "ENV=dev SERVICE=core jest --config ./test/jest-e2e.json --detectOpenHandles",
-    "test-e2e:staging": "ENV=staging SERVICE=core jest --config ./test/jest-e2e.json --detectOpenHandles",
-    "test-e2e:prod": "ENV=prod SERVICE=core jest --config ./test/jest-e2e.json --detectOpenHandles"
+    "test-e2e:dev": "ENV=dev SERVICE=core jest --config ./test/jest-e2e.json --detectOpenHandles --forceExit",
+    "test-e2e:staging": "ENV=staging SERVICE=core jest --config ./test/jest-e2e.json --detectOpenHandles --forceExit"
   },
   "dependencies": {
     "@google-cloud/pubsub": "^3.5.2",

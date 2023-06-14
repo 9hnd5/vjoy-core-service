@@ -1,4 +1,14 @@
-import { API_CORE_PREFIX, API_TOKEN, createUser, deleteUser, expectError, generateNumber, ROLE_ID, signin, User } from "@common";
+import {
+  API_CORE_PREFIX,
+  API_TOKEN,
+  createUser,
+  deleteUser,
+  expectError,
+  generateNumber,
+  ROLE_ID,
+  signin,
+  User,
+} from "@common";
 import { HttpStatus, INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "app.module";
@@ -73,12 +83,7 @@ describe("Configs E2E Test", () => {
         .post(`${API_CORE_PREFIX}/configs`)
         .send({ type: null })
         .set("Authorization", `Bearer ${adminToken}`)
-        .expect((res) => {
-          const { error } = res.body;
-          expect(error).not.toBeNull();
-          expect(error[0].code).toBe("type");
-          expect(error[0].message).not.toBeNull();
-        });
+        .expect((res) => expectError(res.body));
     });
 
     it("Should succeed due to user is admin", () => {
@@ -138,9 +143,7 @@ describe("Configs E2E Test", () => {
     });
 
     it("Should fail due to user unauthorized", () => {
-      return agent
-        .patch(`${API_CORE_PREFIX}/configs/${config.id}`)
-        .expect(HttpStatus.UNAUTHORIZED);
+      return agent.patch(`${API_CORE_PREFIX}/configs/${config.id}`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to invalid params(id)", () => {
@@ -210,9 +213,7 @@ describe("Configs E2E Test", () => {
 
   describe("Delete config (DELETE)api/configs/:id", () => {
     it("Should fail due to user unauthorized", () => {
-      return agent
-        .delete(`${API_CORE_PREFIX}/configs/${config.id}`)
-        .expect(HttpStatus.UNAUTHORIZED);
+      return agent.delete(`${API_CORE_PREFIX}/configs/${config.id}`).expect(HttpStatus.UNAUTHORIZED);
     });
 
     it("Should fail due to invalid params(id)", () => {
