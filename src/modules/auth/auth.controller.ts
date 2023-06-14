@@ -12,7 +12,7 @@ import {
   SignupByEmailDto,
   SignupByPhoneDto,
   UpdatePasswordDto,
-} from "./dto/credential";
+} from "./dto/credential.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 @Controller("auth")

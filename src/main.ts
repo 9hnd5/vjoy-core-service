@@ -13,6 +13,7 @@ async function bootstrap() {
   app.setViewEngine("hbs");
   const config = new DocumentBuilder()
     .addBearerAuth()
+    .addGlobalParameters({ in: "header", name: "api-token" })
     .setTitle("Vjoy-Core")
     .setDescription("The documentation vjoy-core")
     .setVersion("1.0")

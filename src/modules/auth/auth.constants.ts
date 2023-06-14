@@ -12,6 +12,7 @@ export const ERROR_CODE = {
   USER_DELETED: "UserDeleted",
   REQUEST_TOO_FAST: "RequestTooFast",
   USER_NOT_EXISTS: "UserNotExists",
+  USER_EXISTS: "UserExists",
   USER_DEACTIVATED: "UserDeactivated",
   TOKEN_EXPIRED: "TokenExpired",
   INVALID_CREDENTIAL: "InvalidCredential",
