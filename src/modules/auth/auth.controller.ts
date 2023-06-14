@@ -1,4 +1,4 @@
-import { AdminOrSameUser, Authorize, Controller, Public } from "@common";
+import { AdminOrSameUser, Controller, Public } from "@common";
 import { Body, Delete, Get, Param, Post, Query, Res } from "@nestjs/common";
 import { Response } from "express";
 import { AuthService } from "./auth.service";
@@ -19,22 +19,10 @@ import { VerifyOtpDto } from "./dto/verify-otp.dto";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Authorize({ action: "read", resource: "live_sessions" })
-  @Get("check-authorize")
-  checkAuthorize() {
-    return "Authorized";
-  }
-
   @Public()
   @Post("refresh-token")
   refreshToken() {
     return this.authService.refreshToken();
-  }
-
-  @Get("check-same-user/:userId")
-  @AdminOrSameUser()
-  checkSameUser(@Param("userId") userId: unknown) {
-    return `User ${userId} the same`;
   }
 
   @Public()
