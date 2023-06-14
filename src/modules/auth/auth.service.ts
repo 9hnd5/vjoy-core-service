@@ -38,7 +38,7 @@ import {
   SignupByEmailDto,
   SignupByPhoneDto,
   UpdatePasswordDto,
-} from "./dto/credential";
+} from "./dto/credential.dto";
 import { OtpToken } from "entities/otp-token.entity";
 import { I18nTranslations } from "i18n/i18n.generated";
 
@@ -197,7 +197,7 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
     if (existUser) {
-      throw new BadRequestException(this.i18n.t("auth.USER_EXISTED"));
+      throw new BadRequestException({ code: ERROR_CODE.USER_EXISTS, message: this.i18n.t("auth.USER_EXISTED") });
     } else {
       const newUser = await this.userModel.create({
         phone,
