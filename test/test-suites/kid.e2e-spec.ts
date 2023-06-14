@@ -57,11 +57,11 @@ describe("KidDetail E2E Test", () => {
         .post(`${API_CORE_PREFIX}/kids`)
         .send({})
         .expect((res) => {
-          const { error } = res.body;
-          expect(error).toEqual([
-            { code: "parentId", message: expect.any(String) },
-            { code: "avatar", message: expect.any(String) },
-            { code: "character", message: expect.any(String) },
+          const { errors } = res.body;
+          expect(errors).toEqual([
+            { code: "isNotEmpty", message: expect.any(String) },
+            { code: "isString", message: expect.any(String) },
+            { code: "isNotEmpty", message: expect.any(String) },
           ]);
         })
         .expect(HttpStatus.BAD_REQUEST);

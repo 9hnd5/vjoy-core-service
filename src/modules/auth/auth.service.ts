@@ -22,6 +22,7 @@ import { Op } from "sequelize";
 import {
   EMAIL_RESET_PASSWORD_EXPIRES,
   EMAIL_VERIFY_EXPIRES,
+  ERROR_CODE,
   GOOGLE_CLIENT_ID,
   MAX_RESEND_EMAIL_HOURS,
   MAX_RESEND_OTP_MINS,
@@ -156,10 +157,13 @@ export class AuthService extends BaseService<I18nTranslations> {
     } catch (err) {
       if (err.name === "TokenExpiredError") {
         // Token has expired
-        throw new UnauthorizedException(this.i18n.t("auth.TOKEN_EXPIRED"));
+        throw new UnauthorizedException({ code: ERROR_CODE.TOKEN_EXPIRED, message: this.i18n.t("auth.TOKEN_EXPIRED") });
       } else {
         // Token is invalid
-        throw new UnauthorizedException(this.i18n.t("auth.INVALID_CREDENTIAL"));
+        throw new UnauthorizedException({
+          code: ERROR_CODE.INVALID_CREDENTIAL,
+          message: this.i18n.t("auth.INVALID_CREDENTIAL"),
+        });
       }
     }
   }
@@ -220,22 +224,30 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const existUser = await this.userModel.findOne({ where: { phone }, paranoid: false });
     if (existUser) {
-      if (existUser.deletedAt) throw new BadRequestException(this.i18n.t("auth.USER_DELETED"));
+      if (existUser.deletedAt)
+        throw new BadRequestException({ code: ERROR_CODE.USER_DELETED, message: this.i18n.t("auth.USER_DELETED") });
+
       if (existUser.status === USER_STATUS.DEACTIVED)
-        throw new BadRequestException(this.i18n.t("auth.USER_DEACTIVATED"));
+        throw new BadRequestException({
+          code: ERROR_CODE.USER_DEACTIVATED,
+          message: this.i18n.t("auth.USER_DEACTIVATED"),
+        });
 
       payload = { userId: existUser.id, roleId: existUser.roleId };
 
       const otp_token = await this.otpTokenModel.findOne({ where: { id: existUser.id } });
       if (otp_token) {
         if (dayjs().diff(otp_token.lastSentOtp, "minutes") < MAX_RESEND_OTP_MINS)
-          throw new BadRequestException(this.i18n.t("auth.REQUEST_TOO_FAST"));
+          throw new BadRequestException({
+            code: ERROR_CODE.REQUEST_TOO_FAST,
+            message: this.i18n.t("auth.REQUEST_TOO_FAST"),
+          });
 
         otp_token.lastSentOtp = dayjs().toDate();
         otp_token.save();
       } else this.otpTokenModel.create({ id: existUser.id, lastSentOtp: dayjs().toDate() });
     } else {
-      throw new BadRequestException(this.i18n.t("auth.USER_NOT_EXISTS"));
+      throw new BadRequestException({ code: ERROR_CODE.USER_NOT_EXISTS, message: this.i18n.t("auth.USER_NOT_EXISTS") });
     }
 
     const otpCode = this.generateOtpCode();

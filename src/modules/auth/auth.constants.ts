@@ -8,3 +8,11 @@ export const GOOGLE_CLIENT_ID = {
 export const EMAIL_RESET_PASSWORD_EXPIRES = "24h";
 export const EMAIL_VERIFY_EXPIRES = "24h";
 export const MAX_RESEND_EMAIL_HOURS = 24;
+export const ERROR_CODE = {
+  USER_DELETED: "UserDeleted",
+  REQUEST_TOO_FAST: "RequestTooFast",
+  USER_NOT_EXISTS: "UserNotExists",
+  USER_DEACTIVATED: "UserDeactivated",
+  TOKEN_EXPIRED: "TokenExpired",
+  INVALID_CREDENTIAL: "InvalidCredential",
+};
