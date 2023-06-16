@@ -11,7 +11,7 @@
     git submodule update
  # Build the container image
  - name: 'gcr.io/cloud-builders/docker'
-   args: ['build', '-t', 'gcr.io/$PROJECT_ID/vjoy-core-dev:$COMMIT_SHA', '--build-arg', 'env=dev', '.']
+   args: ['build', '-t', 'gcr.io/$PROJECT_ID/vjoy-core-dev:$COMMIT_SHA', '--build-arg', 'env=dev','--network', 'cloudbuild', '.']
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
    args: ['push', 'gcr.io/$PROJECT_ID/vjoy-core-dev:$COMMIT_SHA']
