@@ -7,8 +7,10 @@ import { Public, ROLE_ID, UserId } from "@common";
 import { FindUsersQueryDto } from "./dto/find-users-query.dto";
 import { AdminOrSameUser, Authorize, Controller } from "@common";
 import { ChangePasswordDto } from "./dto/change-password.dto";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @Controller("users")
+@ApiBearerAuth()
 export class UserController {
   constructor(private readonly usersService: UserService, @Inject("REQUEST") private request: any) {}
 

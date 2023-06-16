@@ -44,11 +44,8 @@ describe("KidDetail E2E Test", () => {
     beforeAll(() => {
       data = {
         parentId: parent.id,
-        avatar: "https://example.com/profile.jpg",
-        character: {
-          name: "Tom",
-          url: "https://example.com/cat1.jpg",
-        },
+        avatar: "code1234",
+        character: "code1234",
       };
     });
 
