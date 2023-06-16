@@ -14,8 +14,10 @@ import {
   UpdatePasswordDto,
 } from "./dto/credential.dto";
 import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @Controller("auth")
+@ApiBearerAuth()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

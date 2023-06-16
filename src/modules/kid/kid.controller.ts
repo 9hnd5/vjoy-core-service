@@ -2,8 +2,10 @@ import { Authorize, Controller } from "@common";
 import { Body, Get, Param, Post } from "@nestjs/common";
 import { CreateKidDto } from "./dto/create-kid.dto";
 import { KidService } from "./kid.service";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @Controller("kids")
+@ApiBearerAuth()
 export class KidController {
   constructor(private kidService: KidService) {}
 

@@ -1,13 +1,4 @@
-import { Type } from "class-transformer";
-import { IsDateString, IsNotEmpty, IsOptional, Matches, MaxLength, ValidateNested } from "class-validator";
-
-class Character {
-  @IsNotEmpty()
-  name: string;
-
-  @IsNotEmpty()
-  url: string;
-}
+import { IsDateString, IsNotEmpty, IsOptional, Matches, MaxLength } from "class-validator";
 
 export class CreateKidDetailDto {
   @IsOptional()
@@ -25,7 +16,5 @@ export class CreateKidDetailDto {
   avatar?: string;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => Character)
-  character?: Character;
+  character?: string;
 }

@@ -4,8 +4,10 @@ import { ConfigService } from "./config.service";
 import { CreateConfigDto } from "./dto/create-config.dto";
 import { FindConfigsQueryDto } from "./dto/find-configs-query.dto";
 import { UpdateConfigDto } from "./dto/update-config.dto";
+import { ApiBearerAuth } from "@nestjs/swagger";
 
 @Controller("configs")
+@ApiBearerAuth()
 export class ConfigController {
   constructor(private readonly configService: ConfigService) {}
 

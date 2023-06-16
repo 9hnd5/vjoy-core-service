@@ -1,13 +1,4 @@
-import { Type } from "class-transformer";
-import { IsNotEmpty, IsString, ValidateNested } from "class-validator";
-
-class Character {
-  @IsNotEmpty()
-  name: string;
-
-  @IsNotEmpty()
-  url: string;
-}
+import { IsNotEmpty, IsString } from "class-validator";
 
 export class CreateKidDto {
   @IsNotEmpty()
@@ -18,7 +9,5 @@ export class CreateKidDto {
   avatar: string;
 
   @IsNotEmpty()
-  @ValidateNested()
-  @Type(() => Character)
-  character: Character;
+  character: string;
 }
