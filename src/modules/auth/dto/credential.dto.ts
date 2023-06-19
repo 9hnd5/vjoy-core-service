@@ -1,4 +1,6 @@
+import { Transform } from "class-transformer";
 import { IsEmail, IsMobilePhone, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from "class-validator";
+import { parsePhoneNumber } from "libphonenumber-js";
 import { PASSWORD_REGEX } from "../auth.constants";
 
 export class SignupByEmailDto {
@@ -20,11 +22,25 @@ export class SigninByEmailDto {
 }
 
 export class SignupByPhoneDto {
+  @Transform(({ value }) => {
+    try {
+      return parsePhoneNumber(value, "VN").formatNational().replace(/\s/g, "");
+    } catch (err) {
+      throw err;
+    }
+  })
   @IsMobilePhone("vi-VN")
   phone: string;
 }
 
 export class SigninByPhoneDto {
+  @Transform(({ value }) => {
+    try {
+      return parsePhoneNumber(value, "VN").formatNational().replace(/\s/g, "");
+    } catch (err) {
+      throw err;
+    }
+  })
   @IsMobilePhone("vi-VN")
   phone: string;
 }
