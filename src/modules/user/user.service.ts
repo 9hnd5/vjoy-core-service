@@ -83,7 +83,7 @@ export class UserService extends BaseService {
   async findOne(id: number, includeDeleted = false) {
     const rs = await this.userModel.findByPk(id, {
       attributes: { exclude: EXCLUDE_FIELDS },
-      include: ["parent"],
+      include: ["parent", "kids"],
       paranoid: !includeDeleted,
     });
     return rs;
