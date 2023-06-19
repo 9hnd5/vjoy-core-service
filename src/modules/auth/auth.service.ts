@@ -1,22 +1,24 @@
 import {
   ApiKey,
   BaseService,
+  EnvironmentService,
   HEADER_KEY,
   MailService,
-  Role,
   ROLE_ID,
+  Role,
   SmsService,
-  User,
   USER_PROVIDER,
   USER_STATUS,
-  EnvironmentService,
+  User,
 } from "@common";
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectModel } from "@nestjs/sequelize";
 import * as bcrypt from "bcrypt";
 import * as dayjs from "dayjs";
+import { OtpToken } from "entities/otp-token.entity";
 import { LoginTicket, OAuth2Client } from "google-auth-library";
+import { I18nTranslations } from "i18n/i18n.generated";
 import * as jwksClient from "jwks-rsa";
 import { Op } from "sequelize";
 import {
@@ -39,9 +41,6 @@ import {
   SignupByPhoneDto,
   UpdatePasswordDto,
 } from "./dto/credential.dto";
-import { OtpToken } from "entities/otp-token.entity";
-import { I18nTranslations } from "i18n/i18n.generated";
-import { log } from "console";
 
 @Injectable()
 export class AuthService extends BaseService<I18nTranslations> {
