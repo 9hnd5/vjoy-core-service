@@ -41,6 +41,7 @@ import {
 } from "./dto/credential.dto";
 import { OtpToken } from "entities/otp-token.entity";
 import { I18nTranslations } from "i18n/i18n.generated";
+import { log } from "console";
 
 @Injectable()
 export class AuthService extends BaseService<I18nTranslations> {
@@ -211,8 +212,10 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const otpCode = this.generateOtpCode();
     if (this.request.user?.apiToken.type != "vjoy-test") {
-      const smsContent = this.i18n.t("auth.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
-      this.smsService.send(phone, smsContent as string);
+      setImmediate(() => {
+        const smsContent = this.i18n.t("auth.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+        this.smsService.send(phone, smsContent as string);
+      });
     }
 
     return { otpToken: await this.generateOtpToken(otpCode, payload) };
@@ -252,10 +255,11 @@ export class AuthService extends BaseService<I18nTranslations> {
 
     const otpCode = this.generateOtpCode();
     if (this.request.user?.apiToken.type != "vjoy-test") {
-      const smsContent = this.i18n.t("auth.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
-      this.smsService.send(phone, smsContent as string);
+      setImmediate(() => {
+        const smsContent = this.i18n.t("auth.OTP", { args: { otpCode, min: OTP_TOKEN_EXPIRES.replace("m", "") } });
+        this.smsService.send(phone, smsContent as string);
+      });
     }
-
     return { otpToken: await this.generateOtpToken(otpCode, payload) };
   }
 
