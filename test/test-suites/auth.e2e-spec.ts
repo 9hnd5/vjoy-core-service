@@ -154,7 +154,7 @@ describe("Auth (e2e)", () => {
   });
 
   describe("Sign-up/Sign-in by phone", () => {
-    const data = { phone: `+849${generateNumber(8)}` };
+    const data = { phone: `09${generateNumber(8)}` };
 
     afterAll(async () => {
       const newUser = await userModel.findOne({ where: { phone: data.phone } });
@@ -389,11 +389,13 @@ describe("Auth (e2e)", () => {
     it("Should sign up succeed and return userToken", () => {
       return agent
         .get(`${API_CORE_PREFIX}/auth/signup/guest`)
-        .expect((response: request.Response) => {
-          const { roleId, accessToken, refreshToken } = response.body.data;
+        .expect(async (response: request.Response) => {
+          const { id, roleId, accessToken, refreshToken } = response.body.data;
           expect(roleId).toEqual(ROLE_ID.PARENT);
           expect(accessToken).not.toBeNull();
           expect(refreshToken).not.toBeNull();
+
+          await userModel.destroy({ where: { id }, force: true });
         })
         .expect(HttpStatus.OK);
     });

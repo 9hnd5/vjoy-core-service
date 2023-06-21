@@ -164,39 +164,7 @@ describe("UserController E2E Test", () => {
         .expect(HttpStatus.NOT_FOUND);
     });
 
-    it("Same user updates email should succeed & response otpToken", () => {
-      const updateData = { email: `user-test-${generateNumber(6)}@gmail.com` };
-      return agent
-        .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .send(updateData)
-        .set("Authorization", `Bearer ${userToken}`)
-        .expect(async (response) => {
-          const user = await userModel.findByPk(testUser.id);
-          expect(user?.email).toEqual(testUser.email);
-
-          const { otpToken } = response.body.data;
-          expect(otpToken).not.toBeNull();
-        })
-        .expect(HttpStatus.OK);
-    });
-
-    it("Same user updates phone should succeed & response otpToken", () => {
-      const updateData = { phone: `${generateNumber(10)}` };
-      return agent
-        .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
-        .send(updateData)
-        .set("Authorization", `Bearer ${userToken}`)
-        .expect(async (response) => {
-          const user = await userModel.findByPk(testUser.id);
-          expect(user?.phone).toEqual(testUser.phone);
-
-          const { otpToken } = response.body.data;
-          expect(otpToken).not.toBeNull();
-        })
-        .expect(HttpStatus.OK);
-    });
-
-    it("Update phone, firstname & kid's name should response otpToken & user data", async () => {
+    it("Same user updates should response user data", async () => {
       const createdKid: User["dataValues"] = await userModel.create({
         roleId: ROLE_ID.KID_FREE,
         parentId: testUser.id,
@@ -204,18 +172,24 @@ describe("UserController E2E Test", () => {
       });
 
       const updateData = {
-        phone: `${generateNumber(10)}`,
         firstname: "update firstname",
+        lastname: "last name update",
+        phone: `${generateNumber(10)}`,
+        email: `user-test-${generateNumber(4)}@gmail.com`,
         kidName: "kid name update",
+        passcode: "2023",
       };
       return agent
         .patch(`${API_CORE_PREFIX}/users/${testUser.id}`)
         .send(updateData)
         .set("Authorization", `Bearer ${userToken}`)
         .expect(async (response) => {
-          const { otpToken, firstname } = response.body.data;
-          expect(otpToken).not.toBeNull();
-          expect(firstname).toEqual(updateData.firstname);
+          const user = response.body.data;
+          expect(user.firstname).toEqual(updateData.firstname);
+          expect(user.lastname).toEqual(updateData.lastname.trim());
+          expect(user.phone).toEqual(updateData.phone);
+          expect(user.email).toEqual(updateData.email);
+          expect(user.passcode).toEqual(updateData.passcode);
 
           const kid = await userModel.findByPk(createdKid.id);
           expect(kid?.firstname).toEqual(updateData.kidName.trim());
