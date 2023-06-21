@@ -1,20 +1,19 @@
 import {
   BaseService,
-  generateNumber,
   MailService,
-  Role,
   ROLE_ID,
+  Role,
   SmsService,
+  USER_STATUS,
   User,
   UserAttributes,
-  USER_STATUS,
+  generateNumber,
 } from "@common";
 import { Injectable } from "@nestjs/common";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common/exceptions";
 import { InjectModel } from "@nestjs/sequelize";
-import { OTP_TOKEN_EXPIRES } from "modules/auth/auth.constants";
 import { AuthService } from "modules/auth/auth.service";
-import { col, fn, Op, where, WhereOptions } from "sequelize";
+import { Op, WhereOptions, col, fn, where } from "sequelize";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { FindUsersQueryDto } from "./dto/find-users-query.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -113,13 +112,14 @@ export class UserService extends BaseService {
     }
 
     // do update by admin
-    const { roleId: role, apiToken } = this.request.user!;
+    const { roleId: role } = this.request.user!;
     if (role === ROLE_ID.ADMIN) return (await user.update({ ...updateUserDto })).dataValues;
 
     delete others.roleId;
-    user.update({ ...others });
+    user.update({ email, phone, ...others });
 
-    let otpToken: string | undefined;
+    // Tạm thời đóng lại do chưa cần confirm khi update. Đã clarify với product
+    /* let otpToken: string | undefined;
     if (email && user.email) {
       const otpCode = this.authService.generateOtpCode();
       if (apiToken.type != "vjoy-test") {
@@ -143,9 +143,9 @@ export class UserService extends BaseService {
       }
       const payload = { userId: user.id, phone };
       otpToken = await this.authService.generateOtpToken(otpCode, payload);
-    }
+    } */
 
-    return { ...user.dataValues, otpToken };
+    return { ...user.dataValues };
   }
 
   async verifyOtp(otpCode: string, otpToken: string) {
